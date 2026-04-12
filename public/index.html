@@ -139,3 +139,85 @@
             let totalIncomeMMK = 0; // NEW
 
             let filtered = data;
+            if (currentFilter !== 'all') {
+                filtered = data.filter(item => item.grade === currentFilter);
+            }
+
+            orderCountDisplay.innerText = filtered.length;
+
+            filtered.forEach(item => {
+                const thb = Number(item.price) || 0;
+                const profit = thb * 0.25;
+                const mmkPrice = Math.round((thb + profit) * RATE);
+                const mmkProfit = Math.round(profit * RATE);
+
+                // Add to income regardless of status
+                totalIncomeMMK += mmkPrice;
+
+                if (item.grade === 'Soldout') {
+                    totalProfitMMK += mmkProfit;
+                }
+
+                let style = item.grade === 'Preorder' ? "border-yellow-500/50 text-yellow-500 bg-yellow-500/10" : 
+                            item.grade === 'Instock' ? "border-emerald-500/50 text-emerald-500 bg-emerald-500/10" : 
+                            "border-red-500/50 text-red-500 bg-red-500/10";
+
+                listDiv.innerHTML += `
+                    <div class="py-6 flex justify-between items-start group">
+                        <div class="flex gap-4">
+                            <button onclick="deleteEntry('${item._id}')" class="text-slate-700 hover:text-red-500">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            </button>
+                            <div>
+                                <p class="font-bold text-white text-lg">${item.name}</p>
+                                <span class="${style} text-[9px] px-2 py-0.5 rounded border uppercase font-black">${item.grade}</span>
+                            </div>
+                        </div>
+                        <div class="text-right font-mono">
+                            <p class="text-white font-bold text-lg">${thb.toLocaleString()} ฿</p>
+                            <p class="text-emerald-500 text-xs font-bold">${mmkPrice.toLocaleString()} MMK</p>
+                        </div>
+                    </div>`;
+            });
+
+            profitDisplay.innerText = totalProfitMMK.toLocaleString() + " MMK";
+            incomeDisplay.innerText = totalIncomeMMK.toLocaleString() + " MMK"; // UPDATED
+        }
+
+        async function addEntry() {
+            const data = {
+                name: document.getElementById('itemName').value,
+                grade: document.getElementById('status').value,
+                price: document.getElementById('priceTHB').value,
+                customerName: document.getElementById('custName').value,
+                customerPhone: document.getElementById('custPhone').value,
+                address: document.getElementById('custAddr').value
+            };
+            if (!data.name || !data.price) return alert("Fill Name and Price!");
+            const res = await fetch('/add-student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+                loadEntries();
+            }
+        }
+
+        function setStatusFilter(status) {
+            currentFilter = status;
+            renderList(allData);
+        }
+
+        async function deleteEntry(id) {
+            if (confirm("Delete this order?")) {
+                await fetch(`/delete-student/${id}`, { method: 'DELETE' });
+                loadEntries();
+            }
+        }
+
+        loadEntries();
+    </script>
+</body>
+</html>
