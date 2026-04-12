@@ -6,24 +6,25 @@ const app = express();
 // 1. MIDDLEWARE
 app.use(express.json());
 
-// 2. SERVE STATIC FILES
-// This handles your CSS/JS inside the 'public' folder
+// 2. STATIC FILES
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 3. DATABASE CONNECTION (Direct Shard Access for Hotspots)
+// 3. DATABASE CONNECTION (Using the stable Shard link for hotspots)
 const mongoURI = process.env.MONGO_URI || "mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEverDB?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority";
 
-mongoose.connect(mongoURI)
-    .then(() => console.log("✅ SUCCESS: MongoDB Connected via Direct Shard!"))
-    .catch(err => {
-        console.log("❌ STILL FAILING:", err.message);
-        console.log("If this fails, your hotspot provider is likely blocking port 27017.");
-    });
+mongoose.connect(mongoURI, {
+    serverSelectionTimeoutMS: 15000 // Give the hotspot more time to connect
+})
+.then(() => console.log("✅ MongoDB Connected Successfully"))
+.catch(err => {
+    console.log("❌ CONNECTION ERROR:", err.message);
+    console.log("NOTE: If this fails locally, it's because your hotspot is blocking Port 27017.");
+});
 
-// 4. DATA SCHEMA (Matches your Ledger structure)
+// 4. DATA SCHEMA
 const studentSchema = new mongoose.Schema({
     name: String,
-    grade: String, // 'Preorder', 'Instock', or 'Soldout'
+    grade: String, 
     price: Number,
     customerName: String,
     customerPhone: String,
@@ -34,7 +35,6 @@ const studentSchema = new mongoose.Schema({
 const Student = mongoose.model('Student', studentSchema);
 
 // 5. API ROUTES
-// Get all entries
 app.get('/students', async (req, res) => {
     try {
         const students = await Student.find().sort({ date: -1 });
@@ -44,7 +44,6 @@ app.get('/students', async (req, res) => {
     }
 });
 
-// Add new entry
 app.post('/add-student', async (req, res) => {
     try {
         const newStudent = new Student(req.body);
@@ -55,7 +54,6 @@ app.post('/add-student', async (req, res) => {
     }
 });
 
-// Delete an entry
 app.delete('/delete-student/:id', async (req, res) => {
     try {
         await Student.findByIdAndDelete(req.params.id);
@@ -65,7 +63,7 @@ app.delete('/delete-student/:id', async (req, res) => {
     }
 });
 
-// 6. CATCH-ALL ROUTE (Fixes the "Cannot GET /" error)
+// 6. CATCH-ALL ROUTE
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
