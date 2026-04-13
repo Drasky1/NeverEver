@@ -2,31 +2,35 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const axios = require('axios'); // We use this to send the Telegram message
+const axios = require('axios');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-// --- TELEGRAM CONFIG ---
+// --- CONFIGURATION ---
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
-const MY_CHAT_ID = '1923704168';
+// Add your friends' Chat IDs here separated by commas
+const ADMIN_IDS = ['1923704168']; 
 
 const sendTeleNotification = async (message) => {
     try {
-        await axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, {
-            chat_id: MY_CHAT_ID,
-            text: message,
-            parse_mode: 'HTML'
-        });
+        const promises = ADMIN_IDS.map(id => 
+            axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, {
+                chat_id: id,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        );
+        await Promise.all(promises);
     } catch (err) {
         console.error("Telegram notification failed", err);
     }
 };
 
 // --- MONGODB CONNECTION ---
-
+// Using the cleaned password and database name 'NeverEver'
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
 .then(() => console.log("Connected to MongoDB"))
 .catch(err => console.log("MongoDB Error:", err));
@@ -44,46 +48,42 @@ const Student = mongoose.model('Student', StudentSchema);
 
 // --- ROUTES ---
 
-// 1. Get all items
+// Get all items
 app.get('/students', async (req, res) => {
     const data = await Student.find();
     res.json(data);
 });
 
-// 2. Add New Entry + Send Telegram Notification
+// Add New Entry (Admin or Customer)
 app.post('/add-student', async (req, res) => {
     const newItem = new Student(req.body);
     await newItem.save();
 
-    // Only notify if it's a customer request (Pending/Preorder)
+    // Trigger notification for new customer requests
     if (req.body.grade === 'Pending' || req.body.grade === 'Preorder') {
-        const msg = `🚨 <b>New Order!</b>\n\n` +
+        const msg = `🚨 <b>New Order Request!</b>\n\n` +
                     `<b>Item:</b> ${req.body.name}\n` +
                     `<b>Customer:</b> ${req.body.customerName || 'Unknown'}\n` +
-                    `<b>Contact:</b> ${req.body.customerPhone || 'No contact provided'}\n\n` +
-                    `Check the Admin Dashboard to reply.`;
+                    `<b>Contact:</b> ${req.body.customerPhone || 'None'}\n` +
+                    `<b>Photo:</b> ${req.body.productImage ? 'Attached' : 'No Photo'}\n\n` +
+                    `Check dashboard to calculate price and reply!`;
         sendTeleNotification(msg);
     }
-    
     res.json(newItem);
 });
 
-// 3. Delete Entry
+// Delete Entry
 app.delete('/delete-student/:id', async (req, res) => {
     await Student.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted" });
 });
 
 // --- CLEAN URL LOGIC ---
-// This serves your .html files without the extension in the URL
 app.get('/:page', (req, res, next) => {
     const page = req.params.page;
     const filePath = path.join(__dirname, 'public', `${page}.html`);
-    
     res.sendFile(filePath, (err) => {
-        if (err) {
-            next(); // If file doesn't exist, go to 404/other routes
-        }
+        if (err) next(); 
     });
 });
 
