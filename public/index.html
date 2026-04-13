@@ -43,6 +43,7 @@
             
             <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                 <button onclick="setStatusFilter('all', event)" class="filter-btn bg-emerald-500 text-black px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">All</button>
+                <button onclick="setStatusFilter('Pending', event)" class="filter-btn bg-slate-800 text-slate-400 px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">Pending</button>
                 <button onclick="setStatusFilter('Preorder', event)" class="filter-btn bg-slate-800 text-slate-400 px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">Preorder</button>
                 <button onclick="setStatusFilter('Instock', event)" class="filter-btn bg-slate-800 text-slate-400 px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">Instock</button>
                 <button onclick="setStatusFilter('Soldout', event)" class="filter-btn bg-slate-800 text-slate-400 px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">Soldout</button>
@@ -50,11 +51,11 @@
         </div>
 
         <div id="inventoryList" class="bg-slate-900/40 rounded-2xl border border-slate-800 p-6 mb-12 backdrop-blur-sm shadow-xl min-h-[100px]">
-            </div>
+        </div>
 
         <div class="bg-black rounded-2xl border border-slate-700 p-8 shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-            <h2 class="text-lg font-bold text-white mb-8 uppercase tracking-widest">New Order Entry</h2>
+            <h2 class="text-lg font-bold text-white mb-8 uppercase tracking-widest">Master Entry Form</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-5">
@@ -66,6 +67,7 @@
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Status</label>
                             <select id="status" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white cursor-pointer focus:border-emerald-500">
+                                <option value="Pending">🕒 Pending</option>
                                 <option value="Preorder">📦 Preorder</option>
                                 <option value="Instock">✅ Instock</option>
                                 <option value="Soldout">❌ Soldout</option>
@@ -76,26 +78,27 @@
                             <input type="number" id="priceTHB" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white focus:border-emerald-500">
                         </div>
                     </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Image URL</label>
+                        <input type="text" id="productImg" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none focus:border-emerald-500 text-white text-xs">
+                    </div>
                 </div>
 
                 <div class="space-y-5">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Customer Name</label>
-                        <input type="text" id="custName" placeholder="Client Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white focus:border-emerald-500">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Customer Details</label>
+                        <input type="text" id="custName" placeholder="Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white mb-3 focus:border-emerald-500">
+                        <input type="text" id="custPhone" placeholder="Phone" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white focus:border-emerald-500">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Phone Number</label>
-                        <input type="text" id="custPhone" placeholder="+95..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Address</label>
-                        <textarea id="custAddr" placeholder="Delivery Details" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white h-[45px] focus:border-emerald-500"></textarea>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Admin Note / Reply</label>
+                        <textarea id="adminNote" placeholder="Reply to customer here..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white h-[85px] focus:border-emerald-500"></textarea>
                     </div>
                 </div>
             </div>
 
             <button onclick="addEntry()" class="w-full mt-10 bg-emerald-500 hover:bg-emerald-400 text-black font-black py-4 rounded-xl transition-all transform active:scale-95 uppercase tracking-widest shadow-[0_0_20px_rgba(74,222,128,0.2)]">
-                Confirm To Ledger
+                Update Ledger
             </button>
         </div>
     </main>
@@ -125,10 +128,7 @@
             const response = await fetch('/students');
             allData = await response.json();
             renderList(allData);
-        } catch (e) { 
-            console.error("Load failed:", e);
-            document.getElementById('inventoryList').innerHTML = '<p class="text-red-500 text-center">Connection Error. Check your database.</p>';
-        }
+        } catch (e) { console.error("Load failed:", e); }
     }
 
     function renderList(data) {
@@ -142,53 +142,46 @@
         let totalIncomeMMK = 0;
 
         let filtered = Array.isArray(data) ? data : [];
+        if (currentFilter !== 'all') filtered = filtered.filter(item => item.grade === currentFilter);
 
-        // Apply Status Filter
-        if (currentFilter !== 'all') {
-            filtered = filtered.filter(item => item.grade === currentFilter);
-        }
-
-        // Apply Search Filter
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         if (searchTerm) {
             filtered = filtered.filter(item => 
                 (item.name && item.name.toLowerCase().includes(searchTerm)) ||
-                (item.customerName && item.customerName.toLowerCase().includes(searchTerm)) ||
-                (item.customerPhone && item.customerPhone.includes(searchTerm))
+                (item.customerName && item.customerName.toLowerCase().includes(searchTerm))
             );
         }
 
         orderCountDisplay.innerText = filtered.length;
 
-        if (filtered.length === 0) {
-            listDiv.innerHTML = '<p class="text-slate-600 text-center py-10 uppercase tracking-widest text-[10px]">No orders found</p>';
-        }
-
         filtered.forEach(item => {
             const thb = Number(item.price) || 0;
-            const profitMargin = 0.25;
-            const mmkPrice = Math.round((thb * (1 + profitMargin)) * RATE);
-            const mmkProfit = Math.round((thb * profitMargin) * RATE);
+            const mmkPrice = Math.round((thb * 1.25) * RATE);
+            const mmkProfit = Math.round((thb * 0.25) * RATE);
 
             totalIncomeMMK += mmkPrice;
-            if (item.grade === 'Soldout') {
-                totalProfitMMK += mmkProfit;
-            }
+            if (item.grade === 'Soldout') totalProfitMMK += mmkProfit;
 
-            let style = item.grade === 'Preorder' ? "border-yellow-500/50 text-yellow-500 bg-yellow-500/10" : 
+            let style = item.grade === 'Pending' ? "border-blue-500/50 text-blue-400 bg-blue-500/10" :
+                        item.grade === 'Preorder' ? "border-yellow-500/50 text-yellow-500 bg-yellow-500/10" : 
                         item.grade === 'Instock' ? "border-emerald-500/50 text-emerald-500 bg-emerald-500/10" : 
                         "border-red-500/50 text-red-500 bg-red-500/10";
 
+            const imgHtml = item.productImage ? 
+                `<img src="${item.productImage}" class="w-14 h-14 rounded-lg object-cover border border-slate-700">` :
+                `<div class="w-14 h-14 bg-slate-800 rounded-lg flex items-center justify-center text-[8px] text-slate-600">NO IMG</div>`;
+
             listDiv.innerHTML += `
-                <div class="py-6 flex justify-between items-start group border-b border-slate-800">
-                    <div class="flex gap-4">
-                        <button onclick="deleteEntry('${item._id}')" class="text-slate-700 hover:text-red-500 mt-1 transition-colors">
+                <div class="py-6 flex justify-between items-center group border-b border-slate-800">
+                    <div class="flex gap-4 items-center">
+                        <button onclick="deleteEntry('${item._id}')" class="text-slate-700 hover:text-red-500 transition-colors">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                         </button>
+                        ${imgHtml}
                         <div>
                             <p class="font-bold text-white text-lg group-hover:neon-text transition-colors">${item.name || 'Unnamed'}</p>
                             <span class="${style} text-[9px] px-2 py-0.5 rounded border uppercase font-black mb-1 inline-block">${item.grade}</span>
-                            <p class="text-slate-500 text-[10px] tracking-tight">${item.customerName || 'No Name'} | ${item.customerPhone || 'No Phone'}</p>
+                            <p class="text-slate-500 text-[10px]">${item.customerName || 'Stock'} | ${item.adminNote ? 'Replied' : 'No Reply'}</p>
                         </div>
                     </div>
                     <div class="text-right font-mono">
@@ -204,19 +197,17 @@
     }
 
     async function addEntry() {
-        const nameVal = document.getElementById('itemName').value;
-        const priceVal = document.getElementById('priceTHB').value;
-
-        if (!nameVal || !priceVal) return alert("Fill Name and Price!");
-
         const data = {
-            name: nameVal,
+            name: document.getElementById('itemName').value,
             grade: document.getElementById('status').value,
-            price: Number(priceVal),
+            price: Number(document.getElementById('priceTHB').value),
+            productImage: document.getElementById('productImg').value,
             customerName: document.getElementById('custName').value,
             customerPhone: document.getElementById('custPhone').value,
-            address: document.getElementById('custAddr').value
+            adminNote: document.getElementById('adminNote').value
         };
+
+        if (!data.name || !data.price) return alert("Name and Price required!");
 
         const res = await fetch('/add-student', {
             method: 'POST',
@@ -225,20 +216,14 @@
         });
 
         if (res.ok) {
-            document.getElementById('itemName').value = '';
-            document.getElementById('priceTHB').value = '';
-            document.getElementById('custName').value = '';
-            document.getElementById('custPhone').value = '';
-            document.getElementById('custAddr').value = '';
+            document.querySelectorAll('input, textarea').forEach(i => i.value = '');
             await loadEntries();
-        } else {
-            alert("Failed to add. Check server logs.");
         }
     }
 
     async function deleteEntry(id) {
-        if (confirm("Delete this order?")) {
-            await fetch(`/delete-student/${id}`, { method: 'DELETE' });
+        if (confirm("Delete this?")) {
+            await fetch(\`/delete-student/\${id}\`, { method: 'DELETE' });
             loadEntries();
         }
     }
@@ -250,14 +235,10 @@
             btn.classList.add('bg-slate-800', 'text-slate-400');
         });
         event.target.classList.add('bg-emerald-500', 'text-black');
-        event.target.classList.remove('bg-slate-800', 'text-slate-400');
         renderList(allData);
     }
 
-    function filterEntries() {
-        renderList(allData);
-    }
-
+    function filterEntries() { renderList(allData); }
     loadEntries();
     </script>
 </body>

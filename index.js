@@ -29,6 +29,8 @@ const studentSchema = new mongoose.Schema({
     customerName: String,
     customerPhone: String,
     address: String,
+    productImage: String, // Add this
+    adminNote: String,    // Add this
     date: { type: Date, default: Date.now }
 });
 
