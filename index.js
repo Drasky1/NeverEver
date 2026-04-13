@@ -36,7 +36,7 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
 const StudentSchema = new mongoose.Schema({
     name: String,
     grade: String, 
-    price: Number, // This is the base price (usually CNY or USD)
+    price: Number,
     productImage: String,
     customerName: String,
     customerPhone: String,
@@ -54,9 +54,16 @@ app.post('/add-student', async (req, res) => {
     const newItem = new Student(req.body);
     await newItem.save();
     if (req.body.grade === 'Pending') {
-        sendTeleNotification(`🚨 <b>New Request!</b>\nItem: ${req.body.name}\nFrom: ${req.body.customerPhone}`);
+        const msg = `🚨 <b>New Order!</b>\n<b>Item:</b> ${req.body.name}\n<b>From:</b> ${req.body.customerPhone}`;
+        sendTeleNotification(msg);
     }
     res.json(newItem);
+});
+
+// Added PUT route so you can actually save price updates from Admin
+app.put('/update-student/:id', async (req, res) => {
+    const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
 });
 
 app.delete('/delete-student/:id', async (req, res) => {
@@ -64,7 +71,7 @@ app.delete('/delete-student/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-// --- URL ROUTING FIX ---
+// --- ROUTING: SHOP IS HOME ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
