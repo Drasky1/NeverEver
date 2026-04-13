@@ -26,7 +26,7 @@ const sendTeleNotification = async (message) => {
 };
 
 // --- MONGODB CONNECTION ---
-mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLAgit%20add@cluster0.h2cafaa.mongodb.net/?appName=Cluster0')
+mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
 .then(() => console.log("Connected to MongoDB"))
 .catch(err => console.log("MongoDB Error:", err));
 
