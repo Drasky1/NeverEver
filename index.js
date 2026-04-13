@@ -1,82 +1,90 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const path = require('path');
+const axios = require('axios'); // We use this to send the Telegram message
+
 const app = express();
-
-// 1. MIDDLEWARE
 app.use(express.json());
+app.use(cors());
+app.use(express.static('public'));
 
-// 2. STATIC FILES
-app.use(express.static(path.join(__dirname, 'public')));
+// --- TELEGRAM CONFIG ---
+const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
+const MY_CHAT_ID = '1923704168';
 
-// 3. DATABASE CONNECTION
-const mongoURI = process.env.MONGO_URI || "mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEverDB?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority";
+const sendTeleNotification = async (message) => {
+    try {
+        await axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, {
+            chat_id: MY_CHAT_ID,
+            text: message,
+            parse_mode: 'HTML'
+        });
+    } catch (err) {
+        console.error("Telegram notification failed", err);
+    }
+};
 
-mongoose.connect(mongoURI, {
-    serverSelectionTimeoutMS: 15000 
-})
-.then(() => console.log("✅ MongoDB Connected Successfully"))
-.catch(err => console.log("❌ CONNECTION ERROR:", err.message));
+// --- MONGODB CONNECTION ---
+mongoose.connect('your_mongodb_connection_string')
+.then(() => console.log("Connected to MongoDB"))
+.catch(err => console.log("MongoDB Error:", err));
 
-// 4. DATA SCHEMA
-const studentSchema = new mongoose.Schema({
+const StudentSchema = new mongoose.Schema({
     name: String,
-    grade: String, 
+    grade: String, // Status: Pending, Preorder, Instock, Soldout
     price: Number,
+    productImage: String,
     customerName: String,
     customerPhone: String,
-    address: String,
-    productImage: String, 
-    adminNote: String,    
-    date: { type: Date, default: Date.now }
+    adminNote: String
 });
+const Student = mongoose.model('Student', StudentSchema);
 
-const Student = mongoose.model('Student', studentSchema);
+// --- ROUTES ---
 
-// 5. API ROUTES
+// 1. Get all items
 app.get('/students', async (req, res) => {
-    try {
-        const students = await Student.find().sort({ date: -1 });
-        res.json(students);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    const data = await Student.find();
+    res.json(data);
 });
 
+// 2. Add New Entry + Send Telegram Notification
 app.post('/add-student', async (req, res) => {
-    try {
-        const newStudent = new Student(req.body);
-        await newStudent.save();
-        res.status(201).send("Entry Added");
-    } catch (err) {
-        res.status(400).send(err.message);
+    const newItem = new Student(req.body);
+    await newItem.save();
+
+    // Only notify if it's a customer request (Pending/Preorder)
+    if (req.body.grade === 'Pending' || req.body.grade === 'Preorder') {
+        const msg = `🚨 <b>New Order!</b>\n\n` +
+                    `<b>Item:</b> ${req.body.name}\n` +
+                    `<b>Customer:</b> ${req.body.customerName || 'Unknown'}\n` +
+                    `<b>Contact:</b> ${req.body.customerPhone || 'No contact provided'}\n\n` +
+                    `Check the Admin Dashboard to reply.`;
+        sendTeleNotification(msg);
     }
+    
+    res.json(newItem);
 });
 
+// 3. Delete Entry
 app.delete('/delete-student/:id', async (req, res) => {
-    try {
-        await Student.findByIdAndDelete(req.params.id);
-        res.send("Entry Deleted");
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+    await Student.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
 });
 
-// 6. ROUTES
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// --- CLEAN URL LOGIC ---
+// This serves your .html files without the extension in the URL
+app.get('/:page', (req, res, next) => {
+    const page = req.params.page;
+    const filePath = path.join(__dirname, 'public', `${page}.html`);
+    
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            next(); // If file doesn't exist, go to 404/other routes
+        }
+    });
 });
 
-app.get('/shop', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
-
-app.get('/track', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'track.html'));
-});
-
-// 7. START SERVER
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`🚀 NeverEver Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
