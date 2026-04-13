@@ -32,14 +32,18 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
 const ItemSchema = new mongoose.Schema({
     name: String,
     grade: { type: String, default: 'Pending' }, 
-    price: { type: Number, default: 0 },
+    price: { type: Number, default: 0 }, // This will be your THB cost
     productImage: String,
-    customerPhone: String
+    customerPhone: String,
+    adminNote: { type: String, default: '' }
 });
 const Item = mongoose.model('Item', ItemSchema);
 
 // --- API ROUTES ---
-app.get('/items', async (req, res) => { res.json(await Item.find()); });
+app.get('/items', async (req, res) => { 
+    const allItems = await Item.find();
+    res.json(allItems); 
+});
 
 app.post('/add-item', async (req, res) => {
     const newItem = new Item(req.body);
@@ -60,18 +64,10 @@ app.delete('/delete-item/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-// --- ROUTING FIX: HOME IS SHOP ---
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
-
-app.get('/track', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'track.html'));
-});
-
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
+// --- ROUTING ---
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
+app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

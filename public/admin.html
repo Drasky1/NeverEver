@@ -2,31 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NeverEver Admin</title>
+    <title>NeverEver Admin | Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { background-color: #000; color: #e2e8f0; }</style>
 </head>
 <body class="p-6">
     <div class="max-w-4xl mx-auto">
-        
         <div class="grid grid-cols-2 gap-4 mb-8">
             <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
-                <p class="text-[10px] uppercase font-bold text-slate-500">Total Income</p>
-                <h2 id="totalIncome" class="text-xl font-black text-emerald-400">0 MMK</h2>
+                <p class="text-[10px] uppercase font-bold text-slate-500 mb-1">Total Income (MMK)</p>
+                <h2 id="totalIncome" class="text-2xl font-black text-emerald-400">0</h2>
             </div>
             <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
-                <p class="text-[10px] uppercase font-bold text-slate-500">Total Gain (Profit)</p>
-                <h2 id="totalProfit" class="text-xl font-black text-white">0 MMK</h2>
+                <p class="text-[10px] uppercase font-bold text-slate-500 mb-1">Net Profit (MMK)</p>
+                <h2 id="totalProfit" class="text-2xl font-black text-white">0</h2>
             </div>
         </div>
 
-        <h1 class="text-2xl font-black text-emerald-500 mb-8 italic uppercase">Inventory Manager</h1>
+        <div class="mb-6">
+            <input type="text" id="adminSearch" onkeyup="render()" placeholder="🔍 Search product name or customer username..." 
+                class="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl outline-none focus:border-emerald-500 text-sm">
+        </div>
 
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl mb-10">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="newName" placeholder="Item Name" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
-                <input type="number" id="newPrice" placeholder="Base Price (CNY)" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
-                <button id="upload_widget" class="bg-black border border-dashed border-slate-700 p-3 rounded-xl text-slate-500 text-xs">📸 Tap to Upload Image</button>
+                <input type="text" id="newName" placeholder="Item Name" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
+                <input type="number" id="newPrice" placeholder="Cost in THB" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
+                <button id="upload_widget" class="bg-black border border-dashed border-slate-700 p-3 rounded-xl text-slate-500 text-xs">📸 Upload Photo</button>
                 <input type="hidden" id="newImg">
                 <select id="newGrade" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
                     <option value="Instock">Instock</option>
@@ -35,7 +37,7 @@
                     <option value="Soldout">Soldout</option>
                 </select>
             </div>
-            <button onclick="addNewItem()" class="w-full mt-4 bg-emerald-500 text-black font-black py-4 rounded-xl uppercase text-xs">Add to Shop</button>
+            <button onclick="addNewItem()" class="w-full mt-4 bg-emerald-500 text-black font-black py-4 rounded-xl uppercase text-xs">Add to Database</button>
         </div>
 
         <div id="container" class="grid gap-4"></div>
@@ -44,35 +46,31 @@
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         let items = [];
-        const RATE = 130; 
+        const RATE = 130; // THB to MMK
 
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
                 document.getElementById('newImg').value = result.info.secure_url;
-                document.getElementById('upload_widget').innerText = "✅ Ready";
+                document.getElementById('upload_widget').innerText = "✅ Image Loaded";
             }
         });
         document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
 
         async function load() {
-            const res = await fetch('/items'); // Fixed: was /students
+            const res = await fetch('/items');
             items = await res.json();
-            calculateFinances();
+            updateStats();
             render();
         }
 
-        function calculateFinances() {
-            // Profit = 25% markup. Income = Total selling price.
-            let income = 0;
-            let profit = 0;
+        function updateStats() {
+            let income = 0; let profit = 0;
             items.forEach(i => {
-                const sellPrice = i.price * 1.25 * RATE;
-                const gain = i.price * 0.25 * RATE;
-                income += sellPrice;
-                profit += gain;
+                income += (i.price * 1.25 * RATE);
+                profit += (i.price * 0.25 * RATE);
             });
-            document.getElementById('totalIncome').innerText = Math.round(income).toLocaleString() + " MMK";
-            document.getElementById('totalProfit').innerText = Math.round(profit).toLocaleString() + " MMK";
+            document.getElementById('totalIncome').innerText = Math.round(income).toLocaleString();
+            document.getElementById('totalProfit').innerText = Math.round(profit).toLocaleString();
         }
 
         async function addNewItem() {
@@ -81,26 +79,51 @@
                 price: Number(document.getElementById('newPrice').value),
                 productImage: document.getElementById('newImg').value,
                 grade: document.getElementById('newGrade').value,
-                customerPhone: "Admin Upload"
+                customerPhone: "Admin"
             };
             await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
             location.reload();
         }
 
         function render() {
-            document.getElementById('container').innerHTML = items.reverse().map(i => `
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center ${i.grade === 'Soldout' ? 'opacity-50' : ''}">
+            const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
+            const container = document.getElementById('container');
+            
+            const filtered = items.filter(i => 
+                i.name.toLowerCase().includes(searchTerm) || 
+                (i.customerPhone && i.customerPhone.toLowerCase().includes(searchTerm))
+            );
+
+            container.innerHTML = filtered.reverse().map(i => `
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center ${i.grade === 'Soldout' ? 'opacity-40' : ''}">
                     <div class="flex items-center gap-4">
                         <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-xl">
                         <div>
                             <h3 class="font-bold text-sm uppercase">${i.name}</h3>
-                            <p class="text-[10px] text-emerald-400 font-mono">${(Math.round(i.price * 1.25 * RATE)).toLocaleString()} MMK</p>
-                            <span class="text-[8px] px-2 py-0.5 rounded bg-black text-slate-400">${i.grade}</span>
+                            <p class="text-[10px] text-emerald-400 font-mono">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
+                            <p class="text-[9px] text-slate-500">User: ${i.customerPhone} | Status: ${i.grade}</p>
                         </div>
                     </div>
-                    <button onclick="del('${i._id}')" class="text-slate-600 text-[10px]">Delete</button>
+                    <div class="flex gap-2">
+                        <button onclick="updatePrice('${i._id}')" class="bg-white text-black px-3 py-2 rounded-lg text-[9px] font-bold">EDIT</button>
+                        <button onclick="del('${i._id}')" class="text-red-500 text-[9px] ml-2">DEL</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        async function updatePrice(id) {
+            const p = prompt("New THB Cost:");
+            const g = prompt("New Status (Instock, Preorder, Pending, Soldout):");
+            const n = prompt("Admin Note (Optional):");
+            if(p || g) {
+                await fetch('/update-item/'+id, { 
+                    method: 'PUT', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ price: Number(p), grade: g, adminNote: n }) 
+                });
+                load();
+            }
         }
 
         async function del(id) { if(confirm("Delete?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }

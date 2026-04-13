@@ -3,51 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeverEver | Shop</title>
+    <title>NeverEver Shop</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #000; color: white; font-family: sans-serif; }
+        body { background-color: #000; color: white; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .sold-out { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
-
-    <nav class="p-6 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-50">
-        <h1 class="text-xl font-black italic tracking-tighter text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
-        <div class="flex items-center gap-4">
-            <a href="/track" class="text-[10px] uppercase font-bold text-slate-400 hover:text-white transition">Track Order</a>
-            <button onclick="document.getElementById('request-section').scrollIntoView({behavior: 'smooth'})" 
-                    class="text-[10px] uppercase font-bold border border-white/20 px-4 py-2 rounded-full hover:bg-white hover:text-black transition">
-                Request Preorder
-            </button>
+    <nav class="p-6 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
+        <h1 class="text-xl font-black italic text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
+        <div class="flex gap-4">
+            <a href="/track" class="text-[10px] font-bold uppercase text-slate-400 mt-2">Track</a>
+            <button onclick="document.getElementById('preorder').scrollIntoView({behavior:'smooth'})" class="bg-white text-black text-[10px] font-black px-4 py-2 rounded-full uppercase">Request Preorder</button>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-6">
-        <div id="shop-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <p class="text-slate-500 animate-pulse">Loading collection...</p>
-        </div>
+    <main class="p-6 max-w-6xl mx-auto">
+        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"></div>
 
-        <hr class="my-20 border-white/5">
-
-        <section id="request-section" class="max-w-md mx-auto mb-20">
-            <div class="glass p-8 rounded-3xl">
-                <h2 class="text-2xl font-black text-center mb-2">Custom Preorder</h2>
-                <p class="text-slate-400 text-[10px] text-center uppercase tracking-widest mb-8">Sourcing from Taobao & More</p>
-                
-                <div class="space-y-4">
-                    <input type="text" id="reqName" placeholder="Item Name" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500">
-                    <input type="text" id="reqContact" placeholder="Telegram @username" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500">
-                    
-                    <button id="upload_widget" class="w-full bg-white/5 border border-dashed border-white/20 py-8 rounded-xl text-slate-400 text-xs flex flex-col items-center gap-2">
-                        <span>📸 UPLOAD IMAGE</span>
-                    </button>
-                    <input type="hidden" id="reqImg">
-
-                    <button onclick="submitRequest()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-emerald-400 transition uppercase text-sm tracking-widest mt-4">
-                        Submit Request
-                    </button>
+        <section id="preorder" class="max-w-md mx-auto py-20">
+            <div class="glass p-8 rounded-[40px] text-center">
+                <h2 class="text-xl font-black mb-6 italic">CUSTOM PREORDER</h2>
+                <div class="space-y-4 text-left">
+                    <input type="text" id="pName" placeholder="Item Name (e.g. Chrome Hearts Hat)" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none">
+                    <input type="text" id="pUser" placeholder="Telegram Username / Phone" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none">
+                    <button id="p_upload" class="w-full border border-dashed border-white/20 py-6 rounded-2xl text-xs text-slate-500">📸 Tap to Upload Screenshot</button>
+                    <input type="hidden" id="pImg">
+                    <button onclick="submitPreorder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase tracking-widest text-xs">Send Request</button>
                 </div>
             </div>
         </section>
@@ -55,85 +38,50 @@
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        const RATE = 130; 
-        let items = [];
-
-        // Cloudinary for Preorder Form
+        const RATE = 130;
+        
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
-                document.getElementById('reqImg').value = result.info.secure_url;
-                document.getElementById('upload_widget').innerHTML = "✅ Image Attached";
+                document.getElementById('pImg').value = result.info.secure_url;
+                document.getElementById('p_upload').innerText = "✅ Image Attached";
             }
         });
-        document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
+        document.getElementById("p_upload").addEventListener("click", () => myWidget.open());
 
-        // LOAD SHOP ITEMS
         async function loadShop() {
-            try {
-                const res = await fetch('/items'); // Matches index.js route
-                items = await res.json();
-                renderShop();
-            } catch (e) { console.error("Load error", e); }
-        }
+            const res = await fetch('/items');
+            const data = await res.json();
+            const grid = document.getElementById('shop-grid');
+            
+            // Only show items that are NOT 'Pending'
+            const activeItems = data.filter(i => i.grade !== 'Pending');
 
-        function renderShop() {
-            const container = document.getElementById('shop-container');
-            // We filter out 'Pending' requests so only Instock/Preorder/Soldout show in shop
-            const displayItems = items.filter(i => i.grade !== 'Pending');
-
-            if (displayItems.length === 0) {
-                container.innerHTML = `<p class="col-span-full text-center text-slate-500 py-20 uppercase text-xs tracking-widest">New Drop Coming Soon</p>`;
-                return;
-            }
-
-            container.innerHTML = displayItems.reverse().map(i => {
-                const isSoldOut = i.grade === 'Soldout';
-                const finalPrice = Math.round(i.price * 1.25 * RATE);
-
-                return `
-                    <div class="group ${isSoldOut ? 'sold-out' : ''}">
-                        <div class="relative aspect-[3/4] overflow-hidden rounded-2xl bg-slate-900 mb-3">
-                            <img src="${i.productImage}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            ${isSoldOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/40 font-black italic text-xl">SOLD OUT</div>' : ''}
-                            <div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[8px] font-bold uppercase tracking-tighter">
-                                ${i.grade}
-                            </div>
-                        </div>
-                        <h3 class="text-xs font-medium text-slate-300 truncate">${i.name}</h3>
-                        <p class="text-sm font-black text-emerald-400 font-mono">${finalPrice.toLocaleString()} MMK</p>
+            grid.innerHTML = activeItems.reverse().map(i => `
+                <div class="relative group ${i.grade === 'Soldout' ? 'opacity-50' : ''}">
+                    <div class="aspect-[3/4] rounded-3xl overflow-hidden bg-slate-900 mb-3 relative">
+                        <img src="${i.productImage}" class="w-full h-full object-cover">
+                        <div class="absolute top-3 left-3 bg-black/50 text-[8px] font-bold px-2 py-1 rounded-full backdrop-blur-md uppercase">${i.grade}</div>
+                        ${i.grade === 'Soldout' ? '<div class="absolute inset-0 flex items-center justify-center font-black italic bg-black/20">SOLD OUT</div>' : ''}
                     </div>
-                `;
-            }).join('');
+                    <h3 class="text-[10px] uppercase font-bold text-slate-400 truncate">${i.name}</h3>
+                    <p class="font-black text-emerald-400 font-mono text-sm">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
+                </div>
+            `).join('');
         }
 
-        // SUBMIT PREORDER REQUEST
-        async function submitRequest() {
-            const name = document.getElementById('reqName').value;
-            const contact = document.getElementById('reqContact').value;
-            const img = document.getElementById('reqImg').value;
-
-            if(!name || !contact) return alert("Please fill Name and Contact");
-
+        async function submitPreorder() {
             const data = {
-                name: name,
-                customerPhone: contact,
-                productImage: img,
-                grade: 'Pending', // Marked as pending for admin review
+                name: document.getElementById('pName').value,
+                customerPhone: document.getElementById('pUser').value,
+                productImage: document.getElementById('pImg').value,
+                grade: 'Pending',
                 price: 0
             };
-
-            const res = await fetch('/add-item', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-
-            if(res.ok) {
-                alert("Request Sent! Check 'Track Order' soon.");
-                location.reload();
-            }
+            if(!data.name || !data.customerPhone) return alert("Fill all fields");
+            await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            alert("Request sent successfully!");
+            location.reload();
         }
-
         loadShop();
     </script>
 </body>
