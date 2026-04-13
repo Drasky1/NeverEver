@@ -2,53 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Request Preorder | NeverEver</title>
+    <title>Track Order | NeverEver</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
 </head>
-<body class="bg-black text-slate-200 font-sans min-h-screen flex items-center justify-center p-6">
-    <div class="max-w-md w-full p-8 bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl">
-        <h2 class="text-2xl font-bold mb-2 text-emerald-400">Request a Preorder</h2>
-        <p class="text-slate-400 text-sm mb-6">Upload a screenshot and we'll check the price.</p>
-        
-        <div class="space-y-4">
-            <input type="text" id="itemName" placeholder="Item Name" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-xl outline-none focus:border-emerald-500 transition">
-            <input type="text" id="custName" placeholder="Your Name" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-xl outline-none focus:border-emerald-500 transition">
-            <input type="text" id="custContact" placeholder="Telegram @username" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-xl outline-none focus:border-emerald-500 transition">
-
-            <button type="button" id="upload_widget" class="w-full bg-slate-800 border border-dashed border-slate-600 p-6 rounded-xl hover:border-emerald-500 transition text-sm text-slate-400">
-                📸 Tap to Upload Photo
-            </button>
-            <input type="hidden" id="customer_image_url">
-            <div id="upload_preview" class="hidden flex justify-center mt-2">
-                <img src="" id="preview_img" class="h-32 w-32 object-cover rounded-xl border border-emerald-500">
-            </div>
-
-            <button onclick="submitRequest()" id="submitBtn" class="w-full bg-emerald-500 text-black font-bold p-4 rounded-xl shadow-lg shadow-emerald-500/20 uppercase tracking-widest text-sm">Send Request</button>
+<body class="flex flex-col items-center justify-center p-6">
+    <div class="w-full max-w-md text-center">
+        <h1 class="text-3xl font-black italic mb-10 text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
+        <div class="glass p-8 rounded-3xl mb-8">
+            <input type="text" id="trackInput" placeholder="@username" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500 text-center mb-4">
+            <button onclick="trackOrder()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-emerald-400 transition uppercase tracking-widest text-sm">Check Status</button>
         </div>
+        <div id="resultArea" class="space-y-4"></div>
     </div>
 
-    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
-            if (!error && result && result.event === "success") { 
-                document.getElementById('customer_image_url').value = result.info.secure_url;
-                document.getElementById('preview_img').src = result.info.secure_url;
-                document.getElementById('upload_preview').classList.remove('hidden');
-                document.getElementById('upload_widget').innerText = "✅ Photo Ready";
-            }
-        });
-        document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
-
-        async function submitRequest() {
-            const data = {
-                name: document.getElementById('itemName').value,
-                customerName: document.getElementById('custName').value,
-                customerPhone: document.getElementById('custContact').value,
-                productImage: document.getElementById('customer_image_url').value,
-                grade: 'Pending', price: 0
-            };
-            const response = await fetch('/add-student', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            if (response.ok) { alert("Sent!"); location.reload(); }
+        async function trackOrder() {
+            const input = document.getElementById('trackInput').value.trim().toLowerCase();
+            const res = await fetch('/students');
+            const data = await res.json();
+            const results = data.filter(item => item.customerPhone?.toLowerCase().includes(input.replace('@','')));
+            
+            const area = document.getElementById('resultArea');
+            area.innerHTML = results.length ? results.map(item => `
+                <div class="glass p-6 rounded-2xl text-left border-l-4 border-emerald-500">
+                    <h3 class="font-bold text-lg">${item.name}</h3>
+                    <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-2">${item.grade}</p>
+                    <p class="text-xs text-slate-400 italic">"${item.adminNote || 'Processing your request...'}"</p>
+                </div>
+            `).join('') : '<p class="text-red-400">No orders found.</p>';
         }
     </script>
 </body>

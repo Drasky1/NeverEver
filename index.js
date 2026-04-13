@@ -11,7 +11,7 @@ app.use(express.static('public'));
 
 // --- CONFIGURATION ---
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
-const ADMIN_IDS = ['1923704168']; // Add your friends' IDs here
+const ADMIN_IDS = ['1923704168']; 
 
 const sendTeleNotification = async (message) => {
     try {
@@ -59,7 +59,7 @@ app.post('/add-student', async (req, res) => {
                     `<b>Item:</b> ${req.body.name}\n` +
                     `<b>Customer:</b> ${req.body.customerName || 'Unknown'}\n` +
                     `<b>Contact:</b> ${req.body.customerPhone || 'None'}\n\n` +
-                    `Check /admin to view the photo and quote!`;
+                    `Check /admin to view the photo!`;
         sendTeleNotification(msg);
     }
     res.json(newItem);
@@ -70,13 +70,17 @@ app.delete('/delete-student/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-// --- CLEAN URL HANDLER ---
+// --- UPDATED CLEAN URL HANDLER ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+});
+
 app.get('/:page', (req, res, next) => {
     const pageName = req.params.page;
     const filePath = path.join(__dirname, 'public', `${pageName}.html`);
     res.sendFile(filePath, (err) => {
         if (err) {
-            res.sendFile(path.join(__dirname, 'public', 'index.html'));
+            res.sendFile(path.join(__dirname, 'public', 'shop.html'));
         }
     });
 });
