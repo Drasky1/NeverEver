@@ -2,16 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NeverEver Manager</title>
+    <title>NeverEver Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #000; color: #e2e8f0; }</style>
 </head>
-<body class="bg-black text-slate-200 p-6">
-    <div class="max-w-5xl mx-auto">
-        <h1 class="text-2xl font-black italic text-emerald-500 mb-8 uppercase tracking-widest">Order Manager</h1>
+<body class="p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-black text-emerald-500 mb-8 tracking-tighter italic">ADMIN DASHBOARD</h1>
 
-        <div class="mb-8 space-y-4">
-            <input type="text" id="searchInput" onkeyup="renderOrders()" placeholder="🔍 Search items or customers..." 
-                class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl outline-none focus:border-emerald-500">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl mb-10">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Quick Add Item</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="newName" placeholder="Item Name" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
+                <input type="number" id="newPrice" placeholder="Base Price" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
+                <input type="text" id="newImg" placeholder="Cloudinary Image URL" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
+                <select id="newGrade" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
+                    <option value="Instock">Instock</option>
+                    <option value="Preorder">Preorder</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>
+            <button onclick="addNewItem()" class="w-full mt-4 bg-emerald-500 text-black font-black py-3 rounded-xl uppercase text-xs">Add to Shop</button>
+        </div>
+
+        <div class="space-y-4 mb-8">
+            <input type="text" id="searchInput" onkeyup="render()" placeholder="🔍 Search customers or items..." 
+                class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl outline-none focus:border-emerald-500">
             
             <div class="flex gap-2 overflow-x-auto pb-2">
                 <button onclick="setFilter('all')" class="px-4 py-2 bg-emerald-600 text-black text-[10px] font-bold rounded-lg uppercase">All</button>
@@ -21,63 +37,70 @@
             </div>
         </div>
 
-        <div id="orderContainer" class="grid gap-4"></div>
+        <div id="container" class="grid gap-4"></div>
     </div>
 
     <script>
-        let allItems = [];
-        let currentFilter = 'all';
+        let items = [];
+        let filter = 'all';
         const RATE = 130;
 
         async function load() {
             const res = await fetch('/items');
-            allItems = await res.json();
-            renderOrders();
+            items = await res.json();
+            render();
         }
 
-        function setFilter(f) { currentFilter = f; renderOrders(); }
+        async function addNewItem() {
+            const data = {
+                name: document.getElementById('newName').value,
+                price: Number(document.getElementById('newPrice').value),
+                productImage: document.getElementById('newImg').value,
+                grade: document.getElementById('newGrade').value,
+                customerPhone: "Admin Upload"
+            };
+            await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            location.reload();
+        }
 
-        function renderOrders() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const container = document.getElementById('orderContainer');
+        function setFilter(f) { filter = f; render(); }
+
+        function render() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const container = document.getElementById('container');
             
-            const filtered = allItems.filter(i => {
-                const match = i.name.toLowerCase().includes(query) || (i.customerPhone && i.customerPhone.toLowerCase().includes(query));
-                return match && (currentFilter === 'all' || i.grade === currentFilter);
+            const filtered = items.filter(i => {
+                const match = i.name.toLowerCase().includes(q) || (i.customerPhone && i.customerPhone.toLowerCase().includes(q));
+                return match && (filter === 'all' || i.grade === filter);
             });
 
             container.innerHTML = filtered.reverse().map(i => `
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl flex justify-between items-center">
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-xl border border-slate-700">
+                        <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-xl">
                         <div>
-                            <h3 class="font-bold text-white text-sm uppercase">${i.name}</h3>
-                            <p class="text-[10px] text-slate-500">${i.customerPhone || 'Unknown'}</p>
-                            <p class="text-[10px] text-emerald-400 font-mono mt-1">Price: ${(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
+                            <h3 class="font-bold text-sm uppercase">${i.name}</h3>
+                            <p class="text-[10px] text-emerald-400 font-mono">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="editItem('${i._id}')" class="bg-white text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase">Edit</button>
-                        <button onclick="deleteItem('${i._id}')" class="text-slate-500 hover:text-red-500 text-[10px]">Delete</button>
+                        <button onclick="update('${i._id}')" class="bg-white text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">Edit</button>
+                        <button onclick="del('${i._id}')" class="text-slate-500 text-[10px]">Del</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function editItem(id) {
-            const p = prompt("Enter Base Price:");
-            const g = prompt("Enter Status (Pending, Preorder, Instock, Soldout):");
-            if (p && g) {
-                await fetch('/update-item/'+id, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ price: Number(p), grade: g })
-                });
+        async function update(id) {
+            const p = prompt("New Base Price:");
+            const g = prompt("New Status (Instock, Preorder, Pending, Soldout):");
+            if(p && g) {
+                await fetch('/update-item/'+id, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({price: Number(p), grade: g}) });
                 load();
             }
         }
 
-        async function deleteItem(id) { if(confirm("Delete?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }
+        async function del(id) { if(confirm("Delete?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }
         load();
     </script>
 </body>

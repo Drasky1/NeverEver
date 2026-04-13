@@ -11,7 +11,7 @@ app.use(express.static('public'));
 
 // --- CONFIGURATION ---
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
-const ADMIN_IDS = ['1923704168']; 
+const ADMIN_IDS = ['1923704168'];
 
 const sendTeleNotification = async (message) => {
     try {
@@ -60,16 +60,17 @@ app.delete('/delete-item/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-// --- ROUTING: SHOP IS THE HOME PAGE ---
+// --- ROUTING FIX: HOME IS SHOP ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
-app.get('/:page', (req, res) => {
-    const filePath = path.join(__dirname, 'public', `${req.params.page}.html`);
-    res.sendFile(filePath, (err) => {
-        if (err) res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-    });
+app.get('/track', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'track.html'));
+});
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 const PORT = process.env.PORT || 10000;
