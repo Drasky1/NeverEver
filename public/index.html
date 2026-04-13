@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeverEver | Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
         body { background-color: #0f172a; }
         .neon-text { color: #4ade80; }
@@ -17,20 +18,20 @@
 <body class="font-sans text-slate-200">
 
     <nav class="bg-black border-b border-emerald-500/30 p-4 sticky top-0 z-50 backdrop-blur-md">
-        <div class="container mx-auto flex justify-between items-center">
+        <div class="container mx-auto flex flex-wrap justify-between items-center gap-4">
             <h1 class="text-2xl font-black italic neon-text">NEVER<span class="text-white">EVER</span></h1>
-            <div class="flex gap-6 text-right">
+            <div class="flex gap-4 md:gap-6 text-right">
                 <div>
-                    <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Total Orders</p>
-                    <p id="totalOrderCount" class="text-xl font-mono font-bold text-emerald-400">0</p>
+                    <p class="text-[8px] md:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Orders</p>
+                    <p id="totalOrderCount" class="text-sm md:text-xl font-mono font-bold text-emerald-400">0</p>
                 </div>
                 <div>
-                    <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Total Income</p>
-                    <p id="totalIncome" class="text-xl font-mono font-bold text-blue-400">0 MMK</p>
+                    <p class="text-[8px] md:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Income</p>
+                    <p id="totalIncome" class="text-sm md:text-xl font-mono font-bold text-blue-400">0 MMK</p>
                 </div>
                 <div>
-                    <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Sold Profit</p>
-                    <p id="totalProfit" class="text-xl font-mono font-bold text-white">0 MMK</p>
+                    <p class="text-[8px] md:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Profit</p>
+                    <p id="totalProfit" class="text-sm md:text-xl font-mono font-bold text-white">0 MMK</p>
                 </div>
             </div>
         </div>
@@ -50,8 +51,7 @@
             </div>
         </div>
 
-        <div id="inventoryList" class="bg-slate-900/40 rounded-2xl border border-slate-800 p-6 mb-12 backdrop-blur-sm shadow-xl min-h-[100px]">
-        </div>
+        <div id="inventoryList" class="bg-slate-900/40 rounded-2xl border border-slate-800 p-6 mb-12 backdrop-blur-sm shadow-xl min-h-[100px]"></div>
 
         <div class="bg-black rounded-2xl border border-slate-700 p-8 shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
@@ -79,8 +79,11 @@
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Image URL</label>
-                        <input type="text" id="productImg" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none focus:border-emerald-500 text-white text-xs">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Product Image</label>
+                        <button onclick="openUploadWidget()" id="uploadBtn" class="w-full bg-slate-900 border border-slate-700 border-dashed rounded-xl p-4 text-slate-400 text-xs hover:border-emerald-500 hover:text-white transition-all">
+                            📸 Click to Upload Image
+                        </button>
+                        <input type="hidden" id="productImg">
                     </div>
                 </div>
 
@@ -172,7 +175,6 @@
                 `<img src="${item.productImage}" class="w-14 h-14 rounded-lg object-cover border border-slate-700">` :
                 `<div class="w-14 h-14 bg-slate-800 rounded-lg flex items-center justify-center text-[8px] text-slate-600">NO IMG</div>`;
 
-            // Contact Logic
             let contactLink = '';
             if (item.customerPhone) {
                 if (item.customerPhone.startsWith('@')) {
@@ -195,9 +197,7 @@
                             <div class="flex items-center gap-2">
                                 <p class="text-slate-500 text-[10px]">${item.customerName || 'Stock'}</p>
                                 ${contactLink ? `
-                                    <a href="${contactLink}" target="_blank" class="bg-emerald-500/10 text-emerald-400 text-[7px] px-2 py-0.5 rounded-full border border-emerald-500/20 hover:bg-emerald-500 hover:text-black transition-all font-bold">
-                                        REPLY ↗
-                                    </a>
+                                    <a href="${contactLink}" target="_blank" class="bg-emerald-500/10 text-emerald-400 text-[7px] px-2 py-0.5 rounded-full border border-emerald-500/20 hover:bg-emerald-500 hover:text-black transition-all font-bold">REPLY ↗</a>
                                 ` : ''}
                             </div>
                         </div>
@@ -235,6 +235,9 @@
 
         if (res.ok) {
             document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+            document.getElementById('productImg').value = '';
+            document.getElementById('uploadBtn').innerText = "📸 Click to Upload Image";
+            document.getElementById('uploadBtn').classList.remove('border-emerald-500', 'text-emerald-400');
             await loadEntries();
         }
     }
@@ -247,22 +250,21 @@
     }
 
     function openUploadWidget() {
-    cloudinary.openUploadWidget({
-        cloudName: "dawhhgjsd", // Get this from your main Dashboard
-        uploadPreset: "dawhhgjsd",         // This matches your screenshot
-        sources: ["local", "camera", "url"],
-        multiple: false,
-        theme: "minimal"
-    }, (error, result) => {
-        if (!error && result && result.event === "success") {
-            const url = result.info.secure_url;
-            document.getElementById('productImg').value = url;
-            document.getElementById('uploadBtn').innerText = "✅ Image Uploaded!";
-            document.getElementById('uploadBtn').classList.add('border-emerald-500', 'text-emerald-400');
-            console.log("Done! Image link:", url);
-        }
-    });
-}
+        cloudinary.openUploadWidget({
+            cloudName: "dawhhgjsd", 
+            uploadPreset: "dawhhgjsd",
+            sources: ["local", "camera", "url"],
+            multiple: false,
+            theme: "minimal"
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                const url = result.info.secure_url;
+                document.getElementById('productImg').value = url;
+                document.getElementById('uploadBtn').innerText = "✅ Image Uploaded!";
+                document.getElementById('uploadBtn').classList.add('border-emerald-500', 'text-emerald-400');
+            }
+        });
+    }
 
     function setStatusFilter(status, event) {
         currentFilter = status;
