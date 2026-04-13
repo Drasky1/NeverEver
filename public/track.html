@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order | NeverEver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000000; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-6">
+
+    <div class="w-full max-w-md text-center">
+        <h1 class="text-3xl font-black italic mb-2 text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
+        <p class="text-slate-400 text-xs uppercase tracking-[0.3em] mb-10">Order Tracking System</p>
+
+        <div class="glass p-8 rounded-3xl shadow-2xl">
+            <p class="text-sm text-slate-300 mb-6">Enter your Telegram Username or Phone Number to check status.</p>
+            <input type="text" id="trackInput" placeholder="@username or 09..." 
+                class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500 mb-4 text-center">
+            
+            <button onclick="trackOrder()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-emerald-400 transition-all uppercase tracking-widest text-sm">
+                Check Status
+            </button>
+        </div>
+
+        <div id="resultArea" class="mt-8 space-y-4">
+            </div>
+    </div>
+
+    <script>
+        async function trackOrder() {
+            const input = document.getElementById('trackInput').value.trim();
+            if(!input) return alert("Please enter your contact info");
+
+            const res = await fetch('/students');
+            const data = await res.json();
+            const resultArea = document.getElementById('resultArea');
+            resultArea.innerHTML = '';
+
+            // Filter orders where the phone/username matches exactly
+            const myOrders = data.filter(item => 
+                item.customerPhone === input || 
+                (item.customerPhone && item.customerPhone.toLowerCase() === input.toLowerCase())
+            );
+
+            if(myOrders.length === 0) {
+                resultArea.innerHTML = `<p class="text-red-400 text-sm">No orders found for "${input}"</p>`;
+                return;
+            }
+
+            myOrders.forEach(item => {
+                let statusColor = item.grade === 'Pending' ? 'text-blue-400' : 
+                                 item.grade === 'Preorder' ? 'text-yellow-500' : 
+                                 item.grade === 'Instock' ? 'text-emerald-400' : 'text-red-500';
+
+                resultArea.innerHTML += `
+                    <div class="glass p-6 rounded-2xl text-left border-l-4 border-emerald-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">${item.name}</h3>
+                            <span class="text-[10px] font-black uppercase tracking-widest ${statusColor}">${item.grade}</span>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-xs text-slate-400 leading-relaxed italic">
+                                <span class="text-emerald-400 font-bold tracking-tighter uppercase">Admin Note:</span> 
+                                ${item.adminNote || 'Your request is being processed. We will update you soon.'}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
