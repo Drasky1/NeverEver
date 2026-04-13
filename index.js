@@ -11,8 +11,7 @@ app.use(express.static('public'));
 
 // --- CONFIGURATION ---
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
-// Add your friends' Chat IDs here separated by commas
-const ADMIN_IDS = ['1923704168']; 
+const ADMIN_IDS = ['1923704168']; // Add your friends' IDs here
 
 const sendTeleNotification = async (message) => {
     try {
@@ -30,14 +29,13 @@ const sendTeleNotification = async (message) => {
 };
 
 // --- MONGODB CONNECTION ---
-// Using the cleaned password and database name 'NeverEver'
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
 .then(() => console.log("Connected to MongoDB"))
 .catch(err => console.log("MongoDB Error:", err));
 
 const StudentSchema = new mongoose.Schema({
     name: String,
-    grade: String, // Status: Pending, Preorder, Instock, Soldout
+    grade: String, 
     price: Number,
     productImage: String,
     customerName: String,
@@ -47,45 +45,41 @@ const StudentSchema = new mongoose.Schema({
 const Student = mongoose.model('Student', StudentSchema);
 
 // --- ROUTES ---
-
-// Get all items
 app.get('/students', async (req, res) => {
     const data = await Student.find();
     res.json(data);
 });
 
-// Add New Entry (Admin or Customer)
 app.post('/add-student', async (req, res) => {
     const newItem = new Student(req.body);
     await newItem.save();
 
-    // Trigger notification for new customer requests
     if (req.body.grade === 'Pending' || req.body.grade === 'Preorder') {
         const msg = `🚨 <b>New Order Request!</b>\n\n` +
                     `<b>Item:</b> ${req.body.name}\n` +
                     `<b>Customer:</b> ${req.body.customerName || 'Unknown'}\n` +
-                    `<b>Contact:</b> ${req.body.customerPhone || 'None'}\n` +
-                    `<b>Photo:</b> ${req.body.productImage ? 'Attached' : 'No Photo'}\n\n` +
-                    `Check dashboard to calculate price and reply!`;
+                    `<b>Contact:</b> ${req.body.customerPhone || 'None'}\n\n` +
+                    `Check /admin to view the photo and quote!`;
         sendTeleNotification(msg);
     }
     res.json(newItem);
 });
 
-// Delete Entry
 app.delete('/delete-student/:id', async (req, res) => {
     await Student.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted" });
 });
 
-// --- CLEAN URL LOGIC ---
+// --- CLEAN URL HANDLER ---
 app.get('/:page', (req, res, next) => {
-    const page = req.params.page;
-    const filePath = path.join(__dirname, 'public', `${page}.html`);
+    const pageName = req.params.page;
+    const filePath = path.join(__dirname, 'public', `${pageName}.html`);
     res.sendFile(filePath, (err) => {
-        if (err) next(); 
+        if (err) {
+            res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        }
     });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

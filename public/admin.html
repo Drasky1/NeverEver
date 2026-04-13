@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard | NeverEver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-slate-200 p-8">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold text-emerald-500 mb-8 uppercase tracking-tighter">Order Manager</h1>
+        <div id="orderList" class="grid gap-4"></div>
+    </div>
+
+    <script>
+        async function loadOrders() {
+            const res = await fetch('/students');
+            const orders = await res.json();
+            const container = document.getElementById('orderList');
+            container.innerHTML = orders.map(order => `
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 flex justify-between items-center">
+                    <div class="flex gap-4 items-center">
+                        <img src="${order.productImage || ''}" class="h-20 w-20 object-cover rounded-lg border border-emerald-500 bg-slate-800">
+                        <div>
+                            <h3 class="font-bold">${order.name}</h3>
+                            <p class="text-xs text-slate-500">From: ${order.customerPhone}</p>
+                            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">${order.grade}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="sendQuote('${order.customerPhone}', '${order.name}')" class="bg-emerald-500 text-black px-4 py-2 rounded-lg font-bold text-xs uppercase">Quote</button>
+                        <button onclick="deleteOrder('${order._id}')" class="text-slate-500 hover:text-red-500 text-xs font-bold">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function sendQuote(contact, item) {
+            const price = prompt(`MMK Price for ${item}:`);
+            if(!price) return;
+            const msg = encodeURIComponent(`Hi! For ${item}, the total is ${price} MMK. Want to preorder?`);
+            window.open(`https://t.me/${contact.replace('@','')}?text=${msg}`, '_blank');
+        }
+
+        async function deleteOrder(id) {
+            if(confirm("Delete order?")) { await fetch('/delete-student/'+id, {method:'DELETE'}); loadOrders(); }
+        }
+        loadOrders();
+    </script>
+</body>
+</html>

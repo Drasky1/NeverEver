@@ -2,118 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeverEver | Store</title>
+    <title>NeverEver Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #000000; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .neon-border:hover { border-color: #4ade80; box-shadow: 0 0 15px rgba(74, 222, 128, 0.1); }
-    </style>
+    <style>body { background-color: #000; color: #fff; } .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }</style>
 </head>
 <body>
-
-   <nav class="p-4 md:p-6 flex flex-wrap justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50 gap-y-4">
-    <h1 class="text-xl font-black italic tracking-tighter text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
-    
-    <div class="flex items-center gap-3 md:gap-6">
-        <a href="/track.html" class="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 hover:text-white transition-all">
-            Track Order
-        </a>
-        <a href="#preorder" class="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold border border-white/20 px-3 py-2 md:px-4 md:py-2 rounded-full hover:bg-white hover:text-black transition-all whitespace-nowrap">
-            Request Preorder
-        </a>
-    </div>
-</nav>
+    <nav class="p-6 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
+        <h1 class="text-xl font-black italic text-emerald-400">NEVER EVER</h1>
+        <div class="flex gap-6">
+            <a href="/track" class="text-[10px] uppercase font-bold text-slate-400">Track Order</a>
+            <a href="#preorder" class="text-[10px] uppercase font-bold border border-white/20 px-4 py-2 rounded-full">Request Preorder</a>
+        </div>
+    </nav>
 
     <main class="max-w-6xl mx-auto px-6 pt-10">
-        <section class="mb-20 text-center">
-            <h2 class="text-5xl md:text-7xl font-bold mb-4 tracking-tighter">THE COLLECTION</h2>
-            <p class="text-slate-400 uppercase text-[10px] tracking-[0.5em]">Curated Fashion & Accessories</p>
-        </section>
-
-        <div id="shopGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            </div>
-
-        <hr class="my-32 border-white/5">
+        <div id="shopGrid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-32"></div>
 
         <section id="preorder" class="max-w-2xl mx-auto pb-32">
-            <div class="glass p-8 rounded-3xl text-center">
-                <h3 class="text-2xl font-bold mb-2">Can't find what you need?</h3>
-                <p class="text-slate-400 text-sm mb-8">Send us a photo of the item you want. We'll check the price and reply within 24 hours.</p>
-                
-                <div class="space-y-4 text-left">
-                    <input type="text" id="pName" placeholder="Item Name" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500 transition-all">
-                    <input type="text" id="pContact" placeholder="Telegram @username or Phone Number" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500 transition-all">
-                    <textarea id="pDesc" placeholder="Size, Color, or Details..." class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500 h-32"></textarea>
-                    
-                    <div class="border-2 border-dashed border-white/10 p-8 rounded-xl text-center hover:border-emerald-500/50 transition-all cursor-pointer">
-                        <p class="text-xs text-slate-500 uppercase tracking-widest">Image Upload Coming Soon</p>
-                    </div>
-
-                    <button onclick="submitPreorder()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-emerald-400 transition-all uppercase tracking-widest text-sm">Submit Request</button>
+            <div class="glass p-8 rounded-3xl">
+                <h3 class="text-2xl font-bold mb-8 text-center">Custom Preorder</h3>
+                <div class="space-y-4">
+                    <input type="text" id="pName" placeholder="Item Name" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500">
+                    <input type="text" id="pContact" placeholder="Telegram @username" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500">
+                    <button type="button" id="shop_upload_widget" class="w-full border-2 border-dashed border-white/10 p-8 rounded-xl text-slate-500 text-xs uppercase tracking-widest">📸 Upload Image</button>
+                    <input type="hidden" id="shop_img_url">
+                    <button onclick="submitShopPreorder()" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm">Submit</button>
                 </div>
             </div>
         </section>
     </main>
 
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        const RATE = 130;
-
         async function loadShop() {
             const res = await fetch('/students');
             const data = await res.json();
-            const grid = document.getElementById('shopGrid');
-            
-            // Only show Instock and Preorder items to customers
             const publicItems = data.filter(item => item.grade === 'Instock' || item.grade === 'Preorder');
-
-            grid.innerHTML = publicItems.map(item => {
-                const mmkPrice = Math.round((item.price * 1.25) * RATE);
-                return `
-                    <div class="group cursor-pointer">
-                        <div class="aspect-[3/4] overflow-hidden rounded-2xl bg-slate-900 border border-white/5 mb-4 relative neon-border transition-all">
-                            <img src="${item.productImage || 'https://via.placeholder.com/400x600?text=No+Image'}" 
-                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                            <div class="absolute top-3 left-3">
-                                <span class="bg-black/60 backdrop-blur-md text-[9px] font-black px-2 py-1 rounded uppercase tracking-widest border border-white/10">
-                                    ${item.grade}
-                                </span>
-                            </div>
-                        </div>
-                        <h4 class="font-bold text-sm tracking-tight">${item.name}</h4>
-                        <p class="text-emerald-400 font-mono text-sm">${mmkPrice.toLocaleString()} MMK</p>
-                    </div>
-                `;
-            }).join('');
+            document.getElementById('shopGrid').innerHTML = publicItems.map(item => `
+                <div class="glass p-2 rounded-2xl">
+                    <img src="${item.productImage}" class="aspect-[3/4] w-full object-cover rounded-xl mb-3">
+                    <h4 class="font-bold text-xs px-2">${item.name}</h4>
+                    <p class="text-emerald-400 text-xs px-2 pb-2 font-mono">${(item.price * 1.25 * 130).toLocaleString()} MMK</p>
+                </div>
+            `).join('');
         }
-
-        async function submitPreorder() {
-            const name = document.getElementById('pName').value;
-            const contact = document.getElementById('pContact').value;
-            
-            if(!name || !contact) return alert("Please fill Name and Contact");
-
-            const order = {
-                name: name,
-                customerPhone: contact,
-                grade: 'Pending', // Automatically mark as Pending for Admin
-                price: 0, // Admin will fill this later
-                address: document.getElementById('pDesc').value
-            };
-
-            const res = await fetch('/add-student', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(order)
-            });
-
-            if(res.ok) {
-                alert("Request Sent! We will contact you within 24 hours.");
-                location.reload();
-            }
+        var shopWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
+            if (!error && result.event === "success") { document.getElementById('shop_img_url').value = result.info.secure_url; }
+        });
+        document.getElementById("shop_upload_widget").addEventListener("click", () => shopWidget.open());
+        
+        async function submitShopPreorder() {
+            const order = { name: document.getElementById('pName').value, customerPhone: document.getElementById('pContact').value, grade: 'Pending', productImage: document.getElementById('shop_img_url').value };
+            await fetch('/add-student', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(order) });
+            alert("Sent!"); location.reload();
         }
-
         loadShop();
     </script>
 </body>
