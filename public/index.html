@@ -246,6 +246,24 @@
         }
     }
 
+    function openUploadWidget() {
+    cloudinary.openUploadWidget({
+        cloudName: "dawhhgjsd", // Get this from your main Dashboard
+        uploadPreset: "dawhhgjsd",         // This matches your screenshot
+        sources: ["local", "camera", "url"],
+        multiple: false,
+        theme: "minimal"
+    }, (error, result) => {
+        if (!error && result && result.event === "success") {
+            const url = result.info.secure_url;
+            document.getElementById('productImg').value = url;
+            document.getElementById('uploadBtn').innerText = "✅ Image Uploaded!";
+            document.getElementById('uploadBtn').classList.add('border-emerald-500', 'text-emerald-400');
+            console.log("Done! Image link:", url);
+        }
+    });
+}
+
     function setStatusFilter(status, event) {
         currentFilter = status;
         document.querySelectorAll('.filter-btn').forEach(btn => {
