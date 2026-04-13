@@ -36,7 +36,7 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
 const StudentSchema = new mongoose.Schema({
     name: String,
     grade: String, 
-    price: Number,
+    price: Number, // This is the base price (usually CNY or USD)
     productImage: String,
     customerName: String,
     customerPhone: String,
@@ -53,14 +53,8 @@ app.get('/students', async (req, res) => {
 app.post('/add-student', async (req, res) => {
     const newItem = new Student(req.body);
     await newItem.save();
-
-    if (req.body.grade === 'Pending' || req.body.grade === 'Preorder') {
-        const msg = `🚨 <b>New Order Request!</b>\n\n` +
-                    `<b>Item:</b> ${req.body.name}\n` +
-                    `<b>Customer:</b> ${req.body.customerName || 'Unknown'}\n` +
-                    `<b>Contact:</b> ${req.body.customerPhone || 'None'}\n\n` +
-                    `Check /admin to view the photo!`;
-        sendTeleNotification(msg);
+    if (req.body.grade === 'Pending') {
+        sendTeleNotification(`🚨 <b>New Request!</b>\nItem: ${req.body.name}\nFrom: ${req.body.customerPhone}`);
     }
     res.json(newItem);
 });
@@ -70,18 +64,15 @@ app.delete('/delete-student/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-// --- UPDATED CLEAN URL HANDLER ---
+// --- URL ROUTING FIX ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
-app.get('/:page', (req, res, next) => {
-    const pageName = req.params.page;
-    const filePath = path.join(__dirname, 'public', `${pageName}.html`);
+app.get('/:page', (req, res) => {
+    const filePath = path.join(__dirname, 'public', `${req.params.page}.html`);
     res.sendFile(filePath, (err) => {
-        if (err) {
-            res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-        }
+        if (err) res.sendFile(path.join(__dirname, 'public', 'shop.html'));
     });
 });
 

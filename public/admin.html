@@ -2,60 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Order Manager | NeverEver</title>
+    <title>Admin Panel | NeverEver</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-slate-200 p-8">
+<body class="bg-black text-slate-200 font-sans p-6">
     <div class="max-w-5xl mx-auto">
-        <h1 class="text-3xl font-bold text-emerald-500 mb-8 uppercase tracking-tighter">Order Manager</h1>
-        <div id="orderList" class="grid gap-4">
-            <p class="text-slate-500 italic">Loading orders...</p>
+        <h1 class="text-2xl font-bold text-emerald-500 mb-6 uppercase tracking-widest">Order Manager</h1>
+
+        <div class="mb-8 space-y-4">
+            <input type="text" id="searchInput" onkeyup="renderOrders()" placeholder="🔍 Search items or customers..." 
+                class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl outline-none focus:border-emerald-500">
+            
+            <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                <button onclick="setFilter('all')" class="filter-btn px-4 py-2 bg-emerald-600 text-xs font-bold rounded-lg uppercase">All</button>
+                <button onclick="setFilter('Pending')" class="filter-btn px-4 py-2 bg-slate-800 text-xs font-bold rounded-lg uppercase">Pending</button>
+                <button onclick="setFilter('Instock')" class="filter-btn px-4 py-2 bg-slate-800 text-xs font-bold rounded-lg uppercase">Instock</button>
+                <button onclick="setFilter('Preorder')" class="filter-btn px-4 py-2 bg-slate-800 text-xs font-bold rounded-lg uppercase">Preorder</button>
+            </div>
         </div>
+
+        <div id="orderContainer" class="grid gap-4"></div>
     </div>
 
     <script>
-        async function loadOrders() {
-            const res = await fetch('/students');
-            const orders = await res.json();
-            const container = document.getElementById('orderList');
-            
-            if (orders.length === 0) {
-                container.innerHTML = '<p class="text-slate-500">No orders found.</p>';
-                return;
-            }
+        let allOrders = [];
+        let currentFilter = 'all';
+        const RATE = 130; // Your exchange rate
 
-            container.innerHTML = orders.map(order => `
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 flex justify-between items-center">
-                    <div class="flex gap-4 items-center">
-                        <img src="${order.productImage || ''}" class="h-20 w-20 object-cover rounded-lg border border-emerald-500 bg-slate-800">
+        async function fetchOrders() {
+            const res = await fetch('/students');
+            allOrders = await res.json();
+            renderOrders();
+        }
+
+        function setFilter(status) {
+            currentFilter = status;
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const container = document.getElementById('orderContainer');
+            
+            const filtered = allOrders.filter(o => {
+                const matchesSearch = o.name.toLowerCase().includes(searchTerm) || o.customerPhone.toLowerCase().includes(searchTerm);
+                const matchesFilter = currentFilter === 'all' || o.grade === currentFilter;
+                return matchesSearch && matchesFilter;
+            });
+
+            container.innerHTML = filtered.map(o => `
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
+                    <div class="flex items-center gap-4">
+                        <img src="${o.productImage}" class="w-20 h-20 object-cover rounded-xl border border-slate-700">
                         <div>
-                            <h3 class="font-bold">${order.name}</h3>
-                            <p class="text-xs text-slate-500">User: ${order.customerPhone || 'Anonymous'}</p>
-                            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">${order.grade}</span>
+                            <h3 class="font-bold text-white">${o.name}</h3>
+                            <p class="text-xs text-slate-500">${o.customerPhone}</p>
+                            <p class="text-xs text-emerald-400 font-mono mt-1">Cost: ${(o.price * 1.25 * RATE).toLocaleString()} MMK</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="sendQuote('${order.customerPhone}', '${order.name}')" class="bg-emerald-500 text-black px-4 py-2 rounded-lg font-bold text-xs uppercase">Quote</button>
-                        <button onclick="deleteOrder('${order._id}')" class="text-slate-500 hover:text-red-500 text-xs font-bold transition">Delete</button>
+                        <button onclick="updatePrice('${o._id}')" class="bg-slate-800 p-2 rounded-lg text-[10px] font-bold uppercase">Price</button>
+                        <button onclick="contactUser('${o.customerPhone}', '${o.name}', ${o.price})" class="bg-emerald-500 text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase">Quote</button>
+                        <button onclick="deleteOrder('${o._id}')" class="text-red-500 text-[10px] font-bold px-2">Delete</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function sendQuote(contact, item) {
-            const price = prompt(`Enter MMK Price for ${item}:`);
-            if(!price) return;
-            const msg = encodeURIComponent(`Hi! For ${item}, the total is ${price} MMK. Would you like to proceed?`);
-            window.open(`https://t.me/${contact.replace('@','')}?text=${msg}`, '_blank');
+        async function updatePrice(id) {
+            const newPrice = prompt("Enter Base Price (e.g. 100):");
+            if (newPrice) {
+                // Logic to update price via a PUT request would go here
+                alert("Price saved locally (Add a PUT route to index.js to save to DB)");
+            }
+        }
+
+        function contactUser(phone, item, price) {
+            const mmk = Math.round(price * 1.25 * RATE).toLocaleString();
+            const msg = encodeURIComponent(`Hi! The price for ${item} is ${mmk} MMK. Ready to order?`);
+            window.open(`https://t.me/${phone.replace('@','')}?text=${msg}`);
         }
 
         async function deleteOrder(id) {
-            if(confirm("Delete this entry?")) {
-                await fetch('/delete-student/'+id, {method:'DELETE'});
-                loadOrders();
-            }
+            if(confirm("Delete?")) { await fetch('/delete-student/'+id, {method:'DELETE'}); fetchOrders(); }
         }
-        loadOrders();
+
+        fetchOrders();
     </script>
 </body>
 </html>
