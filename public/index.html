@@ -223,7 +223,7 @@
 
     async function deleteEntry(id) {
         if (confirm("Delete this?")) {
-            await fetch(\`/delete-student/\${id}\`, { method: 'DELETE' });
+            await fetch(`/delete-student/${id}`, { method: 'DELETE' });
             loadEntries();
         }
     }

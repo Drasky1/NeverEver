@@ -9,17 +9,14 @@ app.use(express.json());
 // 2. STATIC FILES
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 3. DATABASE CONNECTION (Using the stable Shard link for hotspots)
+// 3. DATABASE CONNECTION
 const mongoURI = process.env.MONGO_URI || "mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEverDB?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority";
 
 mongoose.connect(mongoURI, {
-    serverSelectionTimeoutMS: 15000 // Give the hotspot more time to connect
+    serverSelectionTimeoutMS: 15000 
 })
 .then(() => console.log("✅ MongoDB Connected Successfully"))
-.catch(err => {
-    console.log("❌ CONNECTION ERROR:", err.message);
-    console.log("NOTE: If this fails locally, it's because your hotspot is blocking Port 27017.");
-});
+.catch(err => console.log("❌ CONNECTION ERROR:", err.message));
 
 // 4. DATA SCHEMA
 const studentSchema = new mongoose.Schema({
@@ -29,8 +26,8 @@ const studentSchema = new mongoose.Schema({
     customerName: String,
     customerPhone: String,
     address: String,
-    productImage: String, // Add this
-    adminNote: String,    // Add this
+    productImage: String, 
+    adminNote: String,    
     date: { type: Date, default: Date.now }
 });
 
@@ -65,9 +62,13 @@ app.delete('/delete-student/:id', async (req, res) => {
     }
 });
 
-// 6. CATCH-ALL ROUTE
+// 6. ROUTES
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/shop', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
 // 7. START SERVER
