@@ -8,35 +8,34 @@
 </head>
 <body class="p-6">
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-black text-emerald-500 mb-8 italic uppercase">Manager Dashboard</h1>
+        
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+                <p class="text-[10px] uppercase font-bold text-slate-500">Total Income</p>
+                <h2 id="totalIncome" class="text-xl font-black text-emerald-400">0 MMK</h2>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+                <p class="text-[10px] uppercase font-bold text-slate-500">Total Gain (Profit)</p>
+                <h2 id="totalProfit" class="text-xl font-black text-white">0 MMK</h2>
+            </div>
+        </div>
+
+        <h1 class="text-2xl font-black text-emerald-500 mb-8 italic uppercase">Inventory Manager</h1>
 
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl mb-10">
-            <h2 class="text-[10px] font-bold uppercase text-slate-500 mb-4">Add New Item</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" id="newName" placeholder="Item Name" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
-                <input type="number" id="newPrice" placeholder="Base Price (CNY/USD)" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
-                
+                <input type="number" id="newPrice" placeholder="Base Price (CNY)" class="bg-black border border-slate-800 p-3 rounded-xl outline-none focus:border-emerald-500">
                 <button id="upload_widget" class="bg-black border border-dashed border-slate-700 p-3 rounded-xl text-slate-500 text-xs">📸 Tap to Upload Image</button>
                 <input type="hidden" id="newImg">
-
                 <select id="newGrade" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
                     <option value="Instock">Instock</option>
                     <option value="Preorder">Preorder</option>
                     <option value="Pending">Pending</option>
+                    <option value="Soldout">Soldout</option>
                 </select>
             </div>
             <button onclick="addNewItem()" class="w-full mt-4 bg-emerald-500 text-black font-black py-4 rounded-xl uppercase text-xs">Add to Shop</button>
-        </div>
-
-        <div class="space-y-4 mb-8">
-            <input type="text" id="searchInput" onkeyup="render()" placeholder="🔍 Search customers or items..." 
-                class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl outline-none focus:border-emerald-500">
-            
-            <div class="flex gap-2">
-                <button onclick="setFilter('all')" class="px-4 py-2 bg-emerald-600 text-black text-[10px] font-bold rounded-lg uppercase">All</button>
-                <button onclick="setFilter('Pending')" class="px-4 py-2 bg-slate-800 text-[10px] font-bold rounded-lg uppercase">Pending</button>
-                <button onclick="setFilter('Preorder')" class="px-4 py-2 bg-slate-800 text-[10px] font-bold rounded-lg uppercase">Preorder</button>
-            </div>
         </div>
 
         <div id="container" class="grid gap-4"></div>
@@ -45,22 +44,35 @@
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         let items = [];
-        let filter = 'all';
-        const RATE = 130;
+        const RATE = 130; 
 
-        // Setup Upload Widget
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
                 document.getElementById('newImg').value = result.info.secure_url;
-                document.getElementById('upload_widget').innerText = "✅ Image Ready";
+                document.getElementById('upload_widget').innerText = "✅ Ready";
             }
         });
         document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
 
         async function load() {
-            const res = await fetch('/items');
+            const res = await fetch('/items'); // Fixed: was /students
             items = await res.json();
+            calculateFinances();
             render();
+        }
+
+        function calculateFinances() {
+            // Profit = 25% markup. Income = Total selling price.
+            let income = 0;
+            let profit = 0;
+            items.forEach(i => {
+                const sellPrice = i.price * 1.25 * RATE;
+                const gain = i.price * 0.25 * RATE;
+                income += sellPrice;
+                profit += gain;
+            });
+            document.getElementById('totalIncome').innerText = Math.round(income).toLocaleString() + " MMK";
+            document.getElementById('totalProfit').innerText = Math.round(profit).toLocaleString() + " MMK";
         }
 
         async function addNewItem() {
@@ -75,43 +87,20 @@
             location.reload();
         }
 
-        function setFilter(f) { filter = f; render(); }
-
         function render() {
-            const q = document.getElementById('searchInput').value.toLowerCase();
-            const container = document.getElementById('container');
-            const filtered = items.filter(i => {
-                const match = i.name.toLowerCase().includes(q) || (i.customerPhone && i.customerPhone.toLowerCase().includes(q));
-                return match && (filter === 'all' || i.grade === filter);
-            });
-
-            container.innerHTML = filtered.reverse().map(i => `
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center">
+            document.getElementById('container').innerHTML = items.reverse().map(i => `
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center ${i.grade === 'Soldout' ? 'opacity-50' : ''}">
                     <div class="flex items-center gap-4">
                         <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-xl">
                         <div>
                             <h3 class="font-bold text-sm uppercase">${i.name}</h3>
-                            <p class="text-[10px] text-emerald-400 font-mono">
-                                MMK: ${(Math.round(i.price * 1.25 * RATE)).toLocaleString()}
-                            </p>
-                            <p class="text-[9px] text-slate-500">By: ${i.customerPhone}</p>
+                            <p class="text-[10px] text-emerald-400 font-mono">${(Math.round(i.price * 1.25 * RATE)).toLocaleString()} MMK</p>
+                            <span class="text-[8px] px-2 py-0.5 rounded bg-black text-slate-400">${i.grade}</span>
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="update('${i._id}')" class="bg-white text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">Edit</button>
-                        <button onclick="del('${i._id}')" class="text-slate-600 text-[10px]">Del</button>
-                    </div>
+                    <button onclick="del('${i._id}')" class="text-slate-600 text-[10px]">Delete</button>
                 </div>
             `).join('');
-        }
-
-        async function update(id) {
-            const p = prompt("New Base Price:");
-            const g = prompt("New Status (Instock, Preorder, Pending):");
-            if(p && g) {
-                await fetch('/update-item/'+id, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({price: Number(p), grade: g}) });
-                load();
-            }
         }
 
         async function del(id) { if(confirm("Delete?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }

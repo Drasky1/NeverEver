@@ -2,37 +2,138 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NeverEver Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeverEver | Shop</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #000; color: white; }</style>
+    <style>
+        body { background-color: #000; color: white; font-family: sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .sold-out { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
+    </style>
 </head>
 <body>
+
     <nav class="p-6 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-50">
         <h1 class="text-xl font-black italic tracking-tighter text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
-        <div class="flex items-center gap-6">
-            <a href="/track" class="text-[10px] uppercase font-bold text-slate-400 hover:text-white transition">Track</a>
-            <a href="#request" class="text-[10px] uppercase font-bold border border-white/20 px-4 py-2 rounded-full hover:bg-white hover:text-black transition">Request Preorder</a>
+        <div class="flex items-center gap-4">
+            <a href="/track" class="text-[10px] uppercase font-bold text-slate-400 hover:text-white transition">Track Order</a>
+            <button onclick="document.getElementById('request-section').scrollIntoView({behavior: 'smooth'})" 
+                    class="text-[10px] uppercase font-bold border border-white/20 px-4 py-2 rounded-full hover:bg-white hover:text-black transition">
+                Request Preorder
+            </button>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto px-6 py-10">
-        <div id="shopGrid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24"></div>
+    <main class="max-w-6xl mx-auto p-6">
+        <div id="shop-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <p class="text-slate-500 animate-pulse">Loading collection...</p>
+        </div>
+
+        <hr class="my-20 border-white/5">
+
+        <section id="request-section" class="max-w-md mx-auto mb-20">
+            <div class="glass p-8 rounded-3xl">
+                <h2 class="text-2xl font-black text-center mb-2">Custom Preorder</h2>
+                <p class="text-slate-400 text-[10px] text-center uppercase tracking-widest mb-8">Sourcing from Taobao & More</p>
+                
+                <div class="space-y-4">
+                    <input type="text" id="reqName" placeholder="Item Name" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500">
+                    <input type="text" id="reqContact" placeholder="Telegram @username" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-emerald-500">
+                    
+                    <button id="upload_widget" class="w-full bg-white/5 border border-dashed border-white/20 py-8 rounded-xl text-slate-400 text-xs flex flex-col items-center gap-2">
+                        <span>📸 UPLOAD IMAGE</span>
+                    </button>
+                    <input type="hidden" id="reqImg">
+
+                    <button onclick="submitRequest()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-emerald-400 transition uppercase text-sm tracking-widest mt-4">
+                        Submit Request
+                    </button>
+                </div>
+            </div>
+        </section>
     </main>
 
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        const RATE = 130;
+        const RATE = 130; 
+        let items = [];
+
+        // Cloudinary for Preorder Form
+        var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
+            if (!error && result.event === "success") { 
+                document.getElementById('reqImg').value = result.info.secure_url;
+                document.getElementById('upload_widget').innerHTML = "✅ Image Attached";
+            }
+        });
+        document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
+
+        // LOAD SHOP ITEMS
         async function loadShop() {
-            const res = await fetch('/items');
-            const data = await res.json();
-            const items = data.filter(i => i.grade === 'Instock' || i.grade === 'Preorder');
-            document.getElementById('shopGrid').innerHTML = items.map(i => `
-                <div class="p-2 bg-white/5 rounded-2xl border border-white/5 group">
-                    <img src="${i.productImage}" class="aspect-[3/4] w-full object-cover rounded-xl mb-3 group-hover:scale-[1.02] transition">
-                    <h4 class="font-bold text-[10px] px-2 truncate uppercase text-slate-300">${i.name}</h4>
-                    <p class="text-emerald-400 text-[10px] px-2 pb-2 font-mono">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
-                </div>
-            `).join('');
+            try {
+                const res = await fetch('/items'); // Matches index.js route
+                items = await res.json();
+                renderShop();
+            } catch (e) { console.error("Load error", e); }
         }
+
+        function renderShop() {
+            const container = document.getElementById('shop-container');
+            // We filter out 'Pending' requests so only Instock/Preorder/Soldout show in shop
+            const displayItems = items.filter(i => i.grade !== 'Pending');
+
+            if (displayItems.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center text-slate-500 py-20 uppercase text-xs tracking-widest">New Drop Coming Soon</p>`;
+                return;
+            }
+
+            container.innerHTML = displayItems.reverse().map(i => {
+                const isSoldOut = i.grade === 'Soldout';
+                const finalPrice = Math.round(i.price * 1.25 * RATE);
+
+                return `
+                    <div class="group ${isSoldOut ? 'sold-out' : ''}">
+                        <div class="relative aspect-[3/4] overflow-hidden rounded-2xl bg-slate-900 mb-3">
+                            <img src="${i.productImage}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            ${isSoldOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/40 font-black italic text-xl">SOLD OUT</div>' : ''}
+                            <div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[8px] font-bold uppercase tracking-tighter">
+                                ${i.grade}
+                            </div>
+                        </div>
+                        <h3 class="text-xs font-medium text-slate-300 truncate">${i.name}</h3>
+                        <p class="text-sm font-black text-emerald-400 font-mono">${finalPrice.toLocaleString()} MMK</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // SUBMIT PREORDER REQUEST
+        async function submitRequest() {
+            const name = document.getElementById('reqName').value;
+            const contact = document.getElementById('reqContact').value;
+            const img = document.getElementById('reqImg').value;
+
+            if(!name || !contact) return alert("Please fill Name and Contact");
+
+            const data = {
+                name: name,
+                customerPhone: contact,
+                productImage: img,
+                grade: 'Pending', // Marked as pending for admin review
+                price: 0
+            };
+
+            const res = await fetch('/add-item', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if(res.ok) {
+                alert("Request Sent! Check 'Track Order' soon.");
+                location.reload();
+            }
+        }
+
         loadShop();
     </script>
 </body>
