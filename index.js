@@ -71,6 +71,10 @@ app.get('/shop', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
+app.get('/track', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'track.html'));
+});
+
 // 7. START SERVER
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
