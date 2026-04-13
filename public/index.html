@@ -2,41 +2,90 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeverEver Shop</title>
-    </head>
-<body class="bg-black text-slate-200">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-black text-slate-200 min-h-screen font-sans">
 
-    <div class="max-w-md mx-auto p-6 bg-slate-900 rounded-2xl border border-slate-700">
-        <h2 class="text-xl font-bold mb-4">Request a Preorder</h2>
+    <nav class="bg-black border-b border-emerald-500/30 p-4 sticky top-0 z-50 backdrop-blur-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tighter text-emerald-500">NEVER EVER</h1>
+            <div class="flex gap-4">
+                <a href="/" class="text-sm font-medium hover:text-emerald-400 transition">Shop</a>
+                <a href="/track" class="text-sm font-medium hover:text-emerald-400 transition">Track Order</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 pt-8 pb-20">
         
-        <input type="text" id="itemName" placeholder="Item Name (e.g. Flare Jeans)" class="w-full mb-3 p-3 bg-slate-800 rounded-lg">
-        <input type="text" id="custName" placeholder="Your Name" class="w-full mb-3 p-3 bg-slate-800 rounded-lg">
-        <input type="text" id="custContact" placeholder="Telegram @username or Phone" class="w-full mb-3 p-3 bg-slate-800 rounded-lg">
+        <div class="max-w-md mx-auto p-6 bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl">
+            <h2 class="text-xl font-bold mb-4 text-emerald-400">Request a Preorder</h2>
+            <p class="text-slate-400 text-sm mb-6">Found something on Taobao? Upload a screenshot and we'll check the price for you.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-500 ml-1">ITEM DESCRIPTION</label>
+                    <input type="text" id="itemName" placeholder="e.g. Uniqlo Flare Jeans Blue" 
+                           class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl outline-none focus:border-emerald-500 transition">
+                </div>
 
-        <div class="mb-4">
-            <button type="button" id="upload_widget" class="w-full bg-slate-800 border border-dashed border-slate-600 p-4 rounded-xl hover:border-emerald-500 transition">
-                📸 Upload/Snap Item Photo
-            </button>
-            <input type="hidden" id="customer_image_url">
-            <div id="upload_preview" class="mt-2 hidden flex justify-center">
-                <img src="" id="preview_img" class="h-32 w-32 object-cover rounded-lg border-2 border-emerald-500">
+                <div>
+                    <label class="text-xs text-slate-500 ml-1">YOUR NAME</label>
+                    <input type="text" id="custName" placeholder="Thant Zin" 
+                           class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl outline-none focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="text-xs text-slate-500 ml-1">TELEGRAM OR PHONE</label>
+                    <input type="text" id="custContact" placeholder="@yourusername" 
+                           class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl outline-none focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="text-xs text-slate-500 ml-1">ATTACH PHOTO</label>
+                    <button type="button" id="upload_widget" 
+                            class="w-full bg-slate-800 border border-dashed border-slate-600 p-6 rounded-xl hover:border-emerald-500 hover:bg-slate-800/50 transition flex flex-col items-center gap-2">
+                        <span class="text-2xl">📸</span>
+                        <span class="text-sm text-slate-400">Tap to Upload Screenshot</span>
+                    </button>
+                    <input type="hidden" id="customer_image_url">
+                    
+                    <div id="upload_preview" class="mt-4 hidden flex justify-center">
+                        <div class="relative">
+                            <img src="" id="preview_img" class="h-40 w-40 object-cover rounded-xl border-2 border-emerald-500 shadow-lg shadow-emerald-500/20">
+                            <div class="absolute -top-2 -right-2 bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded-full">READY</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="submitRequest()" 
+                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold p-4 rounded-xl transition-all active:scale-95 shadow-lg shadow-emerald-500/20 mt-4">
+                    Send Request
+                </button>
             </div>
         </div>
 
-        <button onclick="submitRequest()" class="w-full bg-emerald-500 p-4 rounded-xl font-bold text-black">Submit Request</button>
-    </div>
+    </main>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <script>
         // 1. Cloudinary Setup
         var myWidget = cloudinary.createUploadWidget({
-            cloudName: 'dawhhgjsd', // Your Cloud Name
+            cloudName: 'dawhhgjsd', 
             uploadPreset: 'dawhhgjsd' 
         }, (error, result) => { 
             if (!error && result && result.event === "success") { 
                 document.getElementById('customer_image_url').value = result.info.secure_url;
                 document.getElementById('preview_img').src = result.info.secure_url;
                 document.getElementById('upload_preview').classList.remove('hidden');
+                document.getElementById('upload_widget').innerHTML = "✅ Photo Attached";
+                document.getElementById('upload_widget').classList.add('border-emerald-500/50');
             }
         });
 
@@ -44,26 +93,40 @@
             myWidget.open();
         }, false);
 
-        // 2. Submit to Database
+        // 2. Submit Logic
         async function submitRequest() {
+            const btn = event.target;
+            const name = document.getElementById('itemName').value;
+            
+            if(!name) { alert("Please enter an item name"); return; }
+
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
             const data = {
-                name: document.getElementById('itemName').value,
+                name: name,
                 customerName: document.getElementById('custName').value,
                 customerPhone: document.getElementById('custContact').value,
                 productImage: document.getElementById('customer_image_url').value,
-                grade: 'Pending', // Sets status so it triggers Telegram
-                price: 0 // You'll update this after checking Taobao
+                grade: 'Pending',
+                price: 0 
             };
 
-            const response = await fetch('/add-student', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+            try {
+                const response = await fetch('/add-student', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-            if (response.ok) {
-                alert("Request sent! We will contact you with a price quote soon.");
-                location.reload();
+                if (response.ok) {
+                    alert("Order received! NvmoreBot has notified us. We'll contact you soon.");
+                    location.reload();
+                }
+            } catch (err) {
+                alert("Error sending request. Please try again.");
+                btn.innerText = "Send Request";
+                btn.disabled = false;
             }
         }
     </script>
