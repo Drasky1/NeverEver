@@ -88,7 +88,7 @@
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Customer Details</label>
                         <input type="text" id="custName" placeholder="Name" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white mb-3 focus:border-emerald-500">
-                        <input type="text" id="custPhone" placeholder="Phone" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white focus:border-emerald-500">
+                        <input type="text" id="custPhone" placeholder="Telegram @username or Phone" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 outline-none text-white focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Admin Note / Reply</label>
@@ -148,7 +148,8 @@
         if (searchTerm) {
             filtered = filtered.filter(item => 
                 (item.name && item.name.toLowerCase().includes(searchTerm)) ||
-                (item.customerName && item.customerName.toLowerCase().includes(searchTerm))
+                (item.customerName && item.customerName.toLowerCase().includes(searchTerm)) ||
+                (item.customerPhone && item.customerPhone.toLowerCase().includes(searchTerm))
             );
         }
 
@@ -171,6 +172,16 @@
                 `<img src="${item.productImage}" class="w-14 h-14 rounded-lg object-cover border border-slate-700">` :
                 `<div class="w-14 h-14 bg-slate-800 rounded-lg flex items-center justify-center text-[8px] text-slate-600">NO IMG</div>`;
 
+            // Contact Logic
+            let contactLink = '';
+            if (item.customerPhone) {
+                if (item.customerPhone.startsWith('@')) {
+                    contactLink = `https://t.me/${item.customerPhone.replace('@', '')}`;
+                } else {
+                    contactLink = `tel:${item.customerPhone}`;
+                }
+            }
+
             listDiv.innerHTML += `
                 <div class="py-6 flex justify-between items-center group border-b border-slate-800">
                     <div class="flex gap-4 items-center">
@@ -181,7 +192,14 @@
                         <div>
                             <p class="font-bold text-white text-lg group-hover:neon-text transition-colors">${item.name || 'Unnamed'}</p>
                             <span class="${style} text-[9px] px-2 py-0.5 rounded border uppercase font-black mb-1 inline-block">${item.grade}</span>
-                            <p class="text-slate-500 text-[10px]">${item.customerName || 'Stock'} | ${item.adminNote ? 'Replied' : 'No Reply'}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="text-slate-500 text-[10px]">${item.customerName || 'Stock'}</p>
+                                ${contactLink ? `
+                                    <a href="${contactLink}" target="_blank" class="bg-emerald-500/10 text-emerald-400 text-[7px] px-2 py-0.5 rounded-full border border-emerald-500/20 hover:bg-emerald-500 hover:text-black transition-all font-bold">
+                                        REPLY ↗
+                                    </a>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                     <div class="text-right font-mono">
