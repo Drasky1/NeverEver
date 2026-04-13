@@ -2,26 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NeverEver Admin</title>
+    <title>NeverEver Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style> .no-scrollbar::-webkit-scrollbar { display: none; } </style>
 </head>
-<body class="bg-black text-slate-200 p-4 md:p-8">
+<body class="bg-black text-slate-200 p-6">
     <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-black italic text-emerald-500">MANAGER</h1>
-            <a href="/shop" class="text-[10px] uppercase font-bold text-slate-500 hover:text-white transition">View Shop</a>
-        </div>
+        <h1 class="text-2xl font-black italic text-emerald-500 mb-8 uppercase tracking-widest">Order Manager</h1>
 
         <div class="mb-8 space-y-4">
             <input type="text" id="searchInput" onkeyup="renderOrders()" placeholder="🔍 Search items or customers..." 
-                class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl outline-none focus:border-emerald-500 transition">
+                class="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl outline-none focus:border-emerald-500">
             
-            <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                <button onclick="setFilter('all')" class="filter-btn px-6 py-2 bg-emerald-600 text-black text-[10px] font-black rounded-full uppercase">All</button>
-                <button onclick="setFilter('Pending')" class="filter-btn px-6 py-2 bg-slate-800 text-[10px] font-bold rounded-full uppercase">Pending</button>
-                <button onclick="setFilter('Instock')" class="filter-btn px-6 py-2 bg-slate-800 text-[10px] font-bold rounded-full uppercase">Instock</button>
-                <button onclick="setFilter('Preorder')" class="filter-btn px-6 py-2 bg-slate-800 text-[10px] font-bold rounded-full uppercase">Preorder</button>
+            <div class="flex gap-2 overflow-x-auto pb-2">
+                <button onclick="setFilter('all')" class="px-4 py-2 bg-emerald-600 text-black text-[10px] font-bold rounded-lg uppercase">All</button>
+                <button onclick="setFilter('Pending')" class="px-4 py-2 bg-slate-800 text-[10px] font-bold rounded-lg uppercase">Pending</button>
+                <button onclick="setFilter('Preorder')" class="px-4 py-2 bg-slate-800 text-[10px] font-bold rounded-lg uppercase">Preorder</button>
+                <button onclick="setFilter('Instock')" class="px-4 py-2 bg-slate-800 text-[10px] font-bold rounded-lg uppercase">Instock</button>
             </div>
         </div>
 
@@ -29,80 +25,60 @@
     </div>
 
     <script>
-        let allOrders = [];
+        let allItems = [];
         let currentFilter = 'all';
         const RATE = 130;
 
-        async function fetchOrders() {
-            const res = await fetch('/students');
-            allOrders = await res.json();
+        async function load() {
+            const res = await fetch('/items');
+            allItems = await res.json();
             renderOrders();
         }
 
-        function setFilter(status) {
-            currentFilter = status;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.replace('bg-emerald-600', 'bg-slate-800');
-                btn.classList.remove('text-black');
-            });
-            event.target.classList.replace('bg-slate-800', 'bg-emerald-600');
-            event.target.classList.add('text-black');
-            renderOrders();
-        }
+        function setFilter(f) { currentFilter = f; renderOrders(); }
 
         function renderOrders() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const query = document.getElementById('searchInput').value.toLowerCase();
             const container = document.getElementById('orderContainer');
             
-            const filtered = allOrders.filter(o => {
-                const matchesSearch = o.name.toLowerCase().includes(searchTerm) || (o.customerPhone && o.customerPhone.toLowerCase().includes(searchTerm));
-                const matchesFilter = currentFilter === 'all' || o.grade === currentFilter;
-                return matchesSearch && matchesFilter;
+            const filtered = allItems.filter(i => {
+                const match = i.name.toLowerCase().includes(query) || (i.customerPhone && i.customerPhone.toLowerCase().includes(query));
+                return match && (currentFilter === 'all' || i.grade === currentFilter);
             });
 
-            container.innerHTML = filtered.reverse().map(o => `
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
+            container.innerHTML = filtered.reverse().map(i => `
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <img src="${o.productImage}" class="w-20 h-24 object-cover rounded-xl border border-slate-700">
+                        <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-xl border border-slate-700">
                         <div>
-                            <h3 class="font-bold text-white uppercase text-sm">${o.name}</h3>
-                            <p class="text-xs text-slate-500">Contact: ${o.customerPhone || 'Anonymous'}</p>
-                            <p class="text-[10px] text-emerald-400 font-mono mt-1">Selling Price: <b>${Math.round(o.price * 1.25 * RATE).toLocaleString()} MMK</b></p>
+                            <h3 class="font-bold text-white text-sm uppercase">${i.name}</h3>
+                            <p class="text-[10px] text-slate-500">${i.customerPhone || 'Unknown'}</p>
+                            <p class="text-[10px] text-emerald-400 font-mono mt-1">Price: ${(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="editItem('${o._id}', ${o.price}, '${o.grade}')" class="bg-white text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase">Edit</button>
-                        <button onclick="contactUser('${o.customerPhone}', '${o.name}', ${o.price})" class="bg-emerald-500 text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase">Quote</button>
-                        <button onclick="deleteOrder('${o._id}')" class="text-slate-500 hover:text-red-500 text-[10px] font-bold px-2">Delete</button>
+                        <button onclick="editItem('${i._id}')" class="bg-white text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase">Edit</button>
+                        <button onclick="deleteItem('${i._id}')" class="text-slate-500 hover:text-red-500 text-[10px]">Delete</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function editItem(id, oldPrice, oldGrade) {
-            const newPrice = prompt("Enter Base Price (e.g. 100):", oldPrice);
-            const newStatus = prompt("Enter Status (Pending, Preorder, Instock, Soldout):", oldGrade);
-            if (newPrice && newStatus) {
-                await fetch('/update-student/' + id, {
+        async function editItem(id) {
+            const p = prompt("Enter Base Price:");
+            const g = prompt("Enter Status (Pending, Preorder, Instock, Soldout):");
+            if (p && g) {
+                await fetch('/update-item/'+id, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ price: Number(newPrice), grade: newStatus })
+                    body: JSON.stringify({ price: Number(p), grade: g })
                 });
-                fetchOrders();
+                load();
             }
         }
 
-        function contactUser(phone, item, price) {
-            const mmk = Math.round(price * 1.25 * RATE).toLocaleString();
-            const msg = encodeURIComponent(`Hi! For ${item}, the total is ${mmk} MMK. Ready to order?`);
-            window.open(`https://t.me/${phone.replace('@','')}?text=${msg}`);
-        }
-
-        async function deleteOrder(id) {
-            if(confirm("Permanently delete?")) { await fetch('/delete-student/'+id, {method:'DELETE'}); fetchOrders(); }
-        }
-
-        fetchOrders();
+        async function deleteItem(id) { if(confirm("Delete?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }
+        load();
     </script>
 </body>
 </html>

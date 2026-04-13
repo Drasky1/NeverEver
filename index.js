@@ -17,61 +17,50 @@ const sendTeleNotification = async (message) => {
     try {
         const promises = ADMIN_IDS.map(id => 
             axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, {
-                chat_id: id,
-                text: message,
-                parse_mode: 'HTML'
+                chat_id: id, text: message, parse_mode: 'HTML'
             })
         );
         await Promise.all(promises);
-    } catch (err) {
-        console.error("Telegram notification failed", err);
-    }
+    } catch (err) { console.error("Telegram error", err); }
 };
 
-// --- MONGODB CONNECTION ---
+// --- DATABASE ---
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
 .then(() => console.log("Connected to MongoDB"))
-.catch(err => console.log("MongoDB Error:", err));
+.catch(err => console.log(err));
 
-const StudentSchema = new mongoose.Schema({
+const ItemSchema = new mongoose.Schema({
     name: String,
-    grade: String, 
-    price: Number,
+    grade: { type: String, default: 'Pending' }, 
+    price: { type: Number, default: 0 },
     productImage: String,
-    customerName: String,
-    customerPhone: String,
-    adminNote: String
+    customerPhone: String
 });
-const Student = mongoose.model('Student', StudentSchema);
+const Item = mongoose.model('Item', ItemSchema);
 
-// --- ROUTES ---
-app.get('/students', async (req, res) => {
-    const data = await Student.find();
-    res.json(data);
-});
+// --- API ROUTES ---
+app.get('/items', async (req, res) => { res.json(await Item.find()); });
 
-app.post('/add-student', async (req, res) => {
-    const newItem = new Student(req.body);
+app.post('/add-item', async (req, res) => {
+    const newItem = new Item(req.body);
     await newItem.save();
     if (req.body.grade === 'Pending') {
-        const msg = `🚨 <b>New Order!</b>\n<b>Item:</b> ${req.body.name}\n<b>From:</b> ${req.body.customerPhone}`;
-        sendTeleNotification(msg);
+        sendTeleNotification(`🚨 <b>New Request!</b>\nItem: ${req.body.name}\nFrom: ${req.body.customerPhone}`);
     }
     res.json(newItem);
 });
 
-// Added PUT route so you can actually save price updates from Admin
-app.put('/update-student/:id', async (req, res) => {
-    const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
+app.put('/update-item/:id', async (req, res) => {
+    const updated = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updated);
 });
 
-app.delete('/delete-student/:id', async (req, res) => {
-    await Student.findByIdAndDelete(req.params.id);
+app.delete('/delete-item/:id', async (req, res) => {
+    await Item.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted" });
 });
 
-// --- ROUTING: SHOP IS HOME ---
+// --- ROUTING: SHOP IS THE HOME PAGE ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });

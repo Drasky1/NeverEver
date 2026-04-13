@@ -2,34 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NeverEver | Collection</title>
+    <title>NeverEver Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #000; color: #fff; }</style>
+    <style>body { background-color: #000; color: white; }</style>
 </head>
 <body>
     <nav class="p-6 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-50">
         <h1 class="text-xl font-black italic tracking-tighter text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
-        <a href="/track" class="text-[10px] uppercase font-bold text-slate-400 border border-white/10 px-4 py-2 rounded-full">Track Order</a>
+        <div class="flex gap-4">
+            <a href="/track" class="text-[10px] uppercase font-bold text-slate-400">Track</a>
+            <a href="#request" class="text-[10px] uppercase font-bold border border-white/20 px-4 py-2 rounded-full">Request Preorder</a>
+        </div>
     </nav>
 
     <main class="max-w-6xl mx-auto px-6 py-10">
-        <div id="shopGrid" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+        <div id="shopGrid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24"></div>
+
+        <section id="request" class="max-w-xl mx-auto bg-slate-900 p-8 rounded-3xl border border-slate-800">
+            <h2 class="text-xl font-bold mb-6 text-center text-emerald-400">Submit an Item</h2>
+            <div class="space-y-4">
+                <input type="text" id="itemName" placeholder="Item Name (e.g. Uniqlo Flare Jeans)" class="w-full bg-black border border-slate-700 p-4 rounded-xl outline-none focus:border-emerald-500">
+                <input type="text" id="custPhone" placeholder="Telegram @username" class="w-full bg-black border border-slate-700 p-4 rounded-xl outline-none focus:border-emerald-500">
+                <button type="button" id="upload_widget" class="w-full border border-dashed border-slate-700 p-8 rounded-xl text-slate-500 text-[10px] uppercase tracking-widest">📸 Tap to Upload Image</button>
+                <input type="hidden" id="imgUrl">
+                <button onclick="submitItem()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm shadow-lg shadow-emerald-500/20">Send Request</button>
+            </div>
+        </section>
     </main>
 
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         const RATE = 130;
         async function loadShop() {
-            const res = await fetch('/students');
+            const res = await fetch('/items');
             const data = await res.json();
             const items = data.filter(i => i.grade === 'Instock' || i.grade === 'Preorder');
-            
             document.getElementById('shopGrid').innerHTML = items.map(i => `
-                <div class="bg-white/5 p-2 rounded-2xl border border-white/5">
+                <div class="p-2 bg-white/5 rounded-2xl border border-white/5">
                     <img src="${i.productImage}" class="aspect-[3/4] w-full object-cover rounded-xl mb-3">
-                    <h4 class="font-bold text-xs px-2 truncate">${i.name}</h4>
+                    <h4 class="font-bold text-xs px-2 truncate uppercase text-slate-300">${i.name}</h4>
                     <p class="text-emerald-400 text-xs px-2 pb-2 font-mono">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
                 </div>
             `).join('');
+        }
+
+        var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
+            if (!error && result.event === "success") { 
+                document.getElementById('imgUrl').value = result.info.secure_url;
+                document.getElementById('upload_widget').innerText = "✅ Image Ready";
+            }
+        });
+        document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
+
+        async function submitItem() {
+            const data = { name: document.getElementById('itemName').value, customerPhone: document.getElementById('custPhone').value, productImage: document.getElementById('imgUrl').value, grade: 'Pending' };
+            await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            alert("Sent to Manager!"); location.reload();
         }
         loadShop();
     </script>
