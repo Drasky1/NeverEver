@@ -19,9 +19,17 @@
             </div>
         </div>
 
-        <div class="mb-6">
-            <input type="text" id="adminSearch" onkeyup="render()" placeholder="🔍 Search product name or customer username..." 
+        <div class="space-y-4 mb-6">
+            <input type="text" id="adminSearch" onkeyup="render()" placeholder="🔍 Search product or customer..." 
                 class="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl outline-none focus:border-emerald-500 text-sm">
+            
+            <div class="flex flex-wrap gap-2">
+                <button onclick="setFilter('All')" class="filter-btn bg-emerald-500 text-black text-[10px] font-bold px-4 py-2 rounded-full uppercase">All</button>
+                <button onclick="setFilter('Instock')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Instock</button>
+                <button onclick="setFilter('Preorder')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Preorder</button>
+                <button onclick="setFilter('Soldout')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Sold Out</button>
+                <button onclick="setFilter('Pending')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Pending Requests</button>
+            </div>
         </div>
 
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl mb-10">
@@ -46,7 +54,8 @@
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         let items = [];
-        const RATE = 130; // THB to MMK
+        let currentFilter = 'All';
+        const RATE = 130; 
 
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
@@ -73,6 +82,18 @@
             document.getElementById('totalProfit').innerText = Math.round(profit).toLocaleString();
         }
 
+        function setFilter(filter) {
+            currentFilter = filter;
+            // UI Visual Update for buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-500', 'text-black');
+                btn.classList.add('bg-slate-900', 'text-white', 'border-slate-800');
+            });
+            event.target.classList.remove('bg-slate-900', 'text-white');
+            event.target.classList.add('bg-emerald-500', 'text-black');
+            render();
+        }
+
         async function addNewItem() {
             const data = {
                 name: document.getElementById('newName').value,
@@ -89,10 +110,15 @@
             const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
             const container = document.getElementById('container');
             
-            const filtered = items.filter(i => 
+            let filtered = items.filter(i => 
                 i.name.toLowerCase().includes(searchTerm) || 
                 (i.customerPhone && i.customerPhone.toLowerCase().includes(searchTerm))
             );
+
+            // Apply Status Filter
+            if (currentFilter !== 'All') {
+                filtered = filtered.filter(i => i.grade === currentFilter);
+            }
 
             container.innerHTML = filtered.reverse().map(i => `
                 <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center ${i.grade === 'Soldout' ? 'opacity-40' : ''}">
@@ -101,7 +127,7 @@
                         <div>
                             <h3 class="font-bold text-sm uppercase">${i.name}</h3>
                             <p class="text-[10px] text-emerald-400 font-mono">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
-                            <p class="text-[9px] text-slate-500">User: ${i.customerPhone} | Status: ${i.grade}</p>
+                            <p class="text-[9px] text-slate-500">User: ${i.customerPhone} | Status: <span class="text-white">${i.grade}</span></p>
                         </div>
                     </div>
                     <div class="flex gap-2">

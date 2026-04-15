@@ -24,10 +24,10 @@ const sendTeleNotification = async (message) => {
     } catch (err) { console.error("Telegram error", err); }
 };
 
-// --- DATABASE ---
-mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
-.then(() => console.log("Connected to MongoDB"))
-.catch(err => console.log(err));
+// Replace your entire connection line with this:
+mongoose.connect('mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEver?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=30000')
+  .then(() => console.log("✅ Connection Forced and Successful"))
+  .catch(err => console.error("❌ Still failing:", err.message));
 
 const ItemSchema = new mongoose.Schema({
     name: String,
