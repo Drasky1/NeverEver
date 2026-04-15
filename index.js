@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-const JWT_SECRET = 'never-ever-2026-secure-key'; 
+const JWT_SECRET = 'never-ever-2026-secure-key-999'; 
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
 const ADMIN_IDS = ['1923704168'];
 
@@ -20,15 +20,30 @@ mongoose.connect(dbURI, { family: 4 }).then(() => console.log("✅ DB CONNECTED"
 
 // --- MODELS ---
 const Item = mongoose.model('Item', new mongoose.Schema({
-    name: String, grade: { type: String, default: 'Instock' }, price: Number, productImage: String, customerPhone: { type: String, default: 'Admin' }
+    name: String, 
+    grade: { type: String, default: 'Instock' }, 
+    price: Number, 
+    productImage: String, 
+    customerPhone: { type: String, default: 'Admin' }
 }));
 
 const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, unique: true }, password: { type: String }, phone: String, address: String
+    username: { type: String, unique: true }, 
+    password: { type: String }, 
+    phone: String, 
+    address: String
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
-    userId: String, username: String, items: Array, totalMMK: Number, address: String, phone: String, paymentScreenshot: String, status: { type: String, default: 'Pending Verification' }, createdAt: { type: Date, default: Date.now }
+    userId: String, 
+    username: String, 
+    items: Array, 
+    totalMMK: Number, 
+    address: String, 
+    phone: String, 
+    paymentScreenshot: String, 
+    status: { type: String, default: 'Pending Verification' }, 
+    createdAt: { type: Date, default: Date.now }
 }));
 
 // --- AUTH ---
@@ -38,7 +53,7 @@ app.post('/auth/signup', async (req, res) => {
         const user = new User({ ...req.body, password: hashedPassword });
         await user.save();
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: "Username taken" }); }
+    } catch (e) { res.status(500).json({ error: "Taken" }); }
 });
 
 app.post('/auth/login', async (req, res) => {
@@ -48,7 +63,7 @@ app.post('/auth/login', async (req, res) => {
     res.json({ token, user: { username: user.username, id: user._id, address: user.address, phone: user.phone } });
 });
 
-// --- SHOP DATA ---
+// --- DATA ROUTES ---
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/all-orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
@@ -56,12 +71,12 @@ app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ us
 app.post('/submit-order', async (req, res) => {
     const order = new Order(req.body);
     await order.save();
-    const msg = `💰 NEW ORDER: ${req.body.totalMMK.toLocaleString()} MMK\nFrom: ${req.body.username}\nPhone: ${req.body.phone}`;
+    const msg = `💰 NEW ORDER: ${req.body.totalMMK.toLocaleString()} MMK from ${req.body.username}`;
     ADMIN_IDS.forEach(id => axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: id, text: msg }));
     res.json({ success: true });
 });
 
-// --- ADMIN CONTROLS ---
+// --- ADMIN CONTROLS (FIXED MONGOOSE WARNINGS) ---
 app.post('/add-item', async (req, res) => { res.json(await new Item(req.body).save()); });
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
@@ -81,4 +96,4 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 
-app.listen(10000, () => console.log("🚀 SERVER RUNNING ON 10000"));
+app.listen(10000, () => console.log("🚀 Server Live"));
