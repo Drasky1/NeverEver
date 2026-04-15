@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="NeverEver | Official Store">
+<meta property="og:description" content="Exclusive Resale & Personal Shopping. Handpicked drops.">
+<meta property="og:image" content="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776273517/Neverever_fuhatu.jpg">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#10b981">
     <title>NeverEver | Official Store</title><script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
@@ -135,10 +140,31 @@
         document.getElementById("uploadSS").addEventListener("click", () => ssWidget.open());
 
         async function submitOrder() {
-            const ss = document.getElementById('paymentImg').value; if(!ss) return alert("Upload Screenshot!");
-            await fetch('/submit-order', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId: user.id, username: user.username, items: cart, totalMMK: cart.reduce((s,i)=>s+i.price,0), address: document.getElementById('orderAddr').value, phone: document.getElementById('orderPh').value, paymentScreenshot: ss })});
-            alert("Order Success!"); location.reload();
-        }
+    const ss = document.getElementById('paymentImg').value; 
+    if(!ss) return alert("Please upload your KPay/WavePay screenshot first!");
+    
+    // Generate a temporary 6-digit reference for the user
+    const tempRef = Math.random().toString(36).substr(2, 6).toUpperCase();
+
+    const response = await fetch('/submit-order', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ 
+            userId: user.id, 
+            username: user.username, 
+            items: cart, 
+            totalMMK: cart.reduce((s,i)=>s+i.price,0), 
+            address: document.getElementById('orderAddr').value, 
+            phone: document.getElementById('orderPh').value, 
+            paymentScreenshot: ss 
+        })
+    });
+
+    if(response.ok) {
+        alert(`🔥 ORDER RECEIVED! \n\nReference: #${tempRef} \n\nWe are verifying your payment. You can check the status in the 'Track' section.`);
+        location.reload();
+    }
+}
 
         loadShop();
     </script>
