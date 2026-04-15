@@ -22,8 +22,7 @@
         <div class="space-y-4 mb-8">
             <input type="text" id="adminSearch" onkeyup="render()" placeholder="🔍 Search product or customer name..." 
                 class="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl outline-none focus:border-emerald-500 text-sm">
-            
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2" id="filterGroup">
                 <button onclick="setFilter('All')" class="filter-btn bg-emerald-500 text-black text-[10px] font-bold px-5 py-2.5 rounded-full uppercase">All</button>
                 <button onclick="setFilter('Instock')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-5 py-2.5 rounded-full uppercase text-slate-400">Instock</button>
                 <button onclick="setFilter('Preorder')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-5 py-2.5 rounded-full uppercase text-slate-400">Preorder</button>
@@ -66,10 +65,12 @@
         document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
 
         async function load() {
-            const res = await fetch('/items');
-            items = await res.json();
-            updateStats();
-            render();
+            try {
+                const res = await fetch('/items');
+                items = await res.json();
+                updateStats();
+                render();
+            } catch(e) { console.error("Load failed"); }
         }
 
         function updateStats() {
@@ -94,15 +95,31 @@
         }
 
         async function addNewItem() {
-            const data = {
-                name: document.getElementById('newName').value,
-                price: Number(document.getElementById('newPrice').value),
-                productImage: document.getElementById('newImg').value,
-                grade: document.getElementById('newGrade').value,
-                customerPhone: "Admin"
-            };
-            await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-            location.reload();
+            const name = document.getElementById('newName').value;
+            const price = document.getElementById('newPrice').value;
+            const img = document.getElementById('newImg').value;
+            const grade = document.getElementById('newGrade').value;
+
+            if(!name || !price || !img) {
+                alert("Missing Information! Please ensure you have a Name, Price, and that the Photo is uploaded.");
+                return;
+            }
+
+            const data = { name, price: Number(price), productImage: img, grade, customerPhone: "Admin" };
+
+            try {
+                const res = await fetch('/add-item', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data) 
+                });
+                if(res.ok) {
+                    alert("Added successfully!");
+                    location.reload();
+                } else {
+                    alert("Server error. Check if database is connected.");
+                }
+            } catch(e) { alert("Connection error. Check your internet."); }
         }
 
         function render() {
@@ -131,7 +148,7 @@
         async function updatePrice(id) {
             const p = prompt("New THB Cost:");
             const g = prompt("New Status (Instock, Preorder, Pending, Soldout):");
-            const n = prompt("Admin Note (Optional):");
+            const n = prompt("Admin Note:");
             let update = {};
             if(p) update.price = Number(p);
             if(g) update.grade = g;
@@ -139,7 +156,6 @@
             await fetch('/update-item/'+id, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(update) });
             load();
         }
-
         async function del(id) { if(confirm("Delete item?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }
         load();
     </script>

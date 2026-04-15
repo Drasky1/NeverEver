@@ -9,11 +9,9 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-// --- CONFIGURATION ---
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
 const ADMIN_IDS = ['1923704168'];
 
-// --- STABLE DATABASE CONNECTION (Direct Route) ---
 const dbURI = 'mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEver?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority';
 
 mongoose.connect(dbURI, {
@@ -21,10 +19,9 @@ mongoose.connect(dbURI, {
     socketTimeoutMS: 45000,
     family: 4 
 })
-.then(() => console.log("✅ DATABASE CONNECTED (DIRECT ROUTE)"))
+.then(() => console.log("✅ DATABASE CONNECTED"))
 .catch(err => console.error("❌ Connection Error:", err.message));
 
-// --- SCHEMA ---
 const ItemSchema = new mongoose.Schema({
     name: String,
     grade: { type: String, default: 'Pending' }, 
@@ -35,7 +32,6 @@ const ItemSchema = new mongoose.Schema({
 });
 const Item = mongoose.model('Item', ItemSchema);
 
-// --- API ROUTES ---
 app.get('/items', async (req, res) => { 
     try {
         const allItems = await Item.find().maxTimeMS(20000);
@@ -47,15 +43,13 @@ app.post('/add-item', async (req, res) => {
     try {
         const newItem = new Item(req.body);
         await newItem.save();
-
-        // Send Telegram Notification for new Preorders/Requests
         if (req.body.grade === 'Pending') {
             const message = `🔔 NEW REQUEST\n\nItem: ${req.body.name}\nUser: ${req.body.customerPhone}`;
             ADMIN_IDS.forEach(id => {
-                axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: id, text: message });
+                axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: id, text: message }).catch(e => console.log("Tele Error"));
             });
         }
-        res.json(newItem);
+        res.status(200).json(newItem);
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -73,7 +67,6 @@ app.delete('/delete-item/:id', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// HTML Pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));

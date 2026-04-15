@@ -45,29 +45,29 @@
         document.getElementById("p_upload").addEventListener("click", () => myWidget.open());
 
         async function loadShop() {
-            const res = await fetch('/items');
-            const data = await res.json();
-            const grid = document.getElementById('shop-grid');
-            // Hide Pending items from public shop
-            const activeItems = data.filter(i => i.grade !== 'Pending');
-
-            grid.innerHTML = activeItems.reverse().map(i => `
-                <div class="relative ${i.grade === 'Soldout' ? 'opacity-40 grayscale' : ''}">
-                    <div class="aspect-[3/4] rounded-3xl overflow-hidden bg-slate-900 mb-3 relative">
-                        <img src="${i.productImage}" class="w-full h-full object-cover">
-                        <div class="absolute top-3 left-3 bg-black/60 text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">${i.grade}</div>
+            try {
+                const res = await fetch('/items');
+                const data = await res.json();
+                const grid = document.getElementById('shop-grid');
+                const activeItems = data.filter(i => i.grade !== 'Pending');
+                grid.innerHTML = activeItems.reverse().map(i => `
+                    <div class="relative ${i.grade === 'Soldout' ? 'opacity-40 grayscale' : ''}">
+                        <div class="aspect-[3/4] rounded-3xl overflow-hidden bg-slate-900 mb-3 relative">
+                            <img src="${i.productImage}" class="w-full h-full object-cover">
+                            <div class="absolute top-3 left-3 bg-black/60 text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">${i.grade}</div>
+                        </div>
+                        <h3 class="text-[10px] uppercase font-bold text-slate-500 truncate px-1">${i.name}</h3>
+                        <p class="font-black text-emerald-400 text-sm px-1">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
                     </div>
-                    <h3 class="text-[10px] uppercase font-bold text-slate-500 truncate px-1">${i.name}</h3>
-                    <p class="font-black text-emerald-400 text-sm px-1">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
-                </div>
-            `).join('');
+                `).join('');
+            } catch(e) {}
         }
 
         async function submitPreorder() {
             const n = document.getElementById('pName').value;
             const u = document.getElementById('pUser').value;
             const img = document.getElementById('pImg').value;
-            if(!n || !u) return alert("Fill fields!");
+            if(!n || !u || !img) return alert("Please fill all fields and upload a photo!");
             await fetch('/add-item', { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 

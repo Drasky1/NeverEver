@@ -18,6 +18,7 @@
     <script>
         async function track() {
             const input = document.getElementById('tInput').value.trim().toLowerCase().replace('@','');
+            if(!input) return alert("Please enter your username!");
             const res = await fetch('/items');
             const data = await res.json();
             const mine = data.filter(i => i.customerPhone && i.customerPhone.toLowerCase().includes(input));
