@@ -76,26 +76,40 @@
         if(user) document.getElementById('userGreet').innerText = user.username;
 
         async function loadShop() {
-            const res = await fetch('/items');
-            const data = await res.json();
-            const grid = document.getElementById('shop-grid');
-            
-            grid.innerHTML = data.filter(i => i.grade !== 'Pending').reverse().map(i => `
-                <div class="bg-slate-900/50 p-3 rounded-[32px] border border-white/5">
-                    <div class="aspect-[3/4] rounded-2xl overflow-hidden mb-3">
-                        <img src="${i.productImage}" class="w-full h-full object-cover">
-                    </div>
-                    <div class="px-2">
-                        <h3 class="text-[10px] uppercase font-bold text-slate-400 truncate">${i.name}</h3>
-                        <p class="font-black text-emerald-400 text-sm mb-3">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
-                        <button onclick="addToCart('${i._id}', '${i.name}', ${i.price * 1.25 * RATE}, '${i.productImage}')" 
-                            class="w-full bg-white text-black text-[9px] font-black py-2.5 rounded-xl uppercase hover:bg-emerald-400 transition-colors">
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+    try {
+        const res = await fetch('/items');
+        const data = await res.json();
+        const grid = document.getElementById('shop-grid');
+        
+        // This line is the filter. 
+        // We show it if it's "Instock", "Preorder", "Soldout", or even if the grade is missing!
+        // We ONLY hide it if it is explicitly "Pending".
+        const activeItems = data.filter(i => i.grade !== 'Pending');
+
+        if (activeItems.length === 0) {
+            grid.innerHTML = "<p class='col-span-full text-center text-slate-500 py-10'>No items available yet.</p>";
+            return;
         }
+
+        grid.innerHTML = activeItems.reverse().map(i => `
+            <div class="bg-slate-900/50 p-3 rounded-[32px] border border-white/5">
+                <div class="aspect-[3/4] rounded-2xl overflow-hidden mb-3">
+                    <img src="${i.productImage || 'https://via.placeholder.com/300x400'}" class="w-full h-full object-cover">
+                </div>
+                <div class="px-2">
+                    <h3 class="text-[10px] uppercase font-bold text-slate-400 truncate">${i.name || 'Unnamed Item'}</h3>
+                    <p class="font-black text-emerald-400 text-sm mb-3">${Math.round((i.price || 0) * 1.25 * RATE).toLocaleString()} MMK</p>
+                    <button onclick="addToCart('${i._id}', '${i.name}', ${(i.price || 0) * 1.25 * RATE}, '${i.productImage}')" 
+                        class="w-full bg-white text-black text-[9px] font-black py-2.5 rounded-xl uppercase hover:bg-emerald-400 transition-colors">
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error("Shop load error:", e);
+    }
+}
 
         function addToCart(id, name, price, img) {
             cart.push({id, name, price, img});

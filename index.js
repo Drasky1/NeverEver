@@ -20,7 +20,11 @@ mongoose.connect(dbURI, { family: 4 }).then(() => console.log("✅ BUSINESS DB C
 
 // --- MODELS ---
 const Item = mongoose.model('Item', new mongoose.Schema({
-    name: String, grade: String, price: Number, productImage: String
+    name: String, 
+    grade: { type: String, default: 'Instock' }, // Default to Instock so old data shows
+    price: Number, 
+    productImage: String,
+    customerPhone: { type: String, default: 'Admin' }
 }));
 
 const User = mongoose.model('User', new mongoose.Schema({
@@ -66,17 +70,42 @@ app.post('/submit-order', async (req, res) => {
     try {
         const order = new Order(req.body);
         await order.save();
-        
         const message = `💰 NEW ORDER: ${req.body.totalMMK} MMK\nFrom: ${req.body.username}\nPhone: ${req.body.phone}\nCheck Admin for screenshot!`;
         ADMIN_IDS.forEach(id => axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: id, text: message }));
-        
         res.json({ success: true });
     } catch (e) { res.status(500).send(e.message); }
 });
 
-app.get('/items', async (req, res) => res.json(await Item.find()));
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+// --- GET ITEMS (Fixed to show everything) ---
+app.get('/items', async (req, res) => {
+    try {
+        const all = await Item.find();
+        res.json(all);
+    } catch (e) { res.status(500).send(e.message); }
 });
+
+// --- ADMIN ITEM MANAGEMENT ---
+app.post('/add-item', async (req, res) => {
+    const newItem = new Item(req.body);
+    await newItem.save();
+    res.json(newItem);
+});
+
+app.delete('/delete-item/:id', async (req, res) => {
+    await Item.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+});
+
+app.put('/update-item/:id', async (req, res) => {
+    const updated = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+});
+
+// --- PAGE ROUTES ---
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Store Live on ${PORT}`));
