@@ -10,26 +10,22 @@
     <div class="w-full max-w-md">
         <h1 class="text-3xl font-black italic text-emerald-400 mb-10 text-center">ORDER TRACKING</h1>
         <div class="bg-slate-900 p-8 rounded-[40px] border border-slate-800">
-            <input type="text" id="tInput" placeholder="Enter your @username or Phone" class="w-full bg-black border border-slate-800 p-4 rounded-2xl outline-none mb-4 text-center">
-            <button onclick="track()" class="w-full bg-white text-black font-black py-4 rounded-2xl uppercase text-xs tracking-widest">Check Status</button>
+            <input type="text" id="tInput" placeholder="Enter your Username or Phone" class="w-full bg-black border border-slate-800 p-4 rounded-2xl outline-none mb-4 text-center">
+            <button onclick="track()" class="w-full bg-white text-black font-black py-4 rounded-2xl uppercase text-xs">Check Status</button>
         </div>
         <div id="tResult" class="mt-10 space-y-4"></div>
     </div>
-
     <script>
         async function track() {
             const input = document.getElementById('tInput').value.trim().toLowerCase();
             const res = await fetch('/items');
             const data = await res.json();
-            const area = document.getElementById('tResult');
-            
             const mine = data.filter(i => i.customerPhone && i.customerPhone.toLowerCase().includes(input.replace('@','')));
-            
-            area.innerHTML = mine.length ? mine.map(i => `
+            document.getElementById('tResult').innerHTML = mine.length ? mine.map(i => `
                 <div class="bg-slate-900 p-6 rounded-3xl border-l-4 border-emerald-500">
                     <h3 class="font-black text-sm uppercase">${i.name}</h3>
                     <p class="text-emerald-400 text-[10px] font-bold uppercase mb-2">${i.grade}</p>
-                    <p class="text-[10px] text-slate-500 italic">"${i.adminNote || 'Processing your order...'}"</p>
+                    <p class="text-[10px] text-slate-500 italic">"${i.adminNote || 'Processing...'}"</p>
                 </div>
             `).join('') : '<p class="text-center text-red-500 text-xs">No orders found.</p>';
         }

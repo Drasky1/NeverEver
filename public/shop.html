@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeverEver Shop</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #000; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-    </style>
+    <style>body { background-color: #000; color: white; }</style>
 </head>
 <body>
     <nav class="p-6 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
@@ -23,14 +20,14 @@
         <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"></div>
 
         <section id="preorder" class="max-w-md mx-auto py-20">
-            <div class="glass p-8 rounded-[40px] text-center">
-                <h2 class="text-xl font-black mb-6 italic">CUSTOM PREORDER</h2>
+            <div class="bg-slate-900 p-8 rounded-[40px] text-center">
+                <h2 class="text-xl font-black mb-6 italic uppercase">Custom Request</h2>
                 <div class="space-y-4 text-left">
-                    <input type="text" id="pName" placeholder="Item Name (e.g. Chrome Hearts Hat)" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none">
-                    <input type="text" id="pUser" placeholder="Telegram Username / Phone" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none">
-                    <button id="p_upload" class="w-full border border-dashed border-white/20 py-6 rounded-2xl text-xs text-slate-500">📸 Tap to Upload Screenshot</button>
+                    <input type="text" id="pName" placeholder="Item Name" class="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none">
+                    <input type="text" id="pUser" placeholder="Telegram Username / Phone" class="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none">
+                    <button id="p_upload" class="w-full border border-dashed border-white/20 py-6 rounded-2xl text-xs text-slate-500">📸 Upload Photo</button>
                     <input type="hidden" id="pImg">
-                    <button onclick="submitPreorder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase tracking-widest text-xs">Send Request</button>
+                    <button onclick="submitPreorder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase text-[10px] tracking-widest">Send Request</button>
                 </div>
             </div>
         </section>
@@ -39,11 +36,10 @@
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         const RATE = 130;
-        
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
                 document.getElementById('pImg').value = result.info.secure_url;
-                document.getElementById('p_upload').innerText = "✅ Image Attached";
+                document.getElementById('p_upload').innerText = "✅ ATTACHED";
             }
         });
         document.getElementById("p_upload").addEventListener("click", () => myWidget.open());
@@ -52,34 +48,25 @@
             const res = await fetch('/items');
             const data = await res.json();
             const grid = document.getElementById('shop-grid');
-            
-            // Only show items that are NOT 'Pending'
             const activeItems = data.filter(i => i.grade !== 'Pending');
 
             grid.innerHTML = activeItems.reverse().map(i => `
-                <div class="relative group ${i.grade === 'Soldout' ? 'opacity-50' : ''}">
+                <div class="relative ${i.grade === 'Soldout' ? 'opacity-50' : ''}">
                     <div class="aspect-[3/4] rounded-3xl overflow-hidden bg-slate-900 mb-3 relative">
                         <img src="${i.productImage}" class="w-full h-full object-cover">
-                        <div class="absolute top-3 left-3 bg-black/50 text-[8px] font-bold px-2 py-1 rounded-full backdrop-blur-md uppercase">${i.grade}</div>
-                        ${i.grade === 'Soldout' ? '<div class="absolute inset-0 flex items-center justify-center font-black italic bg-black/20">SOLD OUT</div>' : ''}
+                        <div class="absolute top-3 left-3 bg-black/50 text-[8px] font-bold px-2 py-1 rounded-full uppercase">${i.grade}</div>
                     </div>
                     <h3 class="text-[10px] uppercase font-bold text-slate-400 truncate">${i.name}</h3>
-                    <p class="font-black text-emerald-400 font-mono text-sm">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
+                    <p class="font-black text-emerald-400 text-sm">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
                 </div>
             `).join('');
         }
 
         async function submitPreorder() {
-            const data = {
-                name: document.getElementById('pName').value,
-                customerPhone: document.getElementById('pUser').value,
-                productImage: document.getElementById('pImg').value,
-                grade: 'Pending',
-                price: 0
-            };
-            if(!data.name || !data.customerPhone) return alert("Fill all fields");
+            const data = { name: document.getElementById('pName').value, customerPhone: document.getElementById('pUser').value, productImage: document.getElementById('pImg').value, grade: 'Pending', price: 0 };
+            if(!data.name || !data.customerPhone) return alert("Fill fields");
             await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-            alert("Request sent successfully!");
+            alert("Sent!");
             location.reload();
         }
         loadShop();
