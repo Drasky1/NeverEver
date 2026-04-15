@@ -11,7 +11,7 @@
     <nav class="p-6 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
         <h1 class="text-xl font-black italic text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
         <div class="flex gap-4">
-            <a href="/track" class="text-[10px] font-bold uppercase text-slate-400 mt-2">Track</a>
+            <a href="/track" class="text-[10px] font-bold uppercase text-slate-400 mt-2">Track Order</a>
             <button onclick="document.getElementById('preorder').scrollIntoView({behavior:'smooth'})" class="bg-white text-black text-[10px] font-black px-4 py-2 rounded-full uppercase">Request Preorder</button>
         </div>
     </nav>
@@ -21,13 +21,13 @@
 
         <section id="preorder" class="max-w-md mx-auto py-20">
             <div class="bg-slate-900 p-8 rounded-[40px] text-center">
-                <h2 class="text-xl font-black mb-6 italic uppercase">Custom Request</h2>
+                <h2 class="text-xl font-black mb-6 italic uppercase text-emerald-400">Custom Request</h2>
                 <div class="space-y-4 text-left">
                     <input type="text" id="pName" placeholder="Item Name" class="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none">
                     <input type="text" id="pUser" placeholder="Telegram Username / Phone" class="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none">
-                    <button id="p_upload" class="w-full border border-dashed border-white/20 py-6 rounded-2xl text-xs text-slate-500">📸 Upload Photo</button>
+                    <button id="p_upload" class="w-full border border-dashed border-white/20 py-6 rounded-2xl text-xs text-slate-500 uppercase font-bold tracking-widest">📸 Upload Photo</button>
                     <input type="hidden" id="pImg">
-                    <button onclick="submitPreorder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase text-[10px] tracking-widest">Send Request</button>
+                    <button onclick="submitPreorder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase text-[10px] tracking-[0.2em]">Send Request</button>
                 </div>
             </div>
         </section>
@@ -39,7 +39,7 @@
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
                 document.getElementById('pImg').value = result.info.secure_url;
-                document.getElementById('p_upload').innerText = "✅ ATTACHED";
+                document.getElementById('p_upload').innerText = "✅ PHOTO READY";
             }
         });
         document.getElementById("p_upload").addEventListener("click", () => myWidget.open());
@@ -48,25 +48,32 @@
             const res = await fetch('/items');
             const data = await res.json();
             const grid = document.getElementById('shop-grid');
+            // Hide Pending items from public shop
             const activeItems = data.filter(i => i.grade !== 'Pending');
 
             grid.innerHTML = activeItems.reverse().map(i => `
-                <div class="relative ${i.grade === 'Soldout' ? 'opacity-50' : ''}">
+                <div class="relative ${i.grade === 'Soldout' ? 'opacity-40 grayscale' : ''}">
                     <div class="aspect-[3/4] rounded-3xl overflow-hidden bg-slate-900 mb-3 relative">
                         <img src="${i.productImage}" class="w-full h-full object-cover">
-                        <div class="absolute top-3 left-3 bg-black/50 text-[8px] font-bold px-2 py-1 rounded-full uppercase">${i.grade}</div>
+                        <div class="absolute top-3 left-3 bg-black/60 text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">${i.grade}</div>
                     </div>
-                    <h3 class="text-[10px] uppercase font-bold text-slate-400 truncate">${i.name}</h3>
-                    <p class="font-black text-emerald-400 text-sm">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
+                    <h3 class="text-[10px] uppercase font-bold text-slate-500 truncate px-1">${i.name}</h3>
+                    <p class="font-black text-emerald-400 text-sm px-1">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
                 </div>
             `).join('');
         }
 
         async function submitPreorder() {
-            const data = { name: document.getElementById('pName').value, customerPhone: document.getElementById('pUser').value, productImage: document.getElementById('pImg').value, grade: 'Pending', price: 0 };
-            if(!data.name || !data.customerPhone) return alert("Fill fields");
-            await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-            alert("Sent!");
+            const n = document.getElementById('pName').value;
+            const u = document.getElementById('pUser').value;
+            const img = document.getElementById('pImg').value;
+            if(!n || !u) return alert("Fill fields!");
+            await fetch('/add-item', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ name: n, customerPhone: u, productImage: img, grade: 'Pending', price: 0 }) 
+            });
+            alert("Request sent successfully!");
             location.reload();
         }
         loadShop();

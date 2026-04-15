@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>NeverEver Admin | Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #000; color: #e2e8f0; }</style>
+    <style>body { background-color: #000; color: #e2e8f0; font-family: sans-serif; }</style>
 </head>
 <body class="p-6">
     <div class="max-w-4xl mx-auto">
@@ -38,7 +38,7 @@
                 <input type="number" id="newPrice" placeholder="Cost in THB" class="bg-black border border-slate-800 p-4 rounded-2xl outline-none text-sm">
                 <button id="upload_widget" class="bg-black border border-dashed border-slate-700 p-4 rounded-2xl text-slate-500 text-[10px] font-bold uppercase">📸 Upload Photo</button>
                 <input type="hidden" id="newImg">
-                <select id="newGrade" class="bg-black border border-slate-800 p-4 rounded-2xl outline-none text-sm">
+                <select id="newGrade" class="bg-black border border-slate-800 p-4 rounded-2xl outline-none text-sm appearance-none">
                     <option value="Instock">Instock</option>
                     <option value="Preorder">Preorder</option>
                     <option value="Pending">Pending</option>
@@ -60,7 +60,7 @@
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
                 document.getElementById('newImg').value = result.info.secure_url;
-                document.getElementById('upload_widget').innerText = "✅ READY";
+                document.getElementById('upload_widget').innerText = "✅ PHOTO READY";
             }
         });
         document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
@@ -88,6 +88,7 @@
                 btn.classList.remove('bg-emerald-500', 'text-black');
                 btn.classList.add('bg-slate-900', 'text-slate-400');
             });
+            event.target.classList.remove('bg-slate-900', 'text-slate-400');
             event.target.classList.add('bg-emerald-500', 'text-black');
             render();
         }
@@ -110,18 +111,18 @@
             if (currentFilter !== 'All') filtered = filtered.filter(i => i.grade === currentFilter);
 
             document.getElementById('container').innerHTML = filtered.reverse().map(i => `
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-[32px] flex justify-between items-center ${i.grade === 'Soldout' ? 'opacity-40' : ''}">
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-[32px] flex justify-between items-center ${i.grade === 'Soldout' ? 'opacity-40 grayscale' : ''}">
                     <div class="flex items-center gap-5">
                         <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-2xl">
                         <div>
                             <h3 class="font-black text-sm uppercase">${i.name}</h3>
-                            <p class="text-[11px] text-emerald-400 font-mono">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
+                            <p class="text-[11px] text-emerald-400 font-mono font-bold">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
                             <p class="text-[9px] text-slate-500 uppercase">${i.customerPhone} • ${i.grade}</p>
                         </div>
                     </div>
                     <div class="flex gap-3">
                         <button onclick="updatePrice('${i._id}')" class="bg-white text-black px-4 py-2 rounded-xl text-[10px] font-black uppercase">Edit</button>
-                        <button onclick="del('${i._id}')" class="text-red-500 text-[10px] ml-2">DEL</button>
+                        <button onclick="del('${i._id}')" class="text-red-500 text-[10px] ml-2 font-bold uppercase">Del</button>
                     </div>
                 </div>
             `).join('');
@@ -129,15 +130,17 @@
 
         async function updatePrice(id) {
             const p = prompt("New THB Cost:");
-            const g = prompt("New Status:");
-            const n = prompt("Note:");
-            if(p || g) {
-                await fetch('/update-item/'+id, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ price: Number(p), grade: g, adminNote: n }) });
-                load();
-            }
+            const g = prompt("New Status (Instock, Preorder, Pending, Soldout):");
+            const n = prompt("Admin Note (Optional):");
+            let update = {};
+            if(p) update.price = Number(p);
+            if(g) update.grade = g;
+            if(n !== null) update.adminNote = n;
+            await fetch('/update-item/'+id, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(update) });
+            load();
         }
 
-        async function del(id) { if(confirm("Delete?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }
+        async function del(id) { if(confirm("Delete item?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }
         load();
     </script>
 </body>
