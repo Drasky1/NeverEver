@@ -98,19 +98,31 @@
         }
 
         function renderItems() {
-            document.getElementById('admin-list').innerHTML = items.reverse().map(i => `
-                <tr class="border-t border-white/5">
-                    <td class="p-6 flex items-center gap-4"><img src="${i.productImage}" class="w-10 h-10 rounded-lg object-cover"><b>${i.name}</b></td>
-                    <td class="p-6"><select onchange="updateGrade('${i._id}', this.value)" class="bg-black p-2 rounded-lg text-[10px] uppercase">
-                        <option value="Instock" ${i.grade==='Instock'?'selected':''}>Instock</option>
-                        <option value="Soldout" ${i.grade==='Soldout'?'selected':''}>Soldout</option>
-                        <option value="Pending" ${i.grade==='Pending'?'selected':''}>Pending</option>
-                    </select></td>
-                    <td class="p-6">${Math.round(i.price*RATE).toLocaleString()}</td>
-                    <td class="p-6 text-emerald-400">${Math.round(i.price*1.25*RATE).toLocaleString()}</td>
-                    <td class="p-6"><button onclick="deleteItem('${i._id}')" class="text-red-500">✕</button></td>
-                </tr>`).join('');
-        }
+    const list = document.getElementById('admin-list');
+    list.innerHTML = items.reverse().map(i => `
+        <tr class="border-t border-white/5 hover:bg-white/5">
+            <td class="p-6 flex items-center gap-4">
+                <img src="${i.productImage}" class="w-10 h-10 rounded-lg object-cover">
+                <div>
+                    <p class="font-bold text-sm">${i.name}</p>
+                    <p class="text-[9px] text-slate-500 uppercase">${i.customerPhone || 'Admin'}</p>
+                </div>
+            </td>
+            <td class="p-6">
+                <select onchange="updateGrade('${i._id}', this.value)" class="bg-black text-[10px] font-bold p-2 rounded-lg border border-white/10 uppercase outline-none focus:border-emerald-500">
+                    <option value="Instock" ${i.grade === 'Instock' ? 'selected' : ''}>Instock</option>
+                    <option value="Soldout" ${i.grade === 'Soldout' ? 'selected' : ''}>Sold Out</option>
+                    <option value="Pending" ${i.grade === 'Pending' ? 'selected' : ''}>Preorder/Pending</option>
+                </select>
+            </td>
+            <td class="p-6 text-sm font-mono">${Math.round(i.price * RATE).toLocaleString()}</td>
+            <td class="p-6 text-sm font-mono text-emerald-400">${Math.round(i.price * 1.25 * RATE).toLocaleString()}</td>
+            <td class="p-6 text-center">
+                <button onclick="deleteItem('${i._id}')" class="text-red-500 text-xs">✕</button>
+            </td>
+        </tr>
+    `).join('');
+}
 
         function renderOrders(orders) {
             document.getElementById('order-list').innerHTML = orders.map(o => `
