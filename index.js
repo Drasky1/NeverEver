@@ -15,19 +15,17 @@ const ADMIN_IDS = ['1923704168'];
 
 // --- STABLE DATABASE CONNECTION ---
 // Using the long-form connection string to prevent Render timeout errors
-const dbURI = 'mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEver?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority&connectTimeoutMS=30000';
+const dbURI = 'mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority';
 
-mongoose.connect(dbURI)
-  .then(() => console.log("✅ Render connected to MongoDB"))
-  .catch(err => console.error("❌ Connection Error:", err.message));
-
-const ItemSchema = new mongoose.Schema({
-    name: String,
-    grade: { type: String, default: 'Pending' }, 
-    price: { type: Number, default: 0 },
-    productImage: String,
-    customerPhone: String,
-    adminNote: { type: String, default: '' }
+mongoose.connect(dbURI, {
+    serverSelectionTimeoutMS: 30000, // Wait 30s before giving up
+    socketTimeoutMS: 45000,          // Close inactive connections after 45s
+    family: 4                        // FORCE IPv4 (This is the key for Render)
+})
+.then(() => console.log("✅ Database Connected Successfully"))
+.catch(err => {
+    console.error("❌ Database Connection Error!");
+    console.error("Reason:", err.message);
 });
 const Item = mongoose.model('Item', ItemSchema);
 
