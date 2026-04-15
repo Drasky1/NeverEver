@@ -19,7 +19,7 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
-// --- MODELS ---
+// MODELS
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
     category: { type: String, default: 'General' },
@@ -42,7 +42,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// --- API ROUTES ---
+// AUTH
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -58,40 +58,31 @@ app.post('/auth/login', async (req, res) => {
     res.json({ token, user: { username: user.username, id: user._id, address: user.address, phone: user.phone } });
 });
 
+// SHOP API
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/all-orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
 
 app.post('/submit-order', async (req, res) => {
     await new Order(req.body).save();
-    
-    // Professional Telegram Formatting
-    const message = `🔥 *NEW ORDER RECEIVED*\n\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK\n📍 *Address:* ${req.body.address}\n📞 *Phone:* ${req.body.phone}\n\n_Check admin dashboard for details._`;
-    
-    axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { 
-        chat_id: ADMIN_IDS[0], 
-        text: message,
-        parse_mode: 'Markdown'
-    }).catch(e => console.log("Tele Error"));
-    
+    const message = `🔥 *NEW ORDER RECEIVED*\n\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK\n📍 *Address:* ${req.body.address}\n📞 *Phone:* ${req.body.phone}\n\n_Check admin dashboard for proof._`;
+    axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: ADMIN_IDS[0], text: message, parse_mode: 'Markdown' }).catch(e => console.log("Tele Error"));
     res.json({ success: true });
 });
 
 app.post('/add-item', async (req, res) => res.json(await new Item(req.body).save()));
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
-// FIXED: returnDocument 'after' resolves the Mongoose warning
+// UPDATE ROUTES WITH FIX
 app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
 
-// --- PAGE ROUTING ---
+// ROUTING
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
-
 app.use((req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 NeverEver Running on ${PORT}`));
+app.listen(10000, () => console.log(`🚀 NeverEver Live` ));

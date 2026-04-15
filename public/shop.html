@@ -4,10 +4,10 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeverEver | Official Store</title><script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; }
+        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .glass-card { background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
-        .dropdown-menu { display: none; }
-        .group:hover .dropdown-menu { display: block; }
+        .dropdown-menu { display: none; opacity: 0; transform: translateY(10px); transition: all 0.2s ease; }
+        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0px); }
     </style>
 </head>
 <body>
@@ -15,9 +15,7 @@
         <h1 class="text-xl font-black italic text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
         <div class="flex items-center gap-6">
             <a href="/track" class="text-[10px] font-black text-emerald-400 border border-emerald-400/30 px-3 py-1.5 rounded-full uppercase tracking-widest">Track</a>
-            
-            <div id="userGreet" class="group relative inline-block text-[10px] font-bold uppercase"></div>
-
+            <div id="userGreet" class="relative inline-block text-[10px] font-bold uppercase"></div>
             <button onclick="toggleCart()" class="relative">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
                 <span id="cartCount" class="absolute -top-2 -right-2 bg-emerald-500 text-black text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">0</span>
@@ -29,9 +27,8 @@
         <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24">
             <p class="col-span-full text-center py-20 text-slate-500 animate-pulse uppercase text-[10px] font-bold tracking-[0.3em]">Accessing Vault...</p>
         </div>
-
-        <section id="preorder" class="max-w-md mx-auto py-20 border-t border-white/5">
-            <div class="glass-card p-8 rounded-[40px] text-center border border-emerald-500/10">
+        <section class="max-w-md mx-auto py-20 border-t border-white/5">
+            <div class="glass-card p-8 rounded-[40px] text-center">
                 <h2 class="text-lg font-black italic uppercase text-emerald-400 mb-6">Custom Request</h2>
                 <input type="text" id="pName" placeholder="Item Name" class="w-full bg-black border border-white/10 p-4 rounded-2xl mb-4 outline-none text-sm">
                 <button id="p_upload" class="w-full border border-dashed border-white/20 py-5 rounded-2xl text-[10px] text-slate-500 uppercase font-bold mb-4">📸 Upload Photo</button>
@@ -43,53 +40,46 @@
 
     <div id="cartModal" class="fixed inset-0 bg-black/95 z-[100] hidden p-6 overflow-y-auto">
         <div class="max-w-md mx-auto">
-            <div class="flex justify-between items-center mb-10"><h2 class="text-2xl font-black italic uppercase">Cart</h2><button onclick="toggleCart()" class="text-slate-500 text-xs font-bold uppercase">Close</button></div>
+            <div class="flex justify-between items-center mb-10 text-2xl font-black italic uppercase"><h2>Cart</h2><button onclick="toggleCart()" class="text-slate-500 text-xs uppercase">Close</button></div>
             <div id="cartItems" class="space-y-4 mb-10"></div>
             <div id="checkoutForm" class="hidden space-y-4">
                 <p id="cartTotal" class="text-emerald-400 font-black text-xl mb-6"></p>
-                <input type="text" id="orderAddr" placeholder="Shipping Address" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
-                <input type="text" id="orderPh" placeholder="Phone Number" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
+                <input type="text" id="orderAddr" placeholder="Address" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
+                <input type="text" id="orderPh" placeholder="Phone" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
                 <div class="bg-white/5 p-6 rounded-3xl mt-6 border border-white/5">
-                    <p class="text-[10px] text-emerald-400 font-bold uppercase mb-2">Payment Info</p>
-                    <p class="font-bold text-sm">KPay: 09-777XXXXXX (Malcolm)</p>
-                    <button id="uploadSS" class="w-full mt-4 border border-dashed border-emerald-500/50 py-4 rounded-xl text-[10px] text-emerald-500 font-bold">📸 UPLOAD SCREENSHOT</button>
+                    <p class="text-[10px] text-emerald-400 font-bold uppercase mb-2">KPay: 09-777XXXXXX (Malcolm)</p>
+                    <button id="uploadSS" class="w-full mt-4 border border-dashed border-emerald-500/50 py-4 rounded-xl text-[10px] text-emerald-500 font-bold uppercase">📸 Upload Screenshot</button>
                     <input type="hidden" id="paymentImg">
                 </div>
                 <button onclick="submitOrder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase mt-6">Confirm Purchase</button>
             </div>
-            <div id="authPrompt" class="hidden text-center py-20"><a href="/login" class="bg-white text-black px-10 py-4 rounded-2xl font-black uppercase text-[10px]">Login to Checkout</a></div>
+            <div id="authPrompt" class="hidden text-center py-20"><a href="/login" class="bg-white text-black px-10 py-4 rounded-2xl font-black uppercase text-[10px]">Login to Shop</a></div>
         </div>
     </div>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        let cart = []; 
-        const user = JSON.parse(localStorage.getItem('neverUser'));
+        let cart = []; const user = JSON.parse(localStorage.getItem('neverUser'));
 
-        // Handle User Menu
         if(user) {
             document.getElementById('userGreet').innerHTML = `
-                <button class="text-emerald-400 flex items-center gap-1">${user.username} ▾</button>
-                <div class="dropdown-menu absolute right-0 w-32 bg-slate-900 border border-white/10 rounded-xl mt-2 p-2 shadow-2xl z-50">
+                <button onclick="toggleUserMenu(event)" class="text-emerald-400 flex items-center gap-1">${user.username} ▾</button>
+                <div id="userDropdown" class="dropdown-menu absolute right-0 w-32 bg-slate-900 border border-white/10 rounded-xl mt-2 p-2 shadow-2xl z-50">
                     <button onclick="logout()" class="w-full text-left p-2 hover:bg-white/5 rounded-lg">LOGOUT</button>
-                    <button onclick="deleteAccount()" class="w-full text-left p-2 text-red-500 hover:bg-red-500/10 rounded-lg">DELETE</button>
+                    <button onclick="deleteAccount()" class="w-full text-left p-2 text-red-500 hover:bg-red-500/5 rounded-lg">DELETE</button>
                 </div>`;
-        } else {
-            document.getElementById('userGreet').innerHTML = `<a href="/login" class="text-emerald-400">LOGIN</a>`;
-        }
+        } else { document.getElementById('userGreet').innerHTML = `<a href="/login" class="text-emerald-400">LOGIN</a>`; }
 
+        function toggleUserMenu(e) { e.stopPropagation(); document.getElementById('userDropdown').classList.toggle('show'); }
+        window.onclick = () => { const d = document.getElementById('userDropdown'); if(d) d.classList.remove('show'); };
         function logout() { localStorage.removeItem('neverUser'); location.reload(); }
-        function deleteAccount() { if(confirm("Delete account and history?")){ localStorage.removeItem('neverUser'); location.href='/signup'; } }
+        function deleteAccount() { if(confirm("Delete account?")){ localStorage.removeItem('neverUser'); location.href='/signup'; } }
 
         async function loadShop() {
-            const res = await fetch('/items');
-            const data = await res.json();
+            const res = await fetch('/items'); const data = await res.json();
             const activeItems = data.filter(i => i.grade === 'Instock').reverse();
             const grid = document.getElementById('shop-grid');
-            if (activeItems.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-20 opacity-30 uppercase font-black tracking-widest">Vault Currently Empty</div>`;
-                return;
-            }
+            if (activeItems.length === 0) { grid.innerHTML = `<p class="col-span-full text-center py-20 opacity-30 uppercase font-black">Vault Empty</p>`; return; }
             grid.innerHTML = activeItems.map(i => `
                 <div class="glass-card p-3 rounded-[32px]">
                     <img src="${i.productImage}" class="w-full aspect-[3/4] object-cover rounded-2xl mb-3">
@@ -102,38 +92,26 @@
         }
 
         function addToCart(name, price, img) { cart.push({name, price, img}); updateCartUI(); alert("Added!"); }
-        
         function updateCartUI() {
             document.getElementById('cartCount').innerText = cart.length;
             const total = cart.reduce((s,i)=>s+i.price, 0);
             document.getElementById('cartTotal').innerText = `Total: ${total.toLocaleString()} MMK`;
-            document.getElementById('cartItems').innerHTML = cart.map((i,idx)=>`
-                <div class="flex justify-between items-center glass-card p-4 rounded-2xl text-[10px] font-bold">
-                    <span>${i.name}</span><button onclick="cart.splice(${idx},1);updateCartUI()" class="text-red-500">✕</button>
-                </div>`).join('');
-            if(cart.length > 0) {
-                if(user) { 
-                    document.getElementById('checkoutForm').classList.remove('hidden'); 
-                    document.getElementById('orderAddr').value = user.address; 
-                    document.getElementById('orderPh').value = user.phone; 
-                } else { document.getElementById('authPrompt').classList.remove('hidden'); }
-            } else { document.getElementById('checkoutForm').classList.add('hidden'); }
+            document.getElementById('cartItems').innerHTML = cart.map((i,idx)=>`<div class="flex justify-between items-center glass-card p-4 rounded-2xl text-[10px] font-bold"><span>${i.name}</span><button onclick="cart.splice(${idx},1);updateCartUI()" class="text-red-500">✕</button></div>`).join('');
+            if(cart.length > 0) { if(user) { document.getElementById('checkoutForm').classList.remove('hidden'); document.getElementById('orderAddr').value = user.address; document.getElementById('orderPh').value = user.phone; } else { document.getElementById('authPrompt').classList.remove('hidden'); } }
+            else { document.getElementById('checkoutForm').classList.add('hidden'); }
         }
 
         function toggleCart() { document.getElementById('cartModal').classList.toggle('hidden'); }
-
         var ssWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") { document.getElementById('paymentImg').value = r.info.secure_url; document.getElementById('uploadSS').innerText = "✅ PHOTO READY"; }});
         document.getElementById("uploadSS").addEventListener("click", () => ssWidget.open());
-
         var preWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") { document.getElementById('pImg').value = r.info.secure_url; document.getElementById('p_upload').innerText = "✅ PHOTO READY"; }});
         document.getElementById("p_upload").addEventListener("click", () => preWidget.open());
 
         async function submitOrder() {
             const ss = document.getElementById('paymentImg').value; if(!ss) return alert("Upload Screenshot!");
             await fetch('/submit-order', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId: user.id, username: user.username, items: cart, totalMMK: cart.reduce((s,i)=>s+i.price,0), address: document.getElementById('orderAddr').value, phone: document.getElementById('orderPh').value, paymentScreenshot: ss })});
-            alert("Order Success!"); cart = []; updateCartUI(); toggleCart(); location.reload();
+            alert("Success!"); cart = []; updateCartUI(); toggleCart(); location.reload();
         }
-
         loadShop();
     </script>
 </body>
