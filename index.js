@@ -75,6 +75,8 @@ app.post('/submit-order', async (req, res) => {
 });
 
 app.get('/items', async (req, res) => res.json(await Item.find()));
-
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+});
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Store Live on ${PORT}`));
