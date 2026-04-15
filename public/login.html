@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>NeverEver | Account</title><script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #000; color: white; }</style>
+</head>
+<body class="flex items-center justify-center h-screen p-6">
+    <div class="w-full max-w-sm bg-slate-900 p-10 rounded-[40px] border border-white/5">
+        <h2 id="title" class="text-2xl font-black italic uppercase mb-8 text-emerald-400">Login</h2>
+        <div class="space-y-4">
+            <input type="text" id="user" placeholder="Username" class="w-full bg-black p-4 rounded-2xl outline-none">
+            <input type="password" id="pass" placeholder="Password" class="w-full bg-black p-4 rounded-2xl outline-none">
+            <div id="signupFields" class="hidden space-y-4">
+                <input type="text" id="phone" placeholder="Phone Number" class="w-full bg-black p-4 rounded-2xl outline-none">
+                <input type="text" id="addr" placeholder="City/Address" class="w-full bg-black p-4 rounded-2xl outline-none">
+            </div>
+            <button onclick="handleAuth()" id="btn" class="w-full bg-white text-black font-black py-4 rounded-2xl uppercase text-[10px]">Login</button>
+            <p onclick="toggle()" id="toggleTxt" class="text-center text-[10px] text-slate-500 uppercase font-bold mt-6 cursor-pointer">Don't have an account? Sign Up</p>
+        </div>
+    </div>
+    <script>
+        let isLogin = true;
+        function toggle() {
+            isLogin = !isLogin;
+            document.getElementById('title').innerText = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('btn').innerText = isLogin ? 'Login' : 'Create Account';
+            document.getElementById('signupFields').classList.toggle('hidden');
+            document.getElementById('toggleTxt').innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login";
+        }
+        async function handleAuth() {
+            const body = { username: document.getElementById('user').value, password: document.getElementById('pass').value };
+            if(!isLogin) { body.phone = document.getElementById('phone').value; body.address = document.getElementById('addr').value; }
+            
+            const url = isLogin ? '/auth/login' : '/auth/signup';
+            const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            const data = await res.json();
+            
+            if(data.token) {
+                localStorage.setItem('neverUser', JSON.stringify(data.user));
+                window.location.href = '/';
+            } else if(data.success) {
+                alert("Account created! Now login.");
+                location.reload();
+            } else { alert(data.error); }
+        }
+    </script>
+</body>
+</html>
