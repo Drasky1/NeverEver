@@ -8,6 +8,15 @@
         .glass-card { background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
         .dropdown-menu { display: none; opacity: 0; transform: translateY(10px); transition: all 0.2s ease; }
         .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0px); }
+        
+        /* SOLD OUT STYLES */
+        .sold-out { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
+        .sold-badge {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg);
+            background: #ef4444; color: white; padding: 4px 12px; font-weight: 900;
+            font-size: 14px; border-radius: 4px; z-index: 10; letter-spacing: 2px;
+        }
+        .filter-btn.active { background: white; color: black; }
     </style>
 </head>
 <body>
@@ -23,19 +32,14 @@
         </div>
     </nav>
 
+    <div class="flex gap-2 p-6 overflow-x-auto no-scrollbar">
+        <button onclick="setFilter('All')" class="filter-btn active px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">All Items</button>
+        <button onclick="setFilter('Clothing')" class="filter-btn px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all text-slate-500">Clothing</button>
+        <button onclick="setFilter('Accessories')" class="filter-btn px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all text-slate-500">Accessories</button>
+    </div>
+
     <main class="p-6 max-w-6xl mx-auto">
-        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24">
-            <p class="col-span-full text-center py-20 text-slate-500 animate-pulse uppercase text-[10px] font-bold tracking-[0.3em]">Accessing Vault...</p>
-        </div>
-        <section class="max-w-md mx-auto py-20 border-t border-white/5">
-            <div class="glass-card p-8 rounded-[40px] text-center">
-                <h2 class="text-lg font-black italic uppercase text-emerald-400 mb-6">Custom Request</h2>
-                <input type="text" id="pName" placeholder="Item Name" class="w-full bg-black border border-white/10 p-4 rounded-2xl mb-4 outline-none text-sm">
-                <button id="p_upload" class="w-full border border-dashed border-white/20 py-5 rounded-2xl text-[10px] text-slate-500 uppercase font-bold mb-4">📸 Upload Photo</button>
-                <input type="hidden" id="pImg">
-                <button onclick="submitPreorder()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl uppercase text-[10px]">Get Quote</button>
-            </div>
-        </section>
+        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24"></div>
     </main>
 
     <div id="cartModal" class="fixed inset-0 bg-black/95 z-[100] hidden p-6 overflow-y-auto">
@@ -46,21 +50,20 @@
                 <p id="cartTotal" class="text-emerald-400 font-black text-xl mb-6"></p>
                 <input type="text" id="orderAddr" placeholder="Address" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
                 <input type="text" id="orderPh" placeholder="Phone" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
-                <div class="bg-white/5 p-6 rounded-3xl mt-6 border border-white/5">
-                    <p class="text-[10px] text-emerald-400 font-bold uppercase mb-2">KPay: 09-777XXXXXX (Malcolm)</p>
-                    <button id="uploadSS" class="w-full mt-4 border border-dashed border-emerald-500/50 py-4 rounded-xl text-[10px] text-emerald-500 font-bold uppercase">📸 Upload Screenshot</button>
-                    <input type="hidden" id="paymentImg">
-                </div>
+                <button id="uploadSS" class="w-full mt-4 border border-dashed border-emerald-500/50 py-4 rounded-xl text-[10px] text-emerald-500 font-bold uppercase">📸 Upload Screenshot</button>
+                <input type="hidden" id="paymentImg">
                 <button onclick="submitOrder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase mt-6">Confirm Purchase</button>
             </div>
-            <div id="authPrompt" class="hidden text-center py-20"><a href="/login" class="bg-white text-black px-10 py-4 rounded-2xl font-black uppercase text-[10px]">Login to Shop</a></div>
         </div>
     </div>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        let cart = []; const user = JSON.parse(localStorage.getItem('neverUser'));
+        let allItems = [];
+        let currentCategory = 'All';
+        const user = JSON.parse(localStorage.getItem('neverUser'));
 
+        // DROP-DOWN LOGIC
         if(user) {
             document.getElementById('userGreet').innerHTML = `
                 <button onclick="toggleUserMenu(event)" class="text-emerald-400 flex items-center gap-1">${user.username} ▾</button>
@@ -75,23 +78,49 @@
         function logout() { localStorage.removeItem('neverUser'); location.reload(); }
         function deleteAccount() { if(confirm("Delete account?")){ localStorage.removeItem('neverUser'); location.href='/signup'; } }
 
+        // SHOP LOGIC
         async function loadShop() {
-            const res = await fetch('/items'); const data = await res.json();
-            const activeItems = data.filter(i => i.grade === 'Instock').reverse();
+            const res = await fetch('/items');
+            allItems = await res.json();
+            renderGrid();
+        }
+
+        function setFilter(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(cat.toUpperCase()));
+                btn.classList.toggle('text-slate-500', !btn.innerText.includes(cat.toUpperCase()));
+            });
+            renderGrid();
+        }
+
+        function renderGrid() {
             const grid = document.getElementById('shop-grid');
-            if (activeItems.length === 0) { grid.innerHTML = `<p class="col-span-full text-center py-20 opacity-30 uppercase font-black">Vault Empty</p>`; return; }
-            grid.innerHTML = activeItems.map(i => `
-                <div class="glass-card p-3 rounded-[32px]">
+            const filtered = allItems.filter(i => (currentCategory === 'All' || i.category === currentCategory) && i.grade !== 'Pending').reverse();
+            
+            if (filtered.length === 0) { grid.innerHTML = `<p class="col-span-full text-center py-20 opacity-30 uppercase font-black">No items found</p>`; return; }
+
+            grid.innerHTML = filtered.map(i => {
+                const isSold = i.grade === 'Soldout';
+                return `
+                <div class="glass-card p-3 rounded-[32px] relative ${isSold ? 'sold-out' : ''}">
+                    ${isSold ? '<div class="sold-badge">SOLD</div>' : ''}
                     <img src="${i.productImage}" class="w-full aspect-[3/4] object-cover rounded-2xl mb-3">
                     <div class="px-2">
                         <h3 class="text-[10px] font-bold uppercase text-slate-400 truncate">${i.name}</h3>
                         <p class="font-black text-emerald-400 text-sm mb-3">${i.price.toLocaleString()} MMK</p>
-                        <button onclick="addToCart('${i.name}', ${i.price}, '${i.productImage}')" class="w-full bg-white text-black text-[9px] font-black py-2.5 rounded-xl uppercase">Add to Cart</button>
+                        <button onclick="addToCart('${i.name}', ${i.price}, '${i.productImage}')" 
+                                class="w-full bg-white text-black text-[9px] font-black py-2.5 rounded-xl uppercase ${isSold ? 'hidden' : ''}">
+                            Add to Cart
+                        </button>
                     </div>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         }
 
-        function addToCart(name, price, img) { cart.push({name, price, img}); updateCartUI(); alert("Added!"); }
+        // Add to Cart & Checkout (Same logic as previously verified)
+        let cart = [];
+        function addToCart(name, price, img) { cart.push({name, price, img}); updateCartUI(); alert("Added to cart!"); }
         function updateCartUI() {
             document.getElementById('cartCount').innerText = cart.length;
             const total = cart.reduce((s,i)=>s+i.price, 0);
@@ -100,18 +129,17 @@
             if(cart.length > 0) { if(user) { document.getElementById('checkoutForm').classList.remove('hidden'); document.getElementById('orderAddr').value = user.address; document.getElementById('orderPh').value = user.phone; } else { document.getElementById('authPrompt').classList.remove('hidden'); } }
             else { document.getElementById('checkoutForm').classList.add('hidden'); }
         }
-
         function toggleCart() { document.getElementById('cartModal').classList.toggle('hidden'); }
+
         var ssWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") { document.getElementById('paymentImg').value = r.info.secure_url; document.getElementById('uploadSS').innerText = "✅ PHOTO READY"; }});
         document.getElementById("uploadSS").addEventListener("click", () => ssWidget.open());
-        var preWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") { document.getElementById('pImg').value = r.info.secure_url; document.getElementById('p_upload').innerText = "✅ PHOTO READY"; }});
-        document.getElementById("p_upload").addEventListener("click", () => preWidget.open());
 
         async function submitOrder() {
             const ss = document.getElementById('paymentImg').value; if(!ss) return alert("Upload Screenshot!");
             await fetch('/submit-order', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId: user.id, username: user.username, items: cart, totalMMK: cart.reduce((s,i)=>s+i.price,0), address: document.getElementById('orderAddr').value, phone: document.getElementById('orderPh').value, paymentScreenshot: ss })});
-            alert("Success!"); cart = []; updateCartUI(); toggleCart(); location.reload();
+            alert("Order Success!"); location.reload();
         }
+
         loadShop();
     </script>
 </body>

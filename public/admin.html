@@ -35,11 +35,20 @@
 
         <div class="overflow-hidden rounded-[40px] border border-white/5 mb-12 bg-slate-900/50">
             <table class="w-full text-left">
-                <thead class="bg-slate-900 text-[10px] font-black uppercase text-slate-500"><tr><th class="p-6">User</th><th class="p-6">Total</th><th class="p-6">Proof</th><th class="p-6">Status</th></tr></thead>
-                <tbody id="order-list"></tbody>
+                <thead class="bg-slate-900 text-[10px] font-black uppercase text-slate-500">
+    <tr>
+        <th class="p-6">User</th>
+        <th class="p-6">Items</th> <th class="p-6">Total</th>
+        <th class="p-6">Proof</th>
+        <th class="p-6">Status</th>
+    </tr>
+</thead>
+<tbody id="order-list"></tbody>
             </table>
         </div>
-
+        <div class="mb-6">
+    <input type="text" id="invSearch" onkeyup="searchInventory()" placeholder="Search Inventory..." class="w-full max-w-xs bg-slate-900 border border-white/10 p-3 rounded-xl outline-none text-[10px] font-bold uppercase tracking-widest focus:border-emerald-500/50 transition-all">
+</div>
         <div class="flex justify-between items-center mb-6"><h2 class="text-lg font-black italic uppercase">Inventory</h2><div class="flex bg-slate-900 p-1 rounded-2xl border border-white/5"><button onclick="filterInventory('All')" class="filter-btn active-filter px-4 py-2 rounded-xl text-[10px] font-black">All</button><button onclick="filterInventory('Instock')" class="filter-btn px-4 py-2 rounded-xl text-[10px] font-black text-slate-500">Instock</button><button onclick="filterInventory('Soldout')" class="filter-btn px-4 py-2 rounded-xl text-[10px] font-black text-slate-500">Sold</button></div></div>
         <div class="overflow-hidden rounded-[40px] border border-white/5 mb-20 bg-slate-900/50">
             <table class="w-full text-left">
@@ -67,8 +76,33 @@
             list.innerHTML = filtered.reverse().map(i => `<tr class="border-t border-white/5"><td class="p-6 flex items-center gap-4"><img src="${i.productImage}" class="w-10 h-10 rounded-lg object-cover"><b>${i.name}</b></td><td class="p-6"><select onchange="updateGrade('${i._id}', this.value)" class="bg-black p-2 rounded-lg text-[10px] uppercase font-bold border border-white/10"><option value="Instock" ${i.grade==='Instock'?'selected':''}>Instock</option><option value="Soldout" ${i.grade==='Soldout'?'selected':''}>Sold Out</option><option value="Pending" ${i.grade==='Pending'?'selected':''}>Request</option></select></td><td class="p-6 text-emerald-400 font-bold">${i.price.toLocaleString()}</td><td class="p-6"><button onclick="deleteItem('${i._id}')" class="text-red-500 font-black">✕</button></td></tr>`).join('');
         }
         function renderOrders(orders) {
-            document.getElementById('order-list').innerHTML = orders.map(o => `<tr class="border-t border-white/5 text-[10px] font-bold"><td class="p-6">${o.username}</td><td class="p-6 text-emerald-400 font-black">${o.totalMMK.toLocaleString()}</td><td class="p-6"><a href="${o.paymentScreenshot}" target="_blank" class="text-blue-400 underline">PROOF</a></td><td class="p-6"><select onchange="updateOrder('${o._id}', this.value)" class="bg-black p-2 rounded-lg border border-white/10 uppercase"><option value="Pending Verification" ${o.status==='Pending Verification'?'selected':''}>Pending</option><option value="Paid & Verified" ${o.status==='Paid & Verified'?'selected':''}>Verified</option><option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option></select></td></tr>`).join('');
-        }
+    document.getElementById('order-list').innerHTML = orders.map(o => `
+        <tr class="border-t border-white/5 text-[10px] font-bold">
+            <td class="p-6 cursor-pointer hover:text-emerald-400 transition-colors" onclick="copyToClipboard('${o.username}\\n${o.phone}\\n${o.address}')">
+                ${o.username}<br>
+                <span class="text-slate-500 font-normal">${o.phone}</span>
+                <p class="text-[8px] text-slate-600 mt-1 uppercase">Click to copy details</p>
+            </td>
+            <td class="p-6 text-slate-400">
+                ${o.items.map(i => `<div class="mb-1">• ${i.name}</div>`).join('')}
+            </td>
+            <td class="p-6 text-emerald-400 font-black">${o.totalMMK.toLocaleString()} MMK</td>
+            <td class="p-6"><a href="${o.paymentScreenshot}" target="_blank" class="text-blue-400 underline uppercase">View Proof</a></td>
+            <td class="p-6">
+                <select onchange="updateOrder('${o._id}', this.value)" class="bg-black p-2 rounded-lg border border-white/10 uppercase">
+                    <option value="Pending Verification" ${o.status==='Pending Verification'?'selected':''}>Pending</option>
+                    <option value="Paid & Verified" ${o.status==='Paid & Verified'?'selected':''}>Verified</option>
+                    <option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option>
+                    <option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option>
+                </select>
+            </td>
+        </tr>`).join('');
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text);
+    alert("Shipping info copied!");
+}
         async function updateGrade(id, g) { await fetch(`/update-item/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({grade: g})}); loadAdmin(); }
         async function updateOrder(id, s) { await fetch(`/update-order/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status: s})}); loadAdmin(); }
         async function deleteItem(id) { if(confirm('Delete?')){ await fetch(`/delete-item/${id}`, { method: 'DELETE'}); loadAdmin(); }}
@@ -79,6 +113,20 @@
             await fetch('/add-item', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: document.getElementById('itemName').value, price: finalPrice, category: document.getElementById('itemCat').value, productImage: document.getElementById('itemImg').value })});
             location.reload();
         }
+        function searchInventory() {
+    const term = document.getElementById('invSearch').value.toLowerCase();
+    const rows = document.querySelectorAll('#inventory-list tr');
+    
+    rows.forEach(row => {
+        // We look for the 'b' tag which contains the item name
+        const nameTag = row.querySelector('b');
+        if (nameTag) {
+            const name = nameTag.innerText.toLowerCase();
+            row.style.display = name.includes(term) ? '' : 'none';
+        }
+    });
+
+}
     </script>
 </body>
 </html>
