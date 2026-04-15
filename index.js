@@ -107,5 +107,15 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 
+// Get orders for a specific user
+app.get('/my-orders/:userId', async (req, res) => {
+    try {
+        const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
+});
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Store Live on ${PORT}`));
