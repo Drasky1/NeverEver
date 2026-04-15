@@ -1,36 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Track Order | NeverEver</title><script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #000; color: white; }</style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order</title><script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background: #000; color: #fff; }</style>
 </head>
 <body class="p-6">
-    <nav class="max-w-4xl mx-auto py-6 flex justify-between items-center mb-10">
-        <a href="/" class="text-xs font-black uppercase tracking-widest text-slate-500">← Back</a>
-        <h1 class="text-lg font-black italic text-emerald-400 uppercase">Track Orders</h1>
-    </nav>
-    <main class="max-w-2xl mx-auto">
-        <div id="orderList" class="space-y-6"></div>
-        <div id="loginPrompt" class="hidden text-center py-20 bg-slate-900 border border-white/5 rounded-[40px]">
-            <p class="text-slate-500 text-[10px] font-bold uppercase mb-6">Login to view history</p>
-            <a href="/login" class="bg-white text-black px-10 py-4 rounded-2xl font-black uppercase text-[10px]">Login</a>
-        </div>
-    </main>
+    <div class="max-w-2xl mx-auto py-10">
+        <header class="flex justify-between items-center mb-10">
+            <h1 class="text-2xl font-black italic uppercase">Track <span class="text-emerald-400">Order</span></h1>
+            <a href="/" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">← Back</a>
+        </header>
+        <div id="list" class="space-y-6"></div>
+    </div>
+
     <script>
         const user = JSON.parse(localStorage.getItem('neverUser'));
+        const states = ["Pending Verification", "Paid & Verified", "Shipped", "Delivered"];
+
         async function load() {
-            if(!user) return document.getElementById('loginPrompt').classList.remove('hidden');
-            const res = await fetch(`/my-orders/${user.id}`); const orders = await res.json();
-            document.getElementById('orderList').innerHTML = orders.length ? orders.map(o => `
-                <div class="bg-slate-900 border border-white/5 p-8 rounded-[40px]">
-                    <div class="flex justify-between mb-6">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase">${new Date(o.createdAt).toLocaleDateString()}</p>
-                        <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase rounded-full">${o.status}</span>
+            const res = await fetch(`/my-orders/${user.id}`);
+            const orders = await res.json();
+            document.getElementById('list').innerHTML = orders.map(o => {
+                const step = states.indexOf(o.status);
+                return `
+                <div class="bg-slate-900/50 border border-white/5 p-8 rounded-[40px]">
+                    <div class="flex justify-between text-[10px] font-black uppercase text-slate-500 mb-6">
+                        <span>ID: ${o._id.slice(-6)}</span>
+                        <span>${new Date(o.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <div class="space-y-2 border-t border-white/5 pt-4">
-                        ${o.items.map(i=>`<div class="flex justify-between text-xs text-slate-300"><span>${i.name}</span><span>${Math.round(i.price).toLocaleString()}</span></div>`).join('')}
+                    
+                    <div class="flex justify-between mb-8 relative">
+                        <div class="absolute top-1/2 left-0 w-full h-[2px] bg-white/5 -translate-y-1/2 z-0"></div>
+                        <div class="absolute top-1/2 left-0 h-[2px] bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-1000" style="width: ${(step/3)*100}%"></div>
+                        ${states.map((s, i) => `<div class="w-3 h-3 rounded-full z-10 ${i <= step ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-slate-800'}"></div>`).join('')}
                     </div>
-                </div>`).join('') : '<p class="text-center text-slate-500 font-bold uppercase text-[10px]">No orders yet</p>';
+                    
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-xs font-black uppercase text-emerald-400">${o.status}</p>
+                            <p class="text-[10px] text-slate-500">${o.items.length} Items</p>
+                        </div>
+                        <p class="text-xl font-black">${o.totalMMK.toLocaleString()} MMK</p>
+                    </div>
+                </div>`;
+            }).join('');
         }
         load();
     </script>

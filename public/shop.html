@@ -2,120 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeverEver | Official Store</title><script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #000; color: white; }</style>
+    <title>NeverEver Store</title><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
 </head>
 <body>
-    <nav class="p-6 flex justify-between items-center border-b border-white/5 sticky top-0 bg-black/80 backdrop-blur-lg z-50">
+    <nav class="p-6 border-b border-white/5 sticky top-0 bg-black/90 backdrop-blur-md z-50 flex justify-between items-center">
         <h1 class="text-xl font-black italic text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
-        <div class="flex items-center gap-6">
-            <a href="/track" class="text-[10px] font-black text-emerald-400 border border-emerald-400/30 px-3 py-1.5 rounded-full uppercase tracking-widest">Track Orders</a>
-            <span id="userGreet" class="text-[10px] font-bold uppercase text-slate-500"></span>
-            <button onclick="toggleCart()" class="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
-                <span id="cartCount" class="absolute -top-2 -right-2 bg-emerald-500 text-black text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">0</span>
-            </button>
+        <div class="flex gap-4 items-center">
+            <a href="/track" class="text-[10px] font-bold uppercase border border-white/10 px-4 py-2 rounded-full">Orders</a>
+            <button onclick="toggleCart()" class="bg-white text-black p-2 rounded-full px-4 text-[10px] font-black uppercase">Cart (<span id="count">0</span>)</button>
         </div>
     </nav>
 
-    <main class="p-6 max-w-6xl mx-auto">
-        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24"></div>
-
-        <section id="preorder" class="max-w-md mx-auto py-20 border-t border-white/5">
-            <div class="bg-slate-900/50 p-8 rounded-[40px] border border-white/5 text-center">
-                <h2 class="text-lg font-black italic uppercase text-emerald-400 mb-6 text-center">Custom Preorder</h2>
-                <input type="text" id="pName" placeholder="Item Name" class="w-full bg-black border border-white/10 p-4 rounded-2xl mb-4 outline-none text-sm">
-                <button id="p_upload" class="w-full border border-dashed border-white/20 py-5 rounded-2xl text-[10px] text-slate-500 uppercase font-bold mb-4">📸 Photo</button>
-                <input type="hidden" id="pImg">
-                <button onclick="submitPreorder()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl uppercase text-[10px]">Request Quote</button>
+    <div class="p-6 max-w-6xl mx-auto">
+        <div class="mb-10 space-y-6">
+            <input type="text" id="search" oninput="renderShop()" placeholder="Search products..." class="w-full bg-slate-900 p-4 rounded-2xl border border-white/5 outline-none focus:border-emerald-500">
+            
+            <div class="flex gap-3 overflow-x-auto hide-scroll">
+                <button onclick="setCat('All')" class="cat-btn bg-white text-black px-6 py-2 rounded-full text-[10px] font-bold uppercase whitespace-nowrap">All Items</button>
+                <button onclick="setCat('Clothing')" class="cat-btn bg-slate-900 px-6 py-2 rounded-full text-[10px] font-bold uppercase whitespace-nowrap">Clothing</button>
+                <button onclick="setCat('Accessories')" class="cat-btn bg-slate-900 px-6 py-2 rounded-full text-[10px] font-bold uppercase whitespace-nowrap">Accessories</button>
             </div>
-        </section>
-    </main>
+        </div>
 
-    <div id="cartModal" class="fixed inset-0 bg-black/95 z-[100] hidden p-6 overflow-y-auto">
-        <div class="max-w-md mx-auto">
-            <div class="flex justify-between items-center mb-10"><h2 class="text-2xl font-black italic uppercase">Cart</h2><button onclick="toggleCart()" class="text-slate-500 text-xs font-bold uppercase">Close</button></div>
+        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+    </div>
+
+    <div id="cartBox" class="fixed inset-0 bg-black/95 z-[100] hidden p-6">
+        <div class="max-w-md mx-auto py-10">
+            <h2 class="text-2xl font-black mb-10 uppercase italic">Your Cart</h2>
             <div id="cartItems" class="space-y-4 mb-10"></div>
-            <div id="checkoutForm" class="hidden space-y-4">
-                <p id="cartTotal" class="text-emerald-400 font-black text-xl mb-6"></p>
-                <input type="text" id="orderAddr" placeholder="Full Address" class="w-full bg-slate-900 p-4 rounded-2xl text-white">
-                <input type="text" id="orderPh" placeholder="Phone" class="w-full bg-slate-900 p-4 rounded-2xl text-white">
-                <div class="bg-white/5 p-6 rounded-3xl mt-6">
-                    <p class="text-[10px] text-emerald-400 font-bold uppercase mb-2">Transfer to:</p>
-                    <p class="font-bold text-sm">KPay: 09-777XXXXXX (Malcolm)</p>
-                    <button id="uploadSS" class="w-full mt-4 border border-dashed border-emerald-500/50 py-4 rounded-xl text-[10px] text-emerald-500">📸 UPLOAD SCREENSHOT</button>
-                    <input type="hidden" id="paymentImg">
-                </div>
-                <button onclick="submitOrder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase mt-6">Confirm Purchase</button>
+            <div id="checkout" class="space-y-4 hidden">
+                <p id="total" class="text-2xl font-black text-emerald-400"></p>
+                <input type="text" id="addr" placeholder="Address" class="w-full bg-slate-900 p-4 rounded-xl">
+                <input type="text" id="ph" placeholder="Phone" class="w-full bg-slate-900 p-4 rounded-xl">
+                <button id="upSS" class="w-full border-2 border-dashed border-emerald-500/20 py-6 rounded-xl text-[10px] font-bold">📸 UPLOAD PAYMENT SCREENSHOT</button>
+                <input type="hidden" id="ss">
+                <button onclick="pay()" class="w-full bg-emerald-500 text-black py-4 rounded-xl font-black uppercase tracking-widest">Confirm Order</button>
             </div>
-            <div id="authPrompt" class="hidden text-center py-20"><a href="/login" class="bg-white text-black px-10 py-4 rounded-2xl font-black uppercase text-[10px]">Login to Shop</a></div>
+            <button onclick="toggleCart()" class="mt-10 text-slate-500 uppercase text-[10px] font-bold">← Close</button>
         </div>
     </div>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        const RATE = 130; let cart = []; const user = JSON.parse(localStorage.getItem('neverUser'));
-        if(user) document.getElementById('userGreet').innerText = user.username;
-        else document.getElementById('userGreet').innerHTML = `<a href="/login" class="text-emerald-400">Login</a>`;
+        let items = [], cart = [], cat = 'All';
+        const user = JSON.parse(localStorage.getItem('neverUser'));
+        const RATE = 130;
 
-        async function loadShop() {
-    const res = await fetch('/items');
-    const data = await res.json();
-    const grid = document.getElementById('shop-grid');
-    
-    // ONLY SHOW "INSTOCK" ITEMS TO CUSTOMERS
-    const activeItems = data.filter(i => i.grade === 'Instock').reverse();
+        async function init() {
+            const res = await fetch('/items');
+            items = await res.json();
+            renderShop();
+        }
 
-    if (activeItems.length === 0) {
-        grid.innerHTML = `<p class="col-span-full text-center py-20 text-slate-500 uppercase text-[10px] font-bold">New stock coming soon...</p>`;
-        return;
-    }
+        function setCat(c) { 
+            cat = c; 
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.className = b.innerText.includes(c) ? 'cat-btn bg-white text-black px-6 py-2 rounded-full text-[10px] font-bold uppercase whitespace-nowrap' : 'cat-btn bg-slate-900 px-6 py-2 rounded-full text-[10px] font-bold uppercase whitespace-nowrap';
+            });
+            renderShop(); 
+        }
 
-    grid.innerHTML = activeItems.map(i => `
-        <div class="bg-slate-900/50 p-3 rounded-[32px] border border-white/5">
-            <img src="${i.productImage}" class="w-full aspect-[3/4] object-cover rounded-2xl mb-3">
-            <div class="px-2">
-                <h3 class="text-[10px] font-bold uppercase text-slate-400 truncate">${i.name}</h3>
-                <p class="font-black text-emerald-400 text-sm mb-3">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
-                <button onclick="addToCart('${i.name}', ${i.price * 1.25 * RATE}, '${i.productImage}')" 
-                    class="w-full bg-white text-black text-[9px] font-black py-2.5 rounded-xl uppercase hover:bg-emerald-400 transition-colors">
-                    Add to Cart
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
+        function renderShop() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const filtered = items.filter(i => i.grade === 'Instock' && (cat === 'All' || i.category === cat) && i.name.toLowerCase().includes(query));
+            document.getElementById('shop-grid').innerHTML = filtered.map(i => `
+                <div class="bg-slate-900/50 p-3 rounded-[30px] border border-white/5">
+                    <img src="${i.productImage}" class="w-full aspect-square object-cover rounded-[20px] mb-4">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase px-2">${i.category}</p>
+                    <h3 class="font-bold text-sm px-2 truncate">${i.name}</h3>
+                    <p class="text-emerald-400 font-black px-2 mb-4">${Math.round(i.price*1.25*RATE).toLocaleString()} MMK</p>
+                    <button onclick="addToCart('${i.name}',${i.price*1.25*RATE})" class="w-full bg-white text-black py-3 rounded-2xl text-[10px] font-black uppercase">Add to Cart</button>
+                </div>
+            `).join('');
+        }
 
-        function addToCart(name, price, img) { cart.push({name, price, img}); updateCartUI(); alert("Added!"); }
+        function addToCart(n, p) { cart.push({n, p}); document.getElementById('count').innerText = cart.length; updateCartUI(); }
+        
         function updateCartUI() {
-            document.getElementById('cartCount').innerText = cart.length;
-            const total = cart.reduce((s,i)=>s+i.price, 0);
-            document.getElementById('cartTotal').innerText = `Total: ${Math.round(total).toLocaleString()} MMK`;
-            document.getElementById('cartItems').innerHTML = cart.map((i,idx)=>`<div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl"><p class="text-[10px] font-bold uppercase">${i.name}</p><button onclick="cart.splice(${idx},1);updateCartUI()" class="text-red-500">✕</button></div>`).join('');
-            if(cart.length > 0) { if(user) { document.getElementById('checkoutForm').classList.remove('hidden'); document.getElementById('orderAddr').value = user.address; document.getElementById('orderPh').value = user.phone; } else { document.getElementById('authPrompt').classList.remove('hidden'); } }
-        }
-        function toggleCart() { document.getElementById('cartModal').classList.toggle('hidden'); }
-
-        var ssWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") { document.getElementById('paymentImg').value = r.info.secure_url; document.getElementById('uploadSS').innerText = "✅ PHOTO SAVED"; }});
-        document.getElementById("uploadSS").addEventListener("click", () => ssWidget.open());
-
-        var preWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") { document.getElementById('pImg').value = r.info.secure_url; document.getElementById('p_upload').innerText = "✅ PHOTO READY"; }});
-        document.getElementById("p_upload").addEventListener("click", () => preWidget.open());
-
-        async function submitPreorder() {
-            if(!user) return alert("Login first!");
-            const n = document.getElementById('pName').value, img = document.getElementById('pImg').value;
-            await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name:n, productImage:img, grade:'Pending', price:0, customerPhone:user.username})});
-            alert("Request Sent!"); location.reload();
+            const sum = cart.reduce((s, i) => s + i.p, 0);
+            document.getElementById('cartItems').innerHTML = cart.map((i, idx) => `<div class="flex justify-between bg-white/5 p-4 rounded-xl text-xs"><span>${i.n}</span><button onclick="cart.splice(${idx},1);updateCartUI()">✕</button></div>`).join('');
+            document.getElementById('total').innerText = `Total: ${sum.toLocaleString()} MMK`;
+            if(cart.length > 0 && user) {
+                document.getElementById('checkout').classList.remove('hidden');
+                document.getElementById('addr').value = user.address;
+                document.getElementById('ph').value = user.phone;
+            }
         }
 
-        async function submitOrder() {
-            const ss = document.getElementById('paymentImg').value; if(!ss) return alert("Upload screenshot!");
-            const data = { userId: user.id, username: user.username, items: cart, totalMMK: cart.reduce((s,i)=>s+i.price,0), address: document.getElementById('orderAddr').value, phone: document.getElementById('orderPh').value, paymentScreenshot: ss };
+        function toggleCart() { document.getElementById('cartBox').classList.toggle('hidden'); }
+
+        cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { 
+            if (r.event === "success") { document.getElementById('ss').value = r.info.secure_url; document.getElementById('upSS').innerText = "✅ UPLOADED"; }
+        }).init().addEventListener("click", function(){ this.open() }, false);
+
+        async function pay() {
+            const data = { userId: user.id, username: user.username, items: cart, totalMMK: cart.reduce((s,i)=>s+i.p,0), address: document.getElementById('addr').value, phone: document.getElementById('ph').value, paymentScreenshot: document.getElementById('ss').value };
             await fetch('/submit-order', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-            alert("Success!"); location.reload();
+            alert("Order Success!"); location.reload();
         }
-        loadShop();
+
+        init();
     </script>
 </body>
 </html>
