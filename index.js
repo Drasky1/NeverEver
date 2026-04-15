@@ -19,7 +19,7 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
-// MODELS
+// --- MODELS ---
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
     category: { type: String, default: 'General' },
@@ -42,7 +42,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// API ROUTES
+// --- API ROUTES ---
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -75,13 +75,14 @@ app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelet
 app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 
-// STABLE PAGE ROUTING
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+// --- PAGE ROUTING ---
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 
-// Catch-all (This version works with all Node/Express versions)
+// Catch-all (KEEP AT BOTTOM)
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
