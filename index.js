@@ -2,60 +2,76 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const axios = require('axios');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-// --- CONFIGURATION ---
-const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
-const ADMIN_IDS = ['1923704168'];
-
-// --- STABLE DATABASE CONNECTION ---
-// Using the long-form connection string to prevent Render timeout errors
+// --- DATABASE CONNECTION (STABILITY VERSION) ---
 const dbURI = 'mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority';
 
 mongoose.connect(dbURI, {
-    serverSelectionTimeoutMS: 30000, // Wait 30s before giving up
-    socketTimeoutMS: 45000,          // Close inactive connections after 45s
-    family: 4                        // FORCE IPv4 (This is the key for Render)
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+    family: 4 // Forces IPv4 to bypass local/Render connection issues
 })
 .then(() => console.log("✅ Database Connected Successfully"))
-.catch(err => {
-    console.error("❌ Database Connection Error!");
-    console.error("Reason:", err.message);
+.catch(err => console.error("❌ Database Connection Error:", err.message));
+
+// --- SCHEMA ---
+const ItemSchema = new mongoose.Schema({
+    name: String,
+    grade: { type: String, default: 'Pending' }, 
+    price: { type: Number, default: 0 },
+    productImage: String,
+    customerPhone: String,
+    adminNote: { type: String, default: '' }
 });
 const Item = mongoose.model('Item', ItemSchema);
 
 // --- ROUTES ---
 app.get('/items', async (req, res) => { 
     try {
-        const allItems = await Item.find().maxTimeMS(20000); // Give it extra time
+        const allItems = await Item.find().maxTimeMS(20000);
         res.json(allItems); 
-    } catch (err) { res.status(500).json({error: "Database Timeout"}); }
+    } catch (err) { 
+        res.status(500).json({error: "Database Timeout"}); 
+    }
 });
 
 app.post('/add-item', async (req, res) => {
-    const newItem = new Item(req.body);
-    await newItem.save();
-    res.json(newItem);
+    try {
+        const newItem = new Item(req.body);
+        await newItem.save();
+        res.json(newItem);
+    } catch (err) {
+        res.status(500).json({error: err.message});
+    }
 });
 
 app.put('/update-item/:id', async (req, res) => {
-    const updated = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updated);
+    try {
+        const updated = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({error: err.message});
+    }
 });
 
 app.delete('/delete-item/:id', async (req, res) => {
-    await Item.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted" });
+    try {
+        await Item.findByIdAndDelete(req.params.id);
+        res.json({ message: "Deleted" });
+    } catch (err) {
+        res.status(500).json({error: err.message});
+    }
 });
 
+// HTML Serves
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
