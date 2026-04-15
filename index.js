@@ -16,7 +16,7 @@ const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
 const ADMIN_IDS = ['1923704168'];
 
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority', { family: 4 })
-    .then(() => console.log("✅ SYSTEM ONLINE"))
+    .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
 // MODELS
@@ -25,8 +25,7 @@ const Item = mongoose.model('Item', new mongoose.Schema({
     category: { type: String, default: 'General' },
     grade: { type: String, default: 'Instock' }, 
     price: Number, 
-    productImage: String, 
-    customerPhone: { type: String, default: 'Admin' }
+    productImage: String
 }));
 
 const User = mongoose.model('User', new mongoose.Schema({
@@ -43,7 +42,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// API
+// API ROUTES
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -67,7 +66,7 @@ app.post('/submit-order', async (req, res) => {
     await new Order(req.body).save();
     axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { 
         chat_id: ADMIN_IDS[0], text: `📦 NEW ORDER: ${req.body.username} - ${req.body.totalMMK} MMK` 
-    }).catch(e => console.log("Telegram Error"));
+    }).catch(e => console.log("Tele Error"));
     res.json({ success: true });
 });
 
@@ -76,15 +75,16 @@ app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelet
 app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 
-// FIXED ROUTING FOR NODE V22
+// STABLE PAGE ROUTING
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 
-app.get('/:any*', (req, res) => {
+// Catch-all (This version works with all Node/Express versions)
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 NeverEver Running on ${PORT}`));
