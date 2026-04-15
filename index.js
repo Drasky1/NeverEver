@@ -12,12 +12,11 @@ app.use(express.static('public'));
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
 const ADMIN_IDS = ['1923704168'];
 
-const dbURI = 'mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEver?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority';
+const dbURI = 'mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority';
 
 mongoose.connect(dbURI, {
-    serverSelectionTimeoutMS: 30000,
-    socketTimeoutMS: 45000,
-    family: 4 
+    serverSelectionTimeoutMS: 30000, // Give it time to connect
+    family: 4                       // Force IPv4 (important for Render)
 })
 .then(() => console.log("✅ DATABASE CONNECTED"))
 .catch(err => console.error("❌ Connection Error:", err.message));
