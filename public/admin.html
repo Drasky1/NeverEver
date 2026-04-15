@@ -4,77 +4,109 @@
     <meta charset="UTF-8">
     <title>NeverEver Admin | Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #000; color: #e2e8f0; }</style>
+    <style>
+        body { background-color: #000; color: #e2e8f0; font-family: sans-serif; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
 </head>
 <body class="p-6">
     <div class="max-w-4xl mx-auto">
+        
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h1 class="text-2xl font-black italic text-emerald-500">NEVER<span class="text-white">EVER</span></h1>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Inventory Control Center</p>
+            </div>
+            <div class="text-right">
+                <a href="/" class="text-[10px] font-bold text-slate-400 hover:text-white transition">VIEW SHOP ↗</a>
+            </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4 mb-8">
-            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-[32px]">
                 <p class="text-[10px] uppercase font-bold text-slate-500 mb-1">Total Income (MMK)</p>
                 <h2 id="totalIncome" class="text-2xl font-black text-emerald-400">0</h2>
             </div>
-            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-[32px]">
                 <p class="text-[10px] uppercase font-bold text-slate-500 mb-1">Net Profit (MMK)</p>
                 <h2 id="totalProfit" class="text-2xl font-black text-white">0</h2>
             </div>
         </div>
 
-        <div class="space-y-4 mb-6">
-            <input type="text" id="adminSearch" onkeyup="render()" placeholder="🔍 Search product or customer..." 
-                class="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl outline-none focus:border-emerald-500 text-sm">
+        <div class="space-y-4 mb-8">
+            <div class="relative">
+                <input type="text" id="adminSearch" onkeyup="render()" placeholder="🔍 Search product or customer username..." 
+                    class="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl outline-none focus:border-emerald-500 text-sm transition-all">
+            </div>
             
             <div class="flex flex-wrap gap-2">
-                <button onclick="setFilter('All')" class="filter-btn bg-emerald-500 text-black text-[10px] font-bold px-4 py-2 rounded-full uppercase">All</button>
-                <button onclick="setFilter('Instock')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Instock</button>
-                <button onclick="setFilter('Preorder')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Preorder</button>
-                <button onclick="setFilter('Soldout')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Sold Out</button>
-                <button onclick="setFilter('Pending')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-4 py-2 rounded-full uppercase">Pending Requests</button>
+                <button onclick="setFilter('All')" class="filter-btn bg-emerald-500 text-black text-[10px] font-bold px-5 py-2.5 rounded-full uppercase transition-all">All</button>
+                <button onclick="setFilter('Instock')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-5 py-2.5 rounded-full uppercase text-slate-400 transition-all">Instock</button>
+                <button onclick="setFilter('Preorder')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-5 py-2.5 rounded-full uppercase text-slate-400 transition-all">Preorder</button>
+                <button onclick="setFilter('Soldout')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-5 py-2.5 rounded-full uppercase text-slate-400 transition-all">Sold Out</button>
+                <button onclick="setFilter('Pending')" class="filter-btn bg-slate-900 border border-slate-800 text-[10px] font-bold px-5 py-2.5 rounded-full uppercase text-slate-400 transition-all">Pending Requests</button>
             </div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl mb-10">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-[40px] mb-12">
+            <h3 class="text-xs font-black uppercase mb-6 text-slate-400 tracking-widest">Add New Product</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="newName" placeholder="Item Name" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
-                <input type="number" id="newPrice" placeholder="Cost in THB" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
-                <button id="upload_widget" class="bg-black border border-dashed border-slate-700 p-3 rounded-xl text-slate-500 text-xs">📸 Upload Photo</button>
+                <input type="text" id="newName" placeholder="Item Name" class="bg-black border border-slate-800 p-4 rounded-2xl outline-none focus:border-slate-600 text-sm">
+                <input type="number" id="newPrice" placeholder="Cost in THB" class="bg-black border border-slate-800 p-4 rounded-2xl outline-none focus:border-slate-600 text-sm">
+                
+                <button id="upload_widget" class="bg-black border border-dashed border-slate-700 p-4 rounded-2xl text-slate-500 text-[10px] font-bold uppercase hover:bg-slate-800 transition">
+                    📸 Upload Product Image
+                </button>
                 <input type="hidden" id="newImg">
-                <select id="newGrade" class="bg-black border border-slate-800 p-3 rounded-xl outline-none">
+
+                <select id="newGrade" class="bg-black border border-slate-800 p-4 rounded-2xl outline-none focus:border-slate-600 text-sm appearance-none">
                     <option value="Instock">Instock</option>
                     <option value="Preorder">Preorder</option>
                     <option value="Pending">Pending</option>
                     <option value="Soldout">Soldout</option>
                 </select>
             </div>
-            <button onclick="addNewItem()" class="w-full mt-4 bg-emerald-500 text-black font-black py-4 rounded-xl uppercase text-xs">Add to Database</button>
+            <button onclick="addNewItem()" class="w-full mt-6 bg-emerald-500 hover:bg-emerald-400 text-black font-black py-5 rounded-2xl uppercase text-[10px] tracking-[0.2em] transition-all active:scale-[0.98]">
+                Add to Database
+            </button>
         </div>
 
-        <div id="container" class="grid gap-4"></div>
+        <div id="container" class="grid gap-4">
+            </div>
     </div>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         let items = [];
         let currentFilter = 'All';
-        const RATE = 130; 
+        const RATE = 130; // THB to MMK
 
+        // Cloudinary Configuration
         var myWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (error, result) => { 
             if (!error && result.event === "success") { 
                 document.getElementById('newImg').value = result.info.secure_url;
-                document.getElementById('upload_widget').innerText = "✅ Image Loaded";
+                document.getElementById('upload_widget').innerText = "✅ IMAGE READY";
+                document.getElementById('upload_widget').classList.add('text-emerald-500', 'border-emerald-500');
             }
         });
         document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
 
+        // Load Data from Server
         async function load() {
-            const res = await fetch('/items');
-            items = await res.json();
-            updateStats();
-            render();
+            try {
+                const res = await fetch('/items');
+                items = await res.json();
+                updateStats();
+                render();
+            } catch (e) { console.error("Load failed", e); }
         }
 
+        // Finance Calculations
         function updateStats() {
             let income = 0; let profit = 0;
             items.forEach(i => {
+                // If Soldout, we still count it in total income/profit history
                 income += (i.price * 1.25 * RATE);
                 profit += (i.price * 0.25 * RATE);
             });
@@ -82,30 +114,42 @@
             document.getElementById('totalProfit').innerText = Math.round(profit).toLocaleString();
         }
 
+        // Filter Logic
         function setFilter(filter) {
             currentFilter = filter;
-            // UI Visual Update for buttons
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('bg-emerald-500', 'text-black');
-                btn.classList.add('bg-slate-900', 'text-white', 'border-slate-800');
+                btn.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
             });
-            event.target.classList.remove('bg-slate-900', 'text-white');
+            event.target.classList.remove('bg-slate-900', 'text-slate-400');
             event.target.classList.add('bg-emerald-500', 'text-black');
             render();
         }
 
+        // Add Item
         async function addNewItem() {
+            const name = document.getElementById('newName').value;
+            const price = document.getElementById('newPrice').value;
+            const img = document.getElementById('newImg').value;
+            if(!name || !price || !img) return alert("Please fill Name, Price and Upload Image");
+
             const data = {
-                name: document.getElementById('newName').value,
-                price: Number(document.getElementById('newPrice').value),
-                productImage: document.getElementById('newImg').value,
+                name: name,
+                price: Number(price),
+                productImage: img,
                 grade: document.getElementById('newGrade').value,
                 customerPhone: "Admin"
             };
-            await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            
+            await fetch('/add-item', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(data) 
+            });
             location.reload();
         }
 
+        // Main Render Function
         function render() {
             const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
             const container = document.getElementById('container');
@@ -115,44 +159,61 @@
                 (i.customerPhone && i.customerPhone.toLowerCase().includes(searchTerm))
             );
 
-            // Apply Status Filter
             if (currentFilter !== 'All') {
                 filtered = filtered.filter(i => i.grade === currentFilter);
             }
 
             container.innerHTML = filtered.reverse().map(i => `
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl flex justify-between items-center ${i.grade === 'Soldout' ? 'opacity-40' : ''}">
-                    <div class="flex items-center gap-4">
-                        <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-xl">
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-[32px] flex justify-between items-center transition-all ${i.grade === 'Soldout' ? 'opacity-40 grayscale' : 'hover:border-slate-600'}">
+                    <div class="flex items-center gap-5">
+                        <img src="${i.productImage}" class="w-16 h-20 object-cover rounded-2xl bg-black">
                         <div>
-                            <h3 class="font-bold text-sm uppercase">${i.name}</h3>
-                            <p class="text-[10px] text-emerald-400 font-mono">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
-                            <p class="text-[9px] text-slate-500">User: ${i.customerPhone} | Status: <span class="text-white">${i.grade}</span></p>
+                            <h3 class="font-black text-sm uppercase tracking-tight">${i.name}</h3>
+                            <p class="text-[11px] text-emerald-400 font-mono font-bold">${Math.round(i.price * 1.25 * RATE).toLocaleString()} MMK</p>
+                            <p class="text-[9px] text-slate-500 mt-1 uppercase font-bold">
+                                ${i.customerPhone} • <span class="${i.grade === 'Soldout' ? 'text-red-500' : 'text-slate-300'}">${i.grade}</span>
+                            </p>
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="updatePrice('${i._id}')" class="bg-white text-black px-3 py-2 rounded-lg text-[9px] font-bold">EDIT</button>
-                        <button onclick="del('${i._id}')" class="text-red-500 text-[9px] ml-2">DEL</button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="updateItem('${i._id}')" class="bg-white text-black px-4 py-2.5 rounded-xl text-[10px] font-black uppercase active:scale-95 transition">Edit</button>
+                        <button onclick="del('${i._id}')" class="p-2 text-slate-600 hover:text-red-500 transition">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5 v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                        </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function updatePrice(id) {
-            const p = prompt("New THB Cost:");
+        // Update Logic
+        async function updateItem(id) {
+            const p = prompt("New Cost (THB):");
             const g = prompt("New Status (Instock, Preorder, Pending, Soldout):");
             const n = prompt("Admin Note (Optional):");
-            if(p || g) {
+            
+            let updateData = {};
+            if(p) updateData.price = Number(p);
+            if(g) updateData.grade = g;
+            if(n !== null) updateData.adminNote = n;
+
+            if(Object.keys(updateData).length > 0) {
                 await fetch('/update-item/'+id, { 
                     method: 'PUT', 
                     headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ price: Number(p), grade: g, adminNote: n }) 
+                    body: JSON.stringify(updateData) 
                 });
                 load();
             }
         }
 
-        async function del(id) { if(confirm("Delete?")) { await fetch('/delete-item/'+id, {method:'DELETE'}); load(); } }
+        // Delete Logic
+        async function del(id) { 
+            if(confirm("Permanently delete this item?")) { 
+                await fetch('/delete-item/'+id, { method: 'DELETE' }); 
+                load(); 
+            } 
+        }
+
         load();
     </script>
 </body>

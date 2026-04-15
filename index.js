@@ -13,44 +13,35 @@ app.use(express.static('public'));
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
 const ADMIN_IDS = ['1923704168'];
 
-const sendTeleNotification = async (message) => {
-    try {
-        const promises = ADMIN_IDS.map(id => 
-            axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, {
-                chat_id: id, text: message, parse_mode: 'HTML'
-            })
-        );
-        await Promise.all(promises);
-    } catch (err) { console.error("Telegram error", err); }
-};
+// --- STABLE DATABASE CONNECTION ---
+// Using the long-form connection string to prevent Render timeout errors
+const dbURI = 'mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEver?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority&connectTimeoutMS=30000';
 
-// Replace your entire connection line with this:
-mongoose.connect('mongodb://Malcolm:Sa1Mon3LLA@cluster0-shard-00-00.h2cafaa.mongodb.net:27017,cluster0-shard-00-01.h2cafaa.mongodb.net:27017,cluster0-shard-00-02.h2cafaa.mongodb.net:27017/NeverEver?ssl=true&replicaSet=atlas-h2cafaa-shard-0&authSource=admin&retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=30000')
-  .then(() => console.log("✅ Connection Forced and Successful"))
-  .catch(err => console.error("❌ Still failing:", err.message));
+mongoose.connect(dbURI)
+  .then(() => console.log("✅ Render connected to MongoDB"))
+  .catch(err => console.error("❌ Connection Error:", err.message));
 
 const ItemSchema = new mongoose.Schema({
     name: String,
     grade: { type: String, default: 'Pending' }, 
-    price: { type: Number, default: 0 }, // This will be your THB cost
+    price: { type: Number, default: 0 },
     productImage: String,
     customerPhone: String,
     adminNote: { type: String, default: '' }
 });
 const Item = mongoose.model('Item', ItemSchema);
 
-// --- API ROUTES ---
+// --- ROUTES ---
 app.get('/items', async (req, res) => { 
-    const allItems = await Item.find();
-    res.json(allItems); 
+    try {
+        const allItems = await Item.find().maxTimeMS(20000); // Give it extra time
+        res.json(allItems); 
+    } catch (err) { res.status(500).json({error: "Database Timeout"}); }
 });
 
 app.post('/add-item', async (req, res) => {
     const newItem = new Item(req.body);
     await newItem.save();
-    if (req.body.grade === 'Pending') {
-        sendTeleNotification(`🚨 <b>New Request!</b>\nItem: ${req.body.name}\nFrom: ${req.body.customerPhone}`);
-    }
     res.json(newItem);
 });
 
@@ -64,7 +55,6 @@ app.delete('/delete-item/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-// --- ROUTING ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
