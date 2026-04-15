@@ -64,16 +64,25 @@ app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ us
 
 app.post('/submit-order', async (req, res) => {
     await new Order(req.body).save();
+    
+    // Professional Telegram Formatting
+    const message = `🔥 *NEW ORDER RECEIVED*\n\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK\n📍 *Address:* ${req.body.address}\n📞 *Phone:* ${req.body.phone}\n\n_Check admin dashboard for details._`;
+    
     axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { 
-        chat_id: ADMIN_IDS[0], text: `📦 NEW ORDER: ${req.body.username} - ${req.body.totalMMK} MMK` 
+        chat_id: ADMIN_IDS[0], 
+        text: message,
+        parse_mode: 'Markdown'
     }).catch(e => console.log("Tele Error"));
+    
     res.json({ success: true });
 });
 
 app.post('/add-item', async (req, res) => res.json(await new Item(req.body).save()));
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
-app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+
+// FIXED: returnDocument 'after' resolves the Mongoose warning
+app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
+app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
 
 // --- PAGE ROUTING ---
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
@@ -82,10 +91,7 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 
-// Catch-all (KEEP AT BOTTOM)
-app.use((req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
+app.use((req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 NeverEver Running on ${PORT}`));
