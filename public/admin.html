@@ -184,25 +184,35 @@
 
                 // 3. CALCULATE BUSINESS STATS
                 let invCost = 0; 
-                let profit = 0; 
-                let activeCount = 0;
+let profit = 0; 
+let activeCount = 0;
 
-                items.forEach(i => { if(i.grade === 'Instock') invCost += (i.costTHB * RATE); });
-                
-                orders.forEach(o => { 
-                    if(o.status !== "Pending Verification") {
-                        o.items.forEach(item => { 
-                            const orig = items.find(origItem => origItem.name === item.name);
-                            if(orig) profit += (item.price - (orig.costTHB * RATE));
-                        });
-                    } else {
-                        activeCount++;
-                    }
-                });
+items.forEach(i => { 
+    // We add (i.costTHB || 0) so if it's missing, it uses 0 instead of NaN
+    if(i.grade === 'Instock') {
+        invCost += (parseFloat(i.costTHB) || 0) * RATE; 
+    }
+});
 
-                document.getElementById('stat-cost').innerText = `${invCost.toLocaleString()} MMK`;
-                document.getElementById('stat-profit').innerText = `${profit.toLocaleString()} MMK`;
-                document.getElementById('stat-active').innerText = activeCount;
+orders.forEach(o => { 
+    if(o.status !== "Pending Verification") {
+        o.items.forEach(item => { 
+            const orig = items.find(origItem => origItem.name === item.name);
+            if(orig) {
+                // Same safety here for profit calculation
+                const itemCostMMK = (parseFloat(orig.costTHB) || 0) * RATE;
+                profit += (item.price - itemCostMMK);
+            }
+        });
+    } else {
+        activeCount++;
+    }
+});
+
+// Update the UI with safe numbers
+document.getElementById('stat-cost').innerText = `${Math.round(invCost).toLocaleString()} MMK`;
+document.getElementById('stat-profit').innerText = `${Math.round(profit).toLocaleString()} MMK`;
+document.getElementById('stat-active').innerText = activeCount;
 
             } catch (err) {
                 console.error("Load Error:", err);
