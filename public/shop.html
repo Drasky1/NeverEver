@@ -2,63 +2,88 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:title" content="NeverEver | Official Store">
-<meta property="og:description" content="Exclusive Resale & Personal Shopping. Handpicked drops.">
-<meta property="og:image" content="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776273517/Neverever_fuhatu.jpg">
-<meta property="og:type" content="website">
-<meta name="theme-color" content="#10b981">
-<link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg">
-    <title>NeverEver | Official Store</title><script src="https://cdn.tailwindcss.com"></script>
+    <title>NeverEver | Shop</title>
+    <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass-card { background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
-        .dropdown-menu { display: none; opacity: 0; transform: translateY(10px); transition: all 0.2s ease; }
-        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0px); }
+        body { background-color: #f2f2f2; color: #000; font-family: 'Helvetica', 'Arial', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* SOLD OUT STYLES */
-        .sold-out { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
-        .sold-badge {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg);
-            background: #ef4444; color: white; padding: 4px 12px; font-weight: 900;
-            font-size: 14px; border-radius: 4px; z-index: 10; letter-spacing: 2px;
-        }
-        .filter-btn.active { background: white; color: black; }
+        /* Grid Borders */
+        #shop-grid { gap: 1px; background-color: #e0e0e0; border: 1px solid #e0e0e0; }
+        .shop-item { background: #f2f2f2; padding: 40px 20px; transition: all 0.3s ease; position: relative; }
+        .shop-item:hover { background: #fff; }
+
+        /* Minimalist Navigation */
+        .filter-btn { color: #888; transition: color 0.2s; font-size: 11px; letter-spacing: 0.1em; }
+        .filter-btn.active { color: #000; text-decoration: underline; text-underline-offset: 4px; }
+
+        /* Sold Logic */
+        .sold-out img { filter: grayscale(1); opacity: 0.3; }
+        .sold-text { position: absolute; top: 20px; right: 20px; font-size: 9px; font-weight: 900; letter-spacing: 2px; color: #ff0000; }
+
+        /* Cart Side Panel */
+        #cartModal { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(100%); }
+        #cartModal.show { transform: translateX(0); }
     </style>
 </head>
-<body>
-    <nav class="p-6 flex justify-between items-center border-b border-white/5 sticky top-0 bg-black/80 backdrop-blur-lg z-50">
-        <h1 class="text-xl font-black italic text-emerald-400">NEVER<span class="text-white">EVER</span></h1>
-        <div class="flex items-center gap-6">
-            <a href="/track" class="text-[10px] font-black text-emerald-400 border border-emerald-400/30 px-3 py-1.5 rounded-full uppercase tracking-widest">Track</a>
-            <div id="userGreet" class="relative inline-block text-[10px] font-bold uppercase"></div>
-            <button onclick="toggleCart()" class="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
-                <span id="cartCount" class="absolute -top-2 -right-2 bg-emerald-500 text-black text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">0</span>
-            </button>
+<body class="min-h-screen">
+
+    <nav class="p-8 grid grid-cols-3 items-center sticky top-0 bg-[#f2f2f2]/90 backdrop-blur-md z-50 border-b border-black/5">
+        <div class="flex gap-4">
+            <a href="/track" class="text-[10px] font-black uppercase tracking-[0.2em]">Track</a>
+        </div>
+        
+        <div class="flex justify-center">
+            <a href="/">
+                <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" 
+                     alt="NeverEver" class="h-10 md:h-14 w-auto grayscale contrast-125">
+            </a>
+        </div>
+
+        <div class="flex justify-end gap-6 items-center">
+            <div id="userGreet" class="text-[10px] font-bold uppercase hidden md:block"></div>
+            <button onclick="toggleCart()" class="text-[10px] font-black uppercase tracking-[0.2em]">Cart (<span id="cartCount">0</span>)</button>
         </div>
     </nav>
 
-    <div class="flex gap-2 p-6 overflow-x-auto no-scrollbar">
-        <button onclick="setFilter('All')" class="filter-btn active px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">All Items</button>
-        <button onclick="setFilter('Clothing')" class="filter-btn px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all text-slate-500">Clothing</button>
-        <button onclick="setFilter('Accessories')" class="filter-btn px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all text-slate-500">Accessories</button>
+    <div class="flex justify-center gap-10 p-6 border-b border-black/5">
+        <button onclick="setFilter('All')" class="filter-btn active uppercase font-bold">All</button>
+        <button onclick="setFilter('Clothing')" class="filter-btn uppercase font-bold">Clothing</button>
+        <button onclick="setFilter('Accessories')" class="filter-btn uppercase font-bold">Accessories</button>
     </div>
 
-    <main class="p-6 max-w-6xl mx-auto">
-        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24"></div>
+    <main class="max-w-7xl mx-auto border-x border-black/5">
+        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4">
+            </div>
     </main>
 
-    <div id="cartModal" class="fixed inset-0 bg-black/95 z-[100] hidden p-6 overflow-y-auto">
-        <div class="max-w-md mx-auto">
-            <div class="flex justify-between items-center mb-10 text-2xl font-black italic uppercase"><h2>Cart</h2><button onclick="toggleCart()" class="text-slate-500 text-xs uppercase">Close</button></div>
-            <div id="cartItems" class="space-y-4 mb-10"></div>
-            <div id="checkoutForm" class="hidden space-y-4">
-                <p id="cartTotal" class="text-emerald-400 font-black text-xl mb-6"></p>
-                <input type="text" id="orderAddr" placeholder="Address" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
-                <input type="text" id="orderPh" placeholder="Phone" class="w-full bg-slate-900 p-4 rounded-2xl text-white outline-none">
-                <button id="uploadSS" class="w-full mt-4 border border-dashed border-emerald-500/50 py-4 rounded-xl text-[10px] text-emerald-500 font-bold uppercase">📸 Upload Screenshot</button>
+    <div id="cartOverlay" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] hidden" onclick="toggleCart()"></div>
+    <div id="cartModal" class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-[100] p-10 shadow-2xl overflow-y-auto">
+        <div class="flex justify-between items-center mb-16">
+            <h2 class="text-xl font-black italic uppercase">Your Cart</h2>
+            <button onclick="toggleCart()" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Close</button>
+        </div>
+
+        <div id="cartItems" class="space-y-8 mb-16"></div>
+
+        <div id="checkoutForm" class="hidden">
+            <div class="flex justify-between border-t border-black pt-6 mb-10">
+                <span class="text-[10px] font-black uppercase">Subtotal</span>
+                <span id="cartTotal" class="font-bold"></span>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="text" id="orderAddr" placeholder="SHIPPING ADDRESS" class="w-full border-b border-black/10 py-4 text-[11px] font-bold outline-none focus:border-black transition-colors uppercase">
+                <input type="text" id="orderPh" placeholder="PHONE NUMBER" class="w-full border-b border-black/10 py-4 text-[11px] font-bold outline-none focus:border-black transition-colors uppercase">
+                
+                <div class="pt-6">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-4">Transfer to: KPay/WavePay 09xxxxxxxxx</p>
+                    <button id="uploadSS" class="w-full border border-black py-4 text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all">📸 Upload Receipt</button>
+                </div>
+                
                 <input type="hidden" id="paymentImg">
-                <button onclick="submitOrder()" class="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl uppercase mt-6">Confirm Purchase</button>
+                <button onclick="submitOrder()" class="w-full bg-black text-white font-black py-6 text-[10px] uppercase tracking-[0.3em] mt-8 hover:bg-emerald-600 transition-colors">Place Order</button>
             </div>
         </div>
     </div>
@@ -67,24 +92,17 @@
     <script>
         let allItems = [];
         let currentCategory = 'All';
+        let cart = [];
         const user = JSON.parse(localStorage.getItem('neverUser'));
 
-        // DROP-DOWN LOGIC
+        // Navbar Logic
         if(user) {
-            document.getElementById('userGreet').innerHTML = `
-                <button onclick="toggleUserMenu(event)" class="text-emerald-400 flex items-center gap-1">${user.username} ▾</button>
-                <div id="userDropdown" class="dropdown-menu absolute right-0 w-32 bg-slate-900 border border-white/10 rounded-xl mt-2 p-2 shadow-2xl z-50">
-                    <button onclick="logout()" class="w-full text-left p-2 hover:bg-white/5 rounded-lg">LOGOUT</button>
-                    <button onclick="deleteAccount()" class="w-full text-left p-2 text-red-500 hover:bg-red-500/5 rounded-lg">DELETE</button>
-                </div>`;
-        } else { document.getElementById('userGreet').innerHTML = `<a href="/login" class="text-emerald-400">LOGIN</a>`; }
-
-        function toggleUserMenu(e) { e.stopPropagation(); document.getElementById('userDropdown').classList.toggle('show'); }
-        window.onclick = () => { const d = document.getElementById('userDropdown'); if(d) d.classList.remove('show'); };
+            document.getElementById('userGreet').innerHTML = `${user.username} <button onclick="logout()" class="ml-2 text-slate-400">Logout</button>`;
+        } else {
+            document.getElementById('userGreet').innerHTML = `<a href="/login" class="hover:underline">Login</a>`;
+        }
         function logout() { localStorage.removeItem('neverUser'); location.reload(); }
-        function deleteAccount() { if(confirm("Delete account?")){ localStorage.removeItem('neverUser'); location.href='/signup'; } }
 
-        // SHOP LOGIC
         async function loadShop() {
             const res = await fetch('/items');
             allItems = await res.json();
@@ -95,7 +113,6 @@
             currentCategory = cat;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.innerText.includes(cat.toUpperCase()));
-                btn.classList.toggle('text-slate-500', !btn.innerText.includes(cat.toUpperCase()));
             });
             renderGrid();
         }
@@ -104,68 +121,78 @@
             const grid = document.getElementById('shop-grid');
             const filtered = allItems.filter(i => (currentCategory === 'All' || i.category === currentCategory) && i.grade !== 'Pending').reverse();
             
-            if (filtered.length === 0) { grid.innerHTML = `<p class="col-span-full text-center py-20 opacity-30 uppercase font-black">No items found</p>`; return; }
-
             grid.innerHTML = filtered.map(i => {
                 const isSold = i.grade === 'Soldout';
                 return `
-                <div class="glass-card p-3 rounded-[32px] relative ${isSold ? 'sold-out' : ''}">
-                    ${isSold ? '<div class="sold-badge">SOLD</div>' : ''}
-                    <img src="${i.productImage}" class="w-full aspect-[3/4] object-cover rounded-2xl mb-3">
-                    <div class="px-2">
-                        <h3 class="text-[10px] font-bold uppercase text-slate-400 truncate">${i.name}</h3>
-                        <p class="font-black text-emerald-400 text-sm mb-3">${i.price.toLocaleString()} MMK</p>
-                        <button onclick="addToCart('${i.name}', ${i.price}, '${i.productImage}')" 
-                                class="w-full bg-white text-black text-[9px] font-black py-2.5 rounded-xl uppercase ${isSold ? 'hidden' : ''}">
-                            Add to Cart
-                        </button>
+                <div class="shop-item group cursor-pointer ${isSold ? 'sold-out' : ''}" onclick="${isSold ? '' : `addToCart('${i.name}', ${i.price}, '${i.productImage}')`}">
+                    ${isSold ? '<span class="sold-text text-red-500">SOLD OUT</span>' : ''}
+                    <img src="${i.productImage}" class="w-full aspect-square object-contain mb-8 mix-blend-multiply group-hover:scale-105 transition-transform duration-700">
+                    <div class="text-center">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest mb-1">${i.name}</h3>
+                        <p class="text-[10px] text-slate-500 font-bold">${i.price.toLocaleString()} MMK</p>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        // Add to Cart & Checkout (Same logic as previously verified)
-        let cart = [];
-        function addToCart(name, price, img) { cart.push({name, price, img}); updateCartUI(); alert("Added to cart!"); }
+        function addToCart(name, price, img) {
+            cart.push({name, price, img});
+            updateCartUI();
+            toggleCart(true); // Open cart automatically
+        }
+
         function updateCartUI() {
             document.getElementById('cartCount').innerText = cart.length;
             const total = cart.reduce((s,i)=>s+i.price, 0);
-            document.getElementById('cartTotal').innerText = `Total: ${total.toLocaleString()} MMK`;
-            document.getElementById('cartItems').innerHTML = cart.map((i,idx)=>`<div class="flex justify-between items-center glass-card p-4 rounded-2xl text-[10px] font-bold"><span>${i.name}</span><button onclick="cart.splice(${idx},1);updateCartUI()" class="text-red-500">✕</button></div>`).join('');
-            if(cart.length > 0) { if(user) { document.getElementById('checkoutForm').classList.remove('hidden'); document.getElementById('orderAddr').value = user.address; document.getElementById('orderPh').value = user.phone; } else { document.getElementById('authPrompt').classList.remove('hidden'); } }
-            else { document.getElementById('checkoutForm').classList.add('hidden'); }
-        }
-        function toggleCart() { document.getElementById('cartModal').classList.toggle('hidden'); }
+            document.getElementById('cartTotal').innerText = `${total.toLocaleString()} MMK`;
+            
+            document.getElementById('cartItems').innerHTML = cart.map((i,idx)=>`
+                <div class="flex gap-6 items-center">
+                    <img src="${i.img}" class="w-16 h-16 object-contain bg-slate-50">
+                    <div class="flex-1">
+                        <p class="text-[10px] font-black uppercase">${i.name}</p>
+                        <p class="text-[10px] text-slate-400">${i.price.toLocaleString()} MMK</p>
+                    </div>
+                    <button onclick="cart.splice(${idx},1);updateCartUI()" class="text-[10px] font-bold">✕</button>
+                </div>`).join('');
 
-        var ssWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") { document.getElementById('paymentImg').value = r.info.secure_url; document.getElementById('uploadSS').innerText = "✅ PHOTO READY"; }});
+            if(cart.length > 0 && user) {
+                document.getElementById('checkoutForm').classList.remove('hidden');
+                document.getElementById('orderAddr').value = user.address;
+                document.getElementById('orderPh').value = user.phone;
+            } else {
+                document.getElementById('checkoutForm').classList.add('hidden');
+            }
+        }
+
+        function toggleCart(forceOpen = false) {
+            const modal = document.getElementById('cartModal');
+            const overlay = document.getElementById('cartOverlay');
+            if(forceOpen) { modal.classList.add('show'); overlay.classList.remove('hidden'); }
+            else { modal.classList.toggle('show'); overlay.classList.toggle('hidden'); }
+        }
+
+        var ssWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { 
+            if(r.event==="success") { 
+                document.getElementById('paymentImg').value = r.info.secure_url; 
+                document.getElementById('uploadSS').innerText = "✅ RECEIPT UPLOADED";
+                document.getElementById('uploadSS').classList.add('bg-black', 'text-white');
+            }
+        });
         document.getElementById("uploadSS").addEventListener("click", () => ssWidget.open());
 
         async function submitOrder() {
-    const ss = document.getElementById('paymentImg').value; 
-    if(!ss) return alert("Please upload your KPay/WavePay screenshot first!");
-    
-    // Generate a temporary 6-digit reference for the user
-    const tempRef = Math.random().toString(36).substr(2, 6).toUpperCase();
-
-    const response = await fetch('/submit-order', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ 
-            userId: user.id, 
-            username: user.username, 
-            items: cart, 
-            totalMMK: cart.reduce((s,i)=>s+i.price,0), 
-            address: document.getElementById('orderAddr').value, 
-            phone: document.getElementById('orderPh').value, 
-            paymentScreenshot: ss 
-        })
-    });
-
-    if(response.ok) {
-        alert(`🔥 ORDER RECEIVED! \n\nReference: #${tempRef} \n\nWe are verifying your payment. You can check the status in the 'Track' section.`);
-        location.reload();
-    }
-}
+            const ss = document.getElementById('paymentImg').value; 
+            if(!ss) return alert("Please upload screenshot!");
+            
+            const tempRef = Math.random().toString(36).substr(2, 6).toUpperCase();
+            await fetch('/submit-order', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ userId: user.id, username: user.username, items: cart, totalMMK: cart.reduce((s,i)=>s+i.price,0), address: document.getElementById('orderAddr').value, phone: document.getElementById('orderPh').value, paymentScreenshot: ss })
+            });
+            alert(`ORDER SENT! REF: #${tempRef}`); location.reload();
+        }
 
         loadShop();
     </script>

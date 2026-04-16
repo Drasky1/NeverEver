@@ -2,24 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Order | NeverEver</title><script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background: #000; color: #fff; font-family: 'Inter', sans-serif; }</style>
-    <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg">
+    <title>Track | NeverEver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background: #f2f2f2; color: #000; font-family: 'Helvetica', sans-serif; }</style>
 </head>
-<body class="p-6">
-    <div class="max-w-2xl mx-auto py-10">
-        <header class="flex justify-between items-center mb-10">
-            <h1 class="text-2xl font-black italic uppercase">Track <span class="text-emerald-400">Order</span></h1>
-            <a href="/" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">← Back</a>
+<body class="p-8">
+    <div class="max-w-xl mx-auto py-20">
+        <header class="flex justify-between items-center mb-24">
+            <h1 class="text-[10px] font-black uppercase tracking-[0.4em]">Order Tracking</h1>
+            <a href="/" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest underline underline-offset-4">Back</a>
         </header>
 
-        <div id="list" class="space-y-6">
-            <p class="text-center py-20 text-slate-500 animate-pulse text-[10px] uppercase font-bold tracking-widest">Finding your orders...</p>
-        </div>
+        <div id="list" class="space-y-24"></div>
 
-        <div class="mt-12 pt-10 border-t border-white/5 text-center">
-            <p class="text-[10px] text-slate-500 uppercase font-bold mb-4">Need help with this order?</p>
-            <a href="https://t.me/tfuwnthuh" target="_blank" class="inline-block bg-white text-black px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-400 transition-all active:scale-95 shadow-lg shadow-white/5">
+        <div class="mt-32 text-center">
+            <a href="https://t.me/tfuwnthuh" target="_blank" class="text-[10px] font-black uppercase tracking-[0.2em] border-b-2 border-black pb-2">
                 Contact Support
             </a>
         </div>
@@ -28,56 +25,32 @@
     <script>
         const user = JSON.parse(localStorage.getItem('neverUser'));
         if (!user) { window.location.href = '/login'; }
-
         const states = ["Pending Verification", "Paid & Verified", "Shipped", "Delivered"];
 
         async function load() {
-            try {
-                const res = await fetch(`/my-orders/${user.id}`);
-                const orders = await res.json();
-                
-                if (orders.length === 0) {
-                    document.getElementById('list').innerHTML = `<p class="text-center py-20 text-slate-500 uppercase text-[10px] font-bold">No orders found</p>`;
-                    return;
-                }
+            const res = await fetch(`/my-orders/${user.id}`);
+            const orders = await res.json();
+            document.getElementById('list').innerHTML = orders.map(o => {
+                const step = states.indexOf(o.status);
+                const progress = (step / (states.length - 1)) * 100;
+                return `
+                <div>
+                    <div class="flex justify-between text-[9px] font-black uppercase tracking-widest mb-10 text-slate-400">
+                        <span>ID: ${o._id.slice(-6)}</span>
+                        <span>${new Date(o.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    
+                    <div class="relative h-[1px] bg-black/10 mb-10">
+                        <div class="absolute h-[1px] bg-black transition-all duration-1000" style="width: ${progress}%"></div>
+                        <div class="absolute -top-1 right-0 text-[8px] font-bold uppercase tracking-tighter">${o.status}</div>
+                    </div>
 
-                document.getElementById('list').innerHTML = orders.map(o => {
-                    const step = states.indexOf(o.status);
-                    const progress = (step / (states.length - 1)) * 100;
-
-                    return `
-                    <div class="bg-slate-900/50 border border-white/5 p-8 rounded-[40px] shadow-2xl">
-                        <div class="flex justify-between text-[10px] font-black uppercase text-slate-500 mb-8">
-                            <span>Order ID: ${o._id.slice(-6)}</span>
-                            <span>${new Date(o.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        
-                        <div class="flex justify-between mb-10 relative">
-                            <div class="absolute top-1/2 left-0 w-full h-[2px] bg-white/5 -translate-y-1/2 z-0"></div>
-                            <div class="absolute top-1/2 left-0 h-[2px] bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-1000 shadow-[0_0_15px_#10b981]" style="width: ${progress}%"></div>
-                            
-                            ${states.map((s, i) => `
-                                <div class="w-4 h-4 rounded-full z-10 transition-colors duration-500 ${i <= step ? 'bg-emerald-500 shadow-[0_0_15px_#10b981]' : 'bg-slate-800 border border-white/5'}"></div>
-                            `).join('')}
-                        </div>
-                        
-                        <div class="flex justify-between items-end">
-                            <div>
-                                <p class="text-xs font-black uppercase text-emerald-400 mb-1">${o.status}</p>
-                                <div class="text-[9px] text-slate-500 uppercase font-bold tracking-tight">
-                                    ${o.items.map(i => `<div>• ${i.name}</div>`).join('')}
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-xs text-slate-500 uppercase font-bold mb-1">Total Amount</p>
-                                <p class="text-xl font-black tracking-tighter">${o.totalMMK.toLocaleString()} MMK</p>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
-            } catch (err) {
-                document.getElementById('list').innerHTML = `<p class="text-center py-20 text-red-500 uppercase text-[10px] font-bold">Error loading orders</p>`;
-            }
+                    <div class="text-[10px] font-black uppercase tracking-widest mb-4">
+                        ${o.items.map(i => `<div>${i.name}</div>`).join('')}
+                    </div>
+                    <p class="text-xl font-black">${o.totalMMK.toLocaleString()} MMK</p>
+                </div>`;
+            }).join('');
         }
         load();
     </script>
