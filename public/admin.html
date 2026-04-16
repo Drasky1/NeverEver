@@ -11,7 +11,21 @@
         .stats-box { border-right: 1px solid #e0e0e0; padding: 0 20px; }
         .stats-box:last-child { border: none; }
         input, select { background: #f9f9f9; border: 1px solid #e0e0e0; outline: none; padding: 15px; font-size: 11px; font-weight: bold; }
-        .btn-black { background: #000; color: #fff; font-weight: 900; uppercase tracking-widest text-[10px]; padding: 15px; }
+        .btn-black { 
+    background: #000; 
+    color: #fff; 
+    font-weight: 900; 
+    text-transform: uppercase; 
+    letter-spacing: 0.2em; 
+    font-size: 10px; 
+    padding: 15px;
+    width: 100%; /* If you want it to fill the grid cell */
+    transition: opacity 0.2s ease;
+}
+
+.btn-black:hover {
+    opacity: 0.8;
+}
     </style>
 </head>
 <body class="p-6 md:p-12">
@@ -61,13 +75,34 @@
         document.getElementById("uploadBtn").onclick = () => widget.open();
 
         async function addItem() {
-            const name = document.getElementById('itemName').value; const cost = document.getElementById('itemCost').value;
-            const img = document.getElementById('itemImg').value; const cat = document.getElementById('itemCat').value;
-            const grade = document.getElementById('itemGrade').value;
-            if(!name || !cost || !img) return alert("Fill all fields");
-            const res = await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, costTHB: parseFloat(cost), productImage: img, category: cat, grade: grade }) });
-            if(res.ok) location.reload();
-        }
+    const name = document.getElementById('itemName').value;
+    const cost = document.getElementById('itemCost').value;
+    const img = document.getElementById('itemImg').value;
+    const cat = document.getElementById('itemCat').value;
+    const grade = document.getElementById('itemGrade').value; // This must match the dropdown ID
+
+    if(!name || !cost || !img) return alert("Please fill all fields and upload a photo");
+
+    const res = await fetch('/add-item', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        // Ensure these keys match the index.js exactly
+        body: JSON.stringify({ 
+            name: name, 
+            costTHB: parseFloat(cost), 
+            productImage: img, 
+            category: cat, 
+            grade: grade 
+        }) 
+    });
+
+    if(res.ok) {
+        alert("Item Added!");
+        location.reload(); // This refreshes the list
+    } else {
+        alert("Error adding item");
+    }
+}
 
         async function loadAdmin() {
             const [iRes, oRes] = await Promise.all([fetch('/items'), fetch('/orders')]);

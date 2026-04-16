@@ -83,20 +83,35 @@
         }
 
         function renderGrid() {
-            const grid = document.getElementById('shop-grid');
-            const filtered = allItems.filter(i => (currentCategory === 'All' || i.category === currentCategory) && i.grade !== 'Pending').reverse();
-            grid.innerHTML = filtered.map(i => {
-                const isSold = i.grade === 'Soldout';
-                const isPre = i.grade === 'Pre-order';
-                return `
-                <div class="shop-item group cursor-pointer ${isSold ? 'sold-out' : ''}" onclick="${isSold ? '' : `addToCart('${i.name}', ${i.price}, '${i.productImage}')`}">
-                    ${isSold ? '<span class="sold-text">SOLD</span>' : ''}
-                    ${isPre ? '<span class="absolute top-4 left-4 text-[7px] border border-black px-2 py-0.5 font-black uppercase">Pre-order</span>' : ''}
-                    <img src="${i.productImage}" class="w-full aspect-square object-contain mb-8 mix-blend-multiply group-hover:scale-105 transition-transform duration-700">
-                    <div class="text-center"><h3 class="text-[10px] font-black uppercase tracking-widest mb-1">${i.name}</h3><p class="text-[10px] text-slate-500 font-bold">${i.price.toLocaleString()} MMK</p></div>
-                </div>`;
-            }).join('');
-        }
+    const grid = document.getElementById('shop-grid');
+    
+    // We filter out 'Pending', but show 'Instock', 'Pre-order', and 'Soldout'
+    const filtered = allItems.filter(i => {
+        const matchesCategory = (currentCategory === 'All' || i.category === currentCategory);
+        // Ensure we are checking i.grade correctly
+        return matchesCategory && (i.grade !== 'Pending');
+    }).reverse();
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-20 text-center opacity-20 font-black uppercase tracking-widest text-[10px]">No Items Found</div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(i => {
+        const isSold = i.grade === 'Soldout';
+        const isPre = i.grade === 'Pre-order';
+        return `
+        <div class="shop-item group cursor-pointer ${isSold ? 'sold-out' : ''}" onclick="${isSold ? '' : `addToCart('${i.name}', ${i.price}, '${i.productImage}')`}">
+            ${isSold ? '<span class="sold-text">SOLD</span>' : ''}
+            ${isPre ? '<span class="absolute top-4 left-4 text-[7px] border border-black px-2 py-0.5 font-black uppercase">Pre-order</span>' : ''}
+            <img src="${i.productImage}" class="w-full aspect-square object-contain mb-8 mix-blend-multiply group-hover:scale-105 transition-transform duration-700">
+            <div class="text-center">
+                <h3 class="text-[10px] font-black uppercase tracking-widest mb-1">${i.name}</h3>
+                <p class="text-[10px] text-slate-500 font-bold">${(i.price || 0).toLocaleString()} MMK</p>
+            </div>
+        </div>`;
+    }).join('');
+}
 
         function addToCart(name, price, img) { cart.push({name, price, img}); updateCartUI(); toggleCart(true); }
         function updateCartUI() {

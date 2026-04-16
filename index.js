@@ -23,10 +23,10 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
 // --- MODELS ---
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
-    category: { type: String, default: 'General' },
-    grade: { type: String, default: 'Instock' }, 
-    costTHB: Number, // ADDED: To track spending/profit
-    price: Number,   // This will be costTHB * RATE
+    category: String,
+    grade: String, 
+    costTHB: Number, // CRITICAL: This must be here
+    price: Number, 
     productImage: String
 }));
 
