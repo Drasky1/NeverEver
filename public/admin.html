@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeverEver | Admin</title>
+    <title>Admin | NeverEver</title>
     <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -10,169 +10,96 @@
         .admin-card { background: #fff; border: 1px solid #e0e0e0; padding: 30px; }
         .stats-box { border-right: 1px solid #e0e0e0; padding: 0 20px; }
         .stats-box:last-child { border: none; }
-        input, select { background: #f9f9f9; border: 1px solid #e0e0e0; outline: none; }
-        .btn-black { background: #000; color: #fff; font-weight: 900; uppercase tracking-widest text-[10px]; }
+        input, select { background: #f9f9f9; border: 1px solid #e0e0e0; outline: none; padding: 15px; font-size: 11px; font-weight: bold; }
+        .btn-black { background: #000; color: #fff; font-weight: 900; uppercase tracking-widest text-[10px]; padding: 15px; }
     </style>
 </head>
 <body class="p-6 md:p-12">
 
     <header class="flex flex-col items-center mb-16">
-        <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" 
-             class="h-16 w-auto grayscale contrast-125 mb-4" alt="NeverEver Logo">
+        <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-16 w-auto grayscale contrast-125 mb-4">
         <h1 class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Control Center</h1>
     </header>
 
     <div class="max-w-6xl mx-auto space-y-8">
-        
         <section class="admin-card grid grid-cols-1 md:grid-cols-3 text-center">
-            <div class="stats-box">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Revenue</p>
-                <p id="stat-revenue" class="text-xl font-black italic">0 MMK</p>
-            </div>
-            <div class="stats-box">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimated Profit</p>
-                <p id="stat-profit" class="text-xl font-black italic text-emerald-600">0 MMK</p>
-            </div>
-            <div class="stats-box">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Orders</p>
-                <p id="stat-active" class="text-xl font-black italic">0</p>
-            </div>
+            <div class="stats-box"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Inventory Cost</p><p id="stat-cost" class="text-xl font-black italic">0 MMK</p></div>
+            <div class="stats-box"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Profit</p><p id="stat-profit" class="text-xl font-black italic text-emerald-600">0 MMK</p></div>
+            <div class="stats-box"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Orders</p><p id="stat-active" class="text-xl font-black italic">0</p></div>
         </section>
 
         <section class="admin-card">
-            <h2 class="text-[10px] font-black uppercase tracking-widest mb-8 border-b pb-4">New Inventory</h2>
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <input type="text" id="itemName" placeholder="ITEM NAME" class="p-4 text-[11px] font-bold uppercase">
-                <input type="number" id="itemCost" placeholder="COST (THB)" class="p-4 text-[11px] font-bold">
-                <select id="itemCat" class="p-4 text-[11px] font-bold uppercase">
-                    <option value="Clothing">Clothing</option>
-                    <option value="Accessories">Accessories</option>
-                </select>
-                <button id="uploadBtn" class="border border-dashed border-black/20 text-[10px] font-bold uppercase tracking-widest">📸 Photo</button>
+            <h2 class="text-[10px] font-black uppercase mb-8 border-b pb-4">New Item</h2>
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <input type="text" id="itemName" placeholder="NAME" class="uppercase">
+                <input type="number" id="itemCost" placeholder="COST (THB)">
+                <select id="itemCat" class="uppercase"><option value="Clothing">Clothing</option><option value="Accessories">Accessories</option></select>
+                <select id="itemGrade" class="uppercase"><option value="Instock">Instock</option><option value="Pre-order">Pre-order</option><option value="Soldout">Soldout</option></select>
+                <button id="uploadBtn" class="border border-dashed border-black/20 text-[10px] font-black uppercase">📸 Photo</button>
                 <input type="hidden" id="itemImg">
-                <button onclick="addItem()" class="btn-black py-4">Add Item</button>
+                <button onclick="addItem()" class="btn-black">Add</button>
             </div>
         </section>
 
-        <section class="admin-card">
-            <div class="flex justify-between items-center mb-8 border-b pb-4">
-                <h2 class="text-[10px] font-black uppercase tracking-widest">Inventory</h2>
-                <input type="text" id="invSearch" onkeyup="searchInventory()" placeholder="SEARCH..." class="p-2 text-[10px] font-bold bg-transparent">
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-[11px]">
-                    <thead class="uppercase text-slate-400 font-black">
-                        <tr><th>Product</th><th class="text-center">Status</th><th class="text-right">Price (MMK)</th><th class="text-right">Action</th></tr>
-                    </thead>
-                    <tbody id="inventory-list" class="font-bold"></tbody>
-                </table>
-            </div>
+        <section class="admin-card overflow-x-auto">
+            <table class="w-full text-left text-[11px]">
+                <thead class="uppercase text-slate-400 font-black border-b"><tr class="pb-4"><th>Product</th><th class="text-center">Status</th><th class="text-right">Price</th><th class="text-right">Action</th></tr></thead>
+                <tbody id="inventory-list" class="font-bold"></tbody>
+            </table>
         </section>
 
         <section class="admin-card">
-            <h2 class="text-[10px] font-black uppercase tracking-widest mb-8 border-b pb-4">Customer Orders</h2>
+            <h2 class="text-[10px] font-black uppercase mb-8 border-b pb-4">Customer Orders</h2>
             <div id="order-list" class="space-y-4"></div>
         </section>
     </div>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        // Use the same exchange rate logic as shop.html
         const RATE = 125; 
-
-        var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => {
-            if(r.event === "success") {
-                document.getElementById('itemImg').value = r.info.secure_url;
-                document.getElementById('uploadBtn').innerText = "✅ READY";
-            }
-        });
+        var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event === "success") { document.getElementById('itemImg').value = r.info.secure_url; document.getElementById('uploadBtn').innerText = "✅ READY"; }});
         document.getElementById("uploadBtn").onclick = () => widget.open();
 
         async function addItem() {
-            const name = document.getElementById('itemName').value;
-            const cost = document.getElementById('itemCost').value;
-            const img = document.getElementById('itemImg').value;
-            const cat = document.getElementById('itemCat').value;
+            const name = document.getElementById('itemName').value; const cost = document.getElementById('itemCost').value;
+            const img = document.getElementById('itemImg').value; const cat = document.getElementById('itemCat').value;
+            const grade = document.getElementById('itemGrade').value;
             if(!name || !cost || !img) return alert("Fill all fields");
-
-            await fetch('/add-item', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name, costTHB: parseFloat(cost), productImage: img, category: cat, grade: 'Instock' })
-            });
-            location.reload();
+            const res = await fetch('/add-item', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, costTHB: parseFloat(cost), productImage: img, category: cat, grade: grade }) });
+            if(res.ok) location.reload();
         }
 
         async function loadAdmin() {
-            const [itemRes, orderRes] = await Promise.all([fetch('/items'), fetch('/orders')]);
-            const items = await itemRes.json();
-            const orders = await orderRes.json();
-
-            // RENDER INVENTORY
+            const [iRes, oRes] = await Promise.all([fetch('/items'), fetch('/orders')]);
+            const items = await iRes.json(); const orders = await oRes.json();
+            
             document.getElementById('inventory-list').innerHTML = items.reverse().map(i => `
-                <tr class="border-b border-black/5">
-                    <td class="py-4 flex items-center gap-4">
-                        <img src="${i.productImage}" class="w-10 h-10 object-contain mix-blend-multiply">
-                        <span class="uppercase">${i.name}</span>
-                    </td>
-                    <td class="text-center">
-                        <select onchange="updateStatus('${i._id}', this.value)" class="bg-transparent uppercase">
-                            <option value="Instock" ${i.grade==='Instock'?'selected':''}>Instock</option>
-                            <option value="Soldout" ${i.grade==='Soldout'?'selected':''}>Soldout</option>
-                        </select>
-                    </td>
-                    <td class="text-right font-black">${i.price.toLocaleString()}</td>
-                    <td class="text-right"><button onclick="deleteItem('${i._id}')" class="text-red-400">✕</button></td>
-                </tr>
-            `).join('');
+                <tr class="border-b border-black/5"><td class="py-4 flex items-center gap-4 uppercase"><img src="${i.productImage}" class="w-8 h-8 object-contain mix-blend-multiply">${i.name}</td>
+                <td class="text-center"><select onchange="updateStatus('${i._id}', this.value)" class="bg-transparent uppercase"><option value="Instock" ${i.grade==='Instock'?'selected':''}>Instock</option><option value="Pre-order" ${i.grade==='Pre-order'?'selected':''}>Pre-order</option><option value="Soldout" ${i.grade==='Soldout'?'selected':''}>Soldout</option></select></td>
+                <td class="text-right font-black">${i.price.toLocaleString()}</td><td class="text-right"><button onclick="deleteItem('${i._id}')">✕</button></td></tr>`).join('');
 
-            // RENDER ORDERS
             document.getElementById('order-list').innerHTML = orders.reverse().map(o => `
-                <div class="border border-black/5 p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div>
-                        <p class="text-[9px] font-black uppercase text-slate-400 mb-1">User: ${o.username} | REF: ${o._id.slice(-6)}</p>
-                        <div class="text-[10px] font-bold uppercase">${o.items.map(i => `• ${i.name}`).join(' ')}</div>
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <a href="${o.paymentScreenshot}" target="_blank" class="text-[9px] font-black border-b border-black">PROOF</a>
-                        <select onchange="updateOrder('${o._id}', this.value)" class="text-[9px] font-black uppercase">
-                            <option value="Pending Verification" ${o.status==='Pending Verification'?'selected':''}>Pending</option>
-                            <option value="Paid & Verified" ${o.status==='Paid & Verified'?'selected':''}>Verified</option>
-                            <option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option>
-                            <option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option>
-                        </select>
-                    </div>
-                </div>
-            `).join('');
+                <div class="border border-black/5 p-6 bg-slate-50 flex justify-between items-center text-[10px] font-black uppercase">
+                    <div>User: ${o.username} | REF: ${o._id.slice(-6)}<div class="text-slate-400 mt-2">${o.items.map(i => i.name).join(', ')}</div></div>
+                    <div class="flex items-center gap-6"><a href="${o.paymentScreenshot}" target="_blank" class="border-b border-black">PROOF</a>
+                    <select onchange="updateOrder('${o._id}', this.value)" class="bg-transparent"><option value="Pending Verification" ${o.status==='Pending Verification'?'selected':''}>Pending</option><option value="Paid & Verified" ${o.status==='Paid & Verified'?'selected':''}>Verified</option><option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option><option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option></select></div></div>`).join('');
 
-            // CALCULATE STATS
-            let revenue = 0;
-            let totalCost = 0;
-            let activeCount = 0;
-
-            orders.forEach(o => {
+            // STATS CALCULATION
+            let invCost = 0; let profit = 0; let active = 0;
+            items.forEach(i => { if(i.grade === 'Instock') invCost += (i.costTHB * RATE); });
+            orders.forEach(o => { 
                 if(o.status !== "Pending Verification") {
-                    revenue += o.totalMMK;
-                    // Calculating cost based on items in the order
-                    o.items.forEach(orderItem => {
-                        const original = items.find(i => i.name === orderItem.name);
-                        if(original) totalCost += (original.costTHB * RATE);
-                    });
-                } else {
-                    activeCount++;
-                }
+                    o.items.forEach(item => { const orig = items.find(i => i.name === item.name); if(orig) profit += (item.price - (orig.costTHB * RATE)); });
+                } else active++;
             });
-
-            document.getElementById('stat-revenue').innerText = `${revenue.toLocaleString()} MMK`;
-            document.getElementById('stat-profit').innerText = `${(revenue - totalCost).toLocaleString()} MMK`;
-            document.getElementById('stat-active').innerText = activeCount;
+            document.getElementById('stat-cost').innerText = `${invCost.toLocaleString()} MMK`;
+            document.getElementById('stat-profit').innerText = `${profit.toLocaleString()} MMK`;
+            document.getElementById('stat-active').innerText = active;
         }
 
         async function updateStatus(id, grade) { await fetch(`/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({grade}) }); }
         async function updateOrder(id, status) { await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status}) }); location.reload(); }
-        async function deleteItem(id) { if(confirm("Delete item?")) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); location.reload(); }}
-        function searchInventory() { /* same as before */ }
-
+        async function deleteItem(id) { if(confirm("Delete?")) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); location.reload(); }}
         loadAdmin();
     </script>
 </body>

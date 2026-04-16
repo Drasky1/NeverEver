@@ -14,17 +14,19 @@ app.use(express.static('public'));
 const JWT_SECRET = 'never-ever-2026-secure-key-999'; 
 const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
 const ADMIN_IDS = ['1923704168'];
+const RATE = 125; // Define your exchange rate here
 
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority', { family: 4 })
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
-// MODELS
+// --- MODELS ---
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
     category: { type: String, default: 'General' },
     grade: { type: String, default: 'Instock' }, 
-    price: Number, 
+    costTHB: Number, // ADDED: To track spending/profit
+    price: Number,   // This will be costTHB * RATE
     productImage: String
 }));
 
@@ -42,7 +44,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// AUTH
+// --- AUTH ---
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -58,9 +60,12 @@ app.post('/auth/login', async (req, res) => {
     res.json({ token, user: { username: user.username, id: user._id, address: user.address, phone: user.phone } });
 });
 
-// SHOP API
+// --- SHOP & ADMIN API ---
 app.get('/items', async (req, res) => res.json(await Item.find()));
-app.get('/all-orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
+
+// MATCHING ADMIN DASHBOARD ENDPOINT
+app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
+
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
 
 app.post('/submit-order', async (req, res) => {
@@ -70,14 +75,27 @@ app.post('/submit-order', async (req, res) => {
     res.json({ success: true });
 });
 
-app.post('/add-item', async (req, res) => res.json(await new Item(req.body).save()));
+// IMPROVED ADD-ITEM LOGIC
+app.post('/add-item', async (req, res) => {
+    const { name, costTHB, productImage, category, grade } = req.body;
+    const newItem = new Item({
+        name,
+        category,
+        grade: grade || 'Instock',
+        costTHB: parseFloat(costTHB),
+        price: parseFloat(costTHB) * RATE, // Auto-calculate MMK Price
+        productImage
+    });
+    await newItem.save();
+    res.json({ success: true });
+});
+
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
-// UPDATE ROUTES WITH FIX
-app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
-app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
+app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 
-// ROUTING
+// --- ROUTING ---
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
@@ -85,4 +103,4 @@ app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'tra
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.use((req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 
-app.listen(10000, () => console.log(`🚀 NeverEver Live` ));
+app.listen(10000, () => console.log(`🚀 NeverEver Live on Port 10000` ));
