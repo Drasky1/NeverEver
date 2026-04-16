@@ -92,8 +92,13 @@ app.post('/add-item', async (req, res) => {
 
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
-app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { new: true })));
-app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { new: true })));
+app.put('/update-item/:id', async (req, res) => 
+    res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }))
+);
+
+app.put('/update-order/:id', async (req, res) => 
+    res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' }))
+);
 
 // --- ROUTING ---
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
