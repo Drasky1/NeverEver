@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | NeverEver</title>
+    <title>Admin | NeverEver Control</title>
     <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -10,22 +10,21 @@
         .admin-card { background: #fff; border: 1px solid #e0e0e0; padding: 30px; }
         .stats-box { border-right: 1px solid #e0e0e0; padding: 0 20px; }
         .stats-box:last-child { border: none; }
+        
+        /* Fixed CSS Syntax */
         input, select { background: #f9f9f9; border: 1px solid #e0e0e0; outline: none; padding: 15px; font-size: 11px; font-weight: bold; }
+        
         .btn-black { 
-    background: #000; 
-    color: #fff; 
-    font-weight: 900; 
-    text-transform: uppercase; 
-    letter-spacing: 0.2em; 
-    font-size: 10px; 
-    padding: 15px;
-    width: 100%; /* If you want it to fill the grid cell */
-    transition: opacity 0.2s ease;
-}
-
-.btn-black:hover {
-    opacity: 0.8;
-}
+            background: #000; 
+            color: #fff; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 0.2em; 
+            font-size: 10px; 
+            padding: 15px; 
+            transition: opacity 0.2s;
+        }
+        .btn-black:hover { opacity: 0.8; }
     </style>
 </head>
 <body class="p-6 md:p-12">
@@ -37,9 +36,18 @@
 
     <div class="max-w-6xl mx-auto space-y-8">
         <section class="admin-card grid grid-cols-1 md:grid-cols-3 text-center">
-            <div class="stats-box"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Inventory Cost</p><p id="stat-cost" class="text-xl font-black italic">0 MMK</p></div>
-            <div class="stats-box"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Profit</p><p id="stat-profit" class="text-xl font-black italic text-emerald-600">0 MMK</p></div>
-            <div class="stats-box"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Orders</p><p id="stat-active" class="text-xl font-black italic">0</p></div>
+            <div class="stats-box">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Inventory Cost</p>
+                <p id="stat-cost" class="text-xl font-black italic">0 MMK</p>
+            </div>
+            <div class="stats-box">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Profit</p>
+                <p id="stat-profit" class="text-xl font-black italic text-emerald-600">0 MMK</p>
+            </div>
+            <div class="stats-box">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Orders</p>
+                <p id="stat-active" class="text-xl font-black italic">0</p>
+            </div>
         </section>
 
         <section class="admin-card">
@@ -47,94 +55,164 @@
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <input type="text" id="itemName" placeholder="NAME" class="uppercase">
                 <input type="number" id="itemCost" placeholder="COST (THB)">
-                <select id="itemCat" class="uppercase"><option value="Clothing">Clothing</option><option value="Accessories">Accessories</option></select>
-                <select id="itemGrade" class="uppercase"><option value="Instock">Instock</option><option value="Pre-order">Pre-order</option><option value="Soldout">Soldout</option></select>
+                <select id="itemCat" class="uppercase">
+                    <option value="Clothing">Clothing</option>
+                    <option value="Accessories">Accessories</option>
+                </select>
+                <select id="itemGrade" class="uppercase">
+                    <option value="Instock">Instock</option>
+                    <option value="Pre-order">Pre-order</option>
+                    <option value="Soldout">Soldout</option>
+                </select>
                 <button id="uploadBtn" class="border border-dashed border-black/20 text-[10px] font-black uppercase">📸 Photo</button>
                 <input type="hidden" id="itemImg">
-                <button onclick="addItem()" class="btn-black">Add</button>
+                <button onclick="addItem()" class="btn-black">Add to Shop</button>
             </div>
         </section>
 
-        <section class="admin-card overflow-x-auto">
-            <table class="w-full text-left text-[11px]">
-                <thead class="uppercase text-slate-400 font-black border-b"><tr class="pb-4"><th>Product</th><th class="text-center">Status</th><th class="text-right">Price</th><th class="text-right">Action</th></tr></thead>
-                <tbody id="inventory-list" class="font-bold"></tbody>
-            </table>
+        <section class="admin-card">
+            <h2 class="text-[10px] font-black uppercase mb-8 border-b pb-4">Current Inventory</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-[11px]">
+                    <thead class="uppercase text-slate-400 font-black border-b">
+                        <tr class="pb-4">
+                            <th class="py-4">Product</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-right">Price (MMK)</th>
+                            <th class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-list" class="font-bold">
+                        </tbody>
+                </table>
+            </div>
         </section>
 
         <section class="admin-card">
             <h2 class="text-[10px] font-black uppercase mb-8 border-b pb-4">Customer Orders</h2>
-            <div id="order-list" class="space-y-4"></div>
+            <div id="order-list" class="space-y-4">
+                </div>
         </section>
     </div>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         const RATE = 125; 
-        var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event === "success") { document.getElementById('itemImg').value = r.info.secure_url; document.getElementById('uploadBtn').innerText = "✅ READY"; }});
+
+        // CLOUDINARY WIDGET
+        var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { 
+            if(r.event === "success") { 
+                document.getElementById('itemImg').value = r.info.secure_url; 
+                document.getElementById('uploadBtn').innerText = "✅ READY";
+            }
+        });
         document.getElementById("uploadBtn").onclick = () => widget.open();
 
+        // ADD ITEM FUNCTION
         async function addItem() {
-    const name = document.getElementById('itemName').value;
-    const cost = document.getElementById('itemCost').value;
-    const img = document.getElementById('itemImg').value;
-    const cat = document.getElementById('itemCat').value;
-    const grade = document.getElementById('itemGrade').value; // This must match the dropdown ID
+            const name = document.getElementById('itemName').value;
+            const cost = document.getElementById('itemCost').value;
+            const img = document.getElementById('itemImg').value;
+            const cat = document.getElementById('itemCat').value;
+            const grade = document.getElementById('itemGrade').value;
 
-    if(!name || !cost || !img) return alert("Please fill all fields and upload a photo");
+            if(!name || !cost || !img) return alert("Fill all fields and upload a photo");
 
-    const res = await fetch('/add-item', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        // Ensure these keys match the index.js exactly
-        body: JSON.stringify({ 
-            name: name, 
-            costTHB: parseFloat(cost), 
-            productImage: img, 
-            category: cat, 
-            grade: grade 
-        }) 
-    });
-
-    if(res.ok) {
-        alert("Item Added!");
-        location.reload(); // This refreshes the list
-    } else {
-        alert("Error adding item");
-    }
-}
-
-        async function loadAdmin() {
-            const [iRes, oRes] = await Promise.all([fetch('/items'), fetch('/orders')]);
-            const items = await iRes.json(); const orders = await oRes.json();
-            
-            document.getElementById('inventory-list').innerHTML = items.reverse().map(i => `
-                <tr class="border-b border-black/5"><td class="py-4 flex items-center gap-4 uppercase"><img src="${i.productImage}" class="w-8 h-8 object-contain mix-blend-multiply">${i.name}</td>
-                <td class="text-center"><select onchange="updateStatus('${i._id}', this.value)" class="bg-transparent uppercase"><option value="Instock" ${i.grade==='Instock'?'selected':''}>Instock</option><option value="Pre-order" ${i.grade==='Pre-order'?'selected':''}>Pre-order</option><option value="Soldout" ${i.grade==='Soldout'?'selected':''}>Soldout</option></select></td>
-                <td class="text-right font-black">${i.price.toLocaleString()}</td><td class="text-right"><button onclick="deleteItem('${i._id}')">✕</button></td></tr>`).join('');
-
-            document.getElementById('order-list').innerHTML = orders.reverse().map(o => `
-                <div class="border border-black/5 p-6 bg-slate-50 flex justify-between items-center text-[10px] font-black uppercase">
-                    <div>User: ${o.username} | REF: ${o._id.slice(-6)}<div class="text-slate-400 mt-2">${o.items.map(i => i.name).join(', ')}</div></div>
-                    <div class="flex items-center gap-6"><a href="${o.paymentScreenshot}" target="_blank" class="border-b border-black">PROOF</a>
-                    <select onchange="updateOrder('${o._id}', this.value)" class="bg-transparent"><option value="Pending Verification" ${o.status==='Pending Verification'?'selected':''}>Pending</option><option value="Paid & Verified" ${o.status==='Paid & Verified'?'selected':''}>Verified</option><option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option><option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option></select></div></div>`).join('');
-
-            // STATS CALCULATION
-            let invCost = 0; let profit = 0; let active = 0;
-            items.forEach(i => { if(i.grade === 'Instock') invCost += (i.costTHB * RATE); });
-            orders.forEach(o => { 
-                if(o.status !== "Pending Verification") {
-                    o.items.forEach(item => { const orig = items.find(i => i.name === item.name); if(orig) profit += (item.price - (orig.costTHB * RATE)); });
-                } else active++;
+            const res = await fetch('/add-item', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ 
+                    name, 
+                    costTHB: parseFloat(cost), 
+                    productImage: img, 
+                    category: cat, 
+                    grade: grade 
+                }) 
             });
-            document.getElementById('stat-cost').innerText = `${invCost.toLocaleString()} MMK`;
-            document.getElementById('stat-profit').innerText = `${profit.toLocaleString()} MMK`;
-            document.getElementById('stat-active').innerText = active;
+            if(res.ok) {
+                alert("Item Added!");
+                location.reload();
+            }
+        }
+
+        // LOAD DASHBOARD DATA
+        async function loadAdmin() {
+            try {
+                const [iRes, oRes] = await Promise.all([fetch('/items'), fetch('/orders')]);
+                const items = await iRes.json(); 
+                const orders = await oRes.json();
+
+                // 1. RENDER INVENTORY
+                const invList = document.getElementById('inventory-list');
+                invList.innerHTML = items.reverse().map(i => `
+                    <tr class="border-b border-black/5">
+                        <td class="py-4 flex items-center gap-4 uppercase">
+                            <img src="${i.productImage}" class="w-8 h-8 object-contain mix-blend-multiply">
+                            ${i.name}
+                        </td>
+                        <td class="text-center">
+                            <select onchange="updateStatus('${i._id}', this.value)" class="bg-transparent uppercase">
+                                <option value="Instock" ${i.grade==='Instock'?'selected':''}>Instock</option>
+                                <option value="Pre-order" ${i.grade==='Pre-order'?'selected':''}>Pre-order</option>
+                                <option value="Soldout" ${i.grade==='Soldout'?'selected':''}>Soldout</option>
+                            </select>
+                        </td>
+                        <td class="text-right font-black">${(i.price || 0).toLocaleString()}</td>
+                        <td class="text-right">
+                            <button onclick="deleteItem('${i._id}')" class="text-red-400">✕</button>
+                        </td>
+                    </tr>`).join('');
+
+                // 2. RENDER ORDERS
+                const ordList = document.getElementById('order-list');
+                ordList.innerHTML = orders.reverse().map(o => `
+                    <div class="border border-black/5 p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-center text-[10px] font-black uppercase">
+                        <div>
+                            User: ${o.username} | REF: ${o._id.slice(-6)}
+                            <div class="text-slate-400 mt-2">${o.items.map(item => item.name).join(', ')}</div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <a href="${o.paymentScreenshot}" target="_blank" class="border-b border-black">VIEW PROOF</a>
+                            <select onchange="updateOrder('${o._id}', this.value)" class="bg-transparent uppercase">
+                                <option value="Pending Verification" ${o.status==='Pending Verification'?'selected':''}>Pending</option>
+                                <option value="Paid & Verified" ${o.status==='Paid & Verified'?'selected':''}>Verified</option>
+                                <option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option>
+                                <option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option>
+                            </select>
+                        </div>
+                    </div>`).join('');
+
+                // 3. CALCULATE BUSINESS STATS
+                let invCost = 0; 
+                let profit = 0; 
+                let activeCount = 0;
+
+                items.forEach(i => { if(i.grade === 'Instock') invCost += (i.costTHB * RATE); });
+                
+                orders.forEach(o => { 
+                    if(o.status !== "Pending Verification") {
+                        o.items.forEach(item => { 
+                            const orig = items.find(origItem => origItem.name === item.name);
+                            if(orig) profit += (item.price - (orig.costTHB * RATE));
+                        });
+                    } else {
+                        activeCount++;
+                    }
+                });
+
+                document.getElementById('stat-cost').innerText = `${invCost.toLocaleString()} MMK`;
+                document.getElementById('stat-profit').innerText = `${profit.toLocaleString()} MMK`;
+                document.getElementById('stat-active').innerText = activeCount;
+
+            } catch (err) {
+                console.error("Load Error:", err);
+            }
         }
 
         async function updateStatus(id, grade) { await fetch(`/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({grade}) }); }
         async function updateOrder(id, status) { await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status}) }); location.reload(); }
-        async function deleteItem(id) { if(confirm("Delete?")) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); location.reload(); }}
+        async function deleteItem(id) { if(confirm("Delete this item?")) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); location.reload(); }}
+
         loadAdmin();
     </script>
 </body>
