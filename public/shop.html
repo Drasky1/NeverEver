@@ -86,7 +86,7 @@
     const grid = document.getElementById('shop-grid');
     
     // We filter out 'Pending', but show 'Instock', 'Pre-order', and 'Soldout'
-    const filtered = allItems.filter(i => {
+    const filtered = [...allItems].filter(i => {
         const matchesCategory = (currentCategory === 'All' || i.category === currentCategory);
         // Ensure we are checking i.grade correctly
         return matchesCategory && (i.grade !== 'Pending');

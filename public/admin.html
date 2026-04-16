@@ -110,30 +110,37 @@
 
         // ADD ITEM FUNCTION
         async function addItem() {
-            const name = document.getElementById('itemName').value;
-            const cost = document.getElementById('itemCost').value;
-            const img = document.getElementById('itemImg').value;
-            const cat = document.getElementById('itemCat').value;
-            const grade = document.getElementById('itemGrade').value;
+    const name = document.getElementById('itemName').value;
+    const cost = document.getElementById('itemCost').value;
+    const img = document.getElementById('itemImg').value;
+    const cat = document.getElementById('itemCat').value;
+    const grade = document.getElementById('itemGrade').value;
 
-            if(!name || !cost || !img) return alert("Fill all fields and upload a photo");
+    if(!name || !cost || !img) return alert("Missing Info! Make sure you uploaded a photo.");
 
-            const res = await fetch('/add-item', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ 
-                    name, 
-                    costTHB: parseFloat(cost), 
-                    productImage: img, 
-                    category: cat, 
-                    grade: grade 
-                }) 
-            });
-            if(res.ok) {
-                alert("Item Added!");
-                location.reload();
-            }
-        }
+    console.log("Sending data:", { name, cost, img, cat, grade }); // Debugging line
+
+    const res = await fetch('/add-item', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ 
+            name: name, 
+            costTHB: parseFloat(cost), 
+            productImage: img, 
+            category: cat, 
+            grade: grade 
+        }) 
+    });
+
+    if(res.ok) {
+        alert("Success!");
+        location.reload();
+    } else {
+        const errData = await res.json();
+        console.error("Server Error:", errData);
+        alert("Server rejected the item. Check console.");
+    }
+}
 
         // LOAD DASHBOARD DATA
         async function loadAdmin() {
