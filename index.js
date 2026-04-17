@@ -30,7 +30,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     userId: String, username: String, items: Array, totalMMK: Number,
     address: String, phone: String, paymentScreenshot: String, 
     status: { type: String, default: 'Pending' }, 
-    estArrival: { type: String, default: '' }, // Prevents "undefined"
+    estArrival: { type: String, default: '' }, 
     createdAt: { type: Date, default: Date.now }
 }));
 
@@ -56,10 +56,9 @@ app.put('/update-order/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-app.delete('/delete-item/:id', async (req, res) => { 
-    await Item.findByIdAndDelete(req.params.id); 
-    res.json({ success: true }); 
-});
+// DELETE ROUTES
+app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+app.delete('/delete-order/:id', async (req, res) => { await Order.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
 // AUTH
 app.post('/auth/signup', async (req, res) => {
@@ -78,15 +77,10 @@ app.post('/auth/login', async (req, res) => {
     } else { res.status(401).json({ error: "Invalid credentials" }); }
 });
 
-// --- THE CRASH FIX (Bypasses path-to-regexp wildcard error) ---
+// CRASH FIX FOR RENDER
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-
 app.use((req, res, next) => {
-    // If it's an API call or a file with an extension, skip
-    if (req.path.startsWith('/items') || req.path.startsWith('/auth') || path.extname(req.path)) {
-        return next();
-    }
-    // Otherwise, send the shop page
+    if (req.path.startsWith('/items') || req.path.startsWith('/auth') || path.extname(req.path)) return next();
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 

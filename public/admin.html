@@ -4,39 +4,44 @@
     <meta charset="UTF-8"><title>NEVEREVER | ADMIN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #f7f7f7; font-family: Helvetica, sans-serif; text-transform: uppercase; }
+        body { background: #f4f4f4; font-family: Helvetica, sans-serif; text-transform: uppercase; }
         input, select, textarea { border: 1px solid #ddd; padding: 12px; font-size: 10px; font-weight: 900; width: 100%; outline: none; margin-bottom: 8px; }
         .card { background: #fff; padding: 25px; border: 1px solid #eee; }
         .btn-black { background: #000; color: #fff; padding: 15px; font-size: 10px; font-weight: 900; width: 100%; }
-        .order-scroll { max-height: 500px; overflow-y: auto; } /* Prevents messy stacking */
+        .order-scroll { max-height: 500px; overflow-y: auto; }
     </style>
 </head>
 <body class="p-6 md:p-20">
-    <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex items-center justify-center">
-        <div class="max-w-xs w-full p-10"><input type="password" id="adminPass" placeholder="PASSWORD"><button onclick="checkPass()" class="btn-black">Login</button></div>
+    <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-10">
+        <div class="max-w-xs w-full"><input type="password" id="adminPass" placeholder="ADMIN PASS"><button onclick="checkPass()" class="btn-black">Access</button></div>
     </div>
 
-    <div class="max-w-6xl mx-auto space-y-6">
+    <div class="max-w-6xl mx-auto space-y-8">
         <div class="grid grid-cols-2 gap-4">
             <div class="card text-center"><p class="text-[9px] opacity-40">Revenue</p><h1 id="revTotal" class="text-xl font-black italic">0 MMK</h1></div>
-            <div class="card text-center"><p class="text-[9px] opacity-40">Inventory</p><h1 id="invTotal" class="text-xl font-black italic">0</h1></div>
+            <div class="card text-center"><p class="text-[9px] opacity-40">Total Profit</p><h1 id="profitTotal" class="text-xl font-black italic text-green-600">0 MMK</h1></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="card">
                 <h2 class="text-[10px] font-black mb-6">Product Entry</h2>
                 <input type="text" id="itemName" placeholder="Name">
                 <input type="number" id="itemCost" placeholder="Cost THB">
                 <textarea id="itemDesc" placeholder="Description"></textarea>
                 <input type="text" id="itemSizes" placeholder="Sizes (e.g. S, M, L, XL)">
-                <button id="uploadBtn" class="border-2 border-dashed p-8 text-[9px] w-full mb-4 opacity-50">📸 Upload Images</button>
-                <button onclick="saveItem()" class="btn-black">Deploy</button>
+                <button id="uploadBtn" class="border-2 border-dashed p-10 text-[9px] w-full mb-4 opacity-50">📸 Upload Images</button>
+                <button onclick="saveItem()" class="btn-black">Deploy Product</button>
             </div>
-
             <div class="card">
                 <h2 class="text-[10px] font-black mb-6">Order Stream</h2>
-                <div id="order-list" class="order-scroll space-y-4 pr-2"></div>
+                <div id="order-list" class="order-scroll space-y-4"></div>
             </div>
+        </div>
+
+        <div class="card">
+            <h2 class="text-[10px] font-black mb-6">Inventory List</h2>
+            <input type="text" id="invSearch" placeholder="SEARCH PRODUCTS..." oninput="load()" class="mb-6">
+            <div id="inv-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
     </div>
 
@@ -48,13 +53,7 @@
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
-            const data = { 
-                name: document.getElementById('itemName').value, 
-                costTHB: document.getElementById('itemCost').value, 
-                description: document.getElementById('itemDesc').value, 
-                availableSizes: document.getElementById('itemSizes').value.split(',').map(s=>s.trim()), 
-                images: photos 
-            };
+            const data = { name: document.getElementById('itemName').value, costTHB: document.getElementById('itemCost').value, description: document.getElementById('itemDesc').value, availableSizes: document.getElementById('itemSizes').value.split(',').map(s=>s.trim()), images: photos };
             await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
             location.reload();
         }
@@ -63,22 +62,31 @@
             const status = document.getElementById(`status-${id}`).value;
             const estArrival = document.getElementById(`est-${id}`).value;
             await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival})});
-            alert("Order Updated");
+            alert("Updated");
         }
+
+        async function delOrder(id) { if(confirm('Delete Order?')) { await fetch(`/delete-order/${id}`, {method:'DELETE'}); load(); } }
+        async function delItem(id) { if(confirm('Delete Product?')) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); load(); } }
 
         async function load() {
             const items = await (await fetch('/items')).json();
             const orders = await (await fetch('/orders')).json();
             let rev = 0; orders.forEach(o => rev += o.totalMMK);
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
-            document.getElementById('invTotal').innerText = items.length;
 
             document.getElementById('order-list').innerHTML = orders.map(o => `
-                <div class="border p-4 space-y-2 bg-gray-50">
-                    <div class="flex justify-between text-[8px] font-black"><span>${o.username}</span><a href="${o.paymentScreenshot}" target="_blank" class="text-blue-500">View Receipt</a></div>
+                <div class="border p-4 space-y-3 bg-gray-50">
+                    <div class="flex justify-between text-[8px] font-black"><span>${o.username}</span><div class="flex gap-2"><a href="${o.paymentScreenshot}" target="_blank" class="text-blue-500 underline">Receipt</a><button onclick="delOrder('${o._id}')" class="text-red-500">Delete</button></div></div>
                     <select id="status-${o._id}" class="!mb-0"><option ${o.status=='Pending'?'selected':''}>Pending</option><option ${o.status=='Shipped'?'selected':''}>Shipped</option><option ${o.status=='Delivered'?'selected':''}>Delivered</option></select>
-                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="Arrival (e.g. 5 Days)" class="!mb-0 border-t-0">
+                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="Arrival" class="!mb-0 border-t-0">
                     <button onclick="updateOrder('${o._id}')" class="btn-black !p-2 !text-[8px]">Update</button>
+                </div>`).join('');
+
+            const q = document.getElementById('invSearch').value.toLowerCase();
+            document.getElementById('inv-list').innerHTML = items.filter(i=>i.name.toLowerCase().includes(q)).map(i => `
+                <div class="flex justify-between p-3 border items-center">
+                    <span class="text-[9px] font-black">${i.name}</span>
+                    <button onclick="delItem('${i._id}')" class="text-red-500 text-[8px]">Delete</button>
                 </div>`).join('');
         }
         load();

@@ -9,16 +9,17 @@
         .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #eee; border-top: 1px solid #eee; }
         @media (min-width: 768px) { .yeezy-grid { grid-template-columns: repeat(4, 1fr); } }
         .modal { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; }
+        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; width: 100%; letter-spacing: 0.2em; }
         .size-chip { border: 1px solid #eee; padding: 12px; font-size: 10px; font-weight: 900; text-align: center; cursor: pointer; }
         .size-chip.active { background: #000; color: #fff; border-color: #000; }
-        #cartSide { transform: translateX(100%); transition: 0.4s; position: fixed; top:0; right:0; height:100%; width:100%; max-width:400px; background:#fff; z-index:2000; padding:40px; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
+        #cartSide { transform: translateX(100%); transition: 0.4s; position: fixed; top:0; right:0; height:100%; width:100%; max-width:400px; background:#fff; z-index:2000; padding:40px; }
         #cartSide.show { transform: translateX(0); }
     </style>
 </head>
 <body>
 
 <nav class="p-6 flex justify-between items-center sticky top-0 bg-white/90 z-50 border-b">
-    <button onclick="openOrders()" class="text-[10px] font-black opacity-40">Tracking</button>
+    <button onclick="openOrders()" class="text-[10px] font-black">Tracking</button>
     <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-8 grayscale">
     <div class="flex gap-4">
         <button id="authBtn" onclick="openAuth()" class="text-[10px] font-black">Login</button>
@@ -31,34 +32,27 @@
 <div id="authModal" class="modal flex items-center justify-center">
     <div class="max-w-xs w-full p-10 space-y-4">
         <h2 id="authTitle" class="text-center font-black text-[10px] mb-6">Login</h2>
-        <input type="text" id="authUser" placeholder="Username" class="border-b w-full py-3 text-[10px] font-black uppercase outline-none">
-        <input type="password" id="authPass" placeholder="Password" class="border-b w-full py-3 text-[10px] font-black uppercase outline-none">
-        <button onclick="handleAuth()" class="bg-black text-white w-full py-4 text-[10px] font-black">Continue</button>
-        <p onclick="isLogin=!isLogin; document.getElementById('authTitle').innerText=isLogin?'Login':'Sign Up'" class="text-center text-[8px] font-black opacity-40 cursor-pointer">Switch Mode</p>
+        <input type="text" id="authUser" placeholder="Username" class="border-b w-full py-4 text-[10px] font-black outline-none">
+        <input type="password" id="authPass" placeholder="Password" class="border-b w-full py-4 text-[10px] font-black outline-none">
+        <button onclick="handleAuth()" class="btn-black">Continue</button>
+        <p onclick="toggleMode()" id="modeText" class="text-center text-[8px] font-black opacity-40 cursor-pointer pt-4">Need an account? Sign up</p>
         <button onclick="document.getElementById('authModal').style.display='none'" class="w-full text-[8px] mt-4">Close</button>
     </div>
 </div>
 
 <div id="ordersModal" class="modal">
-    <div class="p-6 border-b flex justify-between items-center">
-        <button onclick="document.getElementById('ordersModal').style.display='none'" class="text-[10px] font-black">← Back</button>
-        <span class="text-[10px] font-black">My Tracking</span>
-        <div class="w-10"></div>
-    </div>
+    <div class="p-6 border-b flex justify-between items-center"><button onclick="document.getElementById('ordersModal').style.display='none'" class="text-[10px] font-black">← Back</button><span class="text-[10px] font-black">My Tracking</span><div class="w-10"></div></div>
     <div id="my-orders-list" class="p-10 max-w-xl mx-auto space-y-6"></div>
 </div>
 
 <div id="productModal" class="modal">
-    <div class="p-6 border-b flex justify-between">
-        <button onclick="document.getElementById('productModal').style.display='none'" class="text-[10px] font-black">← Back</button>
-        <span class="text-[10px] font-black italic">NEVEREVER</span>
-    </div>
+    <div class="p-6 border-b flex justify-between"><button onclick="document.getElementById('productModal').style.display='none'" class="text-[10px] font-black">← Back</button><span class="text-[10px] font-black italic">NEVEREVER</span></div>
     <div class="grid grid-cols-1 md:grid-cols-2">
-        <div id="pGallery" class="flex flex-col gap-1 bg-gray-50"></div>
+        <div id="pGallery" class="flex flex-col gap-1"></div>
         <div class="p-10 md:p-20 space-y-10">
             <div><h1 id="pName" class="text-2xl font-black italic"></h1><p id="pPrice" class="text-lg font-bold mt-2"></p></div>
             <div><p class="text-[9px] font-black opacity-30 mb-4">Select Size</p><div id="sizeGrid" class="grid grid-cols-4 gap-2"></div></div>
-            <button onclick="addToCart()" class="bg-black text-white w-full py-5 text-[10px] font-black">Add To Cart</button>
+            <button onclick="addToCart()" class="btn-black">Add To Cart</button>
         </div>
     </div>
 </div>
@@ -67,23 +61,28 @@
     <div class="flex justify-between items-center mb-10"><h2 class="text-xl font-black italic">Cart</h2><button onclick="toggleCart(false)" class="text-[10px] font-black opacity-30">Close</button></div>
     <div id="cartItems" class="space-y-4"></div>
     <div id="checkoutForm" class="mt-10 pt-10 border-t space-y-4 hidden">
-        <input type="text" id="orderAddr" placeholder="Address" class="w-full border-b py-3 text-[10px] font-black uppercase"><button id="uploadSS" class="w-full border p-4 text-[9px] font-black">📸 Upload Receipt</button>
-        <input type="hidden" id="paymentImg"><button onclick="checkout()" class="bg-black text-white w-full py-5 text-[10px] font-black">Order Now</button>
+        <input type="text" id="orderAddr" placeholder="Delivery Address" class="w-full border-b py-3 text-[10px] font-black"><button id="uploadSS" class="w-full border p-4 text-[9px] font-black">📸 Upload Receipt</button>
+        <input type="hidden" id="paymentImg"><button onclick="checkout()" class="btn-black">Place Order</button>
     </div>
 </div>
 
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
-    let allItems = [], cart = {}, user = JSON.parse(localStorage.getItem('neverUser')), currentItem = null, selectedSize = null, isLogin = true;
+    let allItems = [], cart = {}, user = JSON.parse(localStorage.getItem('neverUser')), currentItem = null, selectedSize = null, isLoginMode = true;
 
     async function init() {
-        allItems = await (await fetch('/items')).json();
-        document.getElementById('main-grid').innerHTML = allItems.map(i => `
+        const res = await fetch('/items');
+        allItems = await res.json();
+        renderGrid(allItems);
+        if(user) document.getElementById('authBtn').innerText = user.username;
+    }
+
+    function renderGrid(data) {
+        document.getElementById('main-grid').innerHTML = data.map(i => `
             <div class="product-card" onclick="openProduct('${i._id}')">
                 <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4">
                 <p class="text-[10px] font-black text-center">${i.name}<br><span class="opacity-30">${i.price.toLocaleString()} MMK</span></p>
             </div>`).join('');
-        if(user) document.getElementById('authBtn').innerText = user.username;
     }
 
     function openProduct(id) {
@@ -98,13 +97,14 @@
 
     function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
     function openAuth() { document.getElementById('authModal').style.display = 'flex'; }
+    function toggleMode() { isLoginMode = !isLoginMode; document.getElementById('authTitle').innerText = isLoginMode ? "Login" : "Sign Up"; document.getElementById('modeText').innerText = isLoginMode ? "Need an account? Sign up" : "Have an account? Login"; }
     function toggleCart(s) { document.getElementById('cartSide').classList.toggle('show', s); updateCart(); }
 
-    function addToCart() {
-        if(!selectedSize) return alert("Select a size");
-        const key = `${currentItem.name} (${selectedSize})`;
-        cart[key] = (cart[key] || 0) + 1;
-        toggleCart(true);
+    async function handleAuth() {
+        const username = document.getElementById('authUser').value, password = document.getElementById('authPass').value;
+        const res = await fetch(isLoginMode ? '/auth/login' : '/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username, password})});
+        const d = await res.json();
+        if(res.ok) { localStorage.setItem('neverUser', JSON.stringify(d.user)); location.reload(); } else alert("Failed");
     }
 
     function updateCart() {
@@ -114,11 +114,11 @@
         document.getElementById('checkoutForm').classList.toggle('hidden', keys.length === 0);
     }
 
-    async function handleAuth() {
-        const username = document.getElementById('authUser').value, password = document.getElementById('authPass').value;
-        const res = await fetch(isLogin ? '/auth/login' : '/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username, password})});
-        const d = await res.json();
-        if(res.ok) { localStorage.setItem('neverUser', JSON.stringify(d.user)); location.reload(); } else alert("Failed");
+    function addToCart() {
+        if(!selectedSize) return alert("Select size");
+        const key = `${currentItem.name} (${selectedSize})`;
+        cart[key] = (cart[key] || 0) + 1;
+        toggleCart(true);
     }
 
     var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") { document.getElementById('paymentImg').value = r.info.secure_url; document.getElementById('uploadSS').innerText = "✅ Attached"; }});
@@ -137,10 +137,10 @@
         document.getElementById('ordersModal').style.display = 'block';
         document.getElementById('my-orders-list').innerHTML = orders.map(o => `
             <div class="border p-6 space-y-4 bg-gray-50">
-                <div class="flex justify-between text-[10px] font-black"><span>Order #${o._id.slice(-5)}</span><span class="bg-black text-white px-2 py-1 rounded-full text-[8px]">${o.status}</span></div>
-                <p class="text-[11px] font-black">Estimated: <span class="text-green-600">${o.estArrival || 'Pending Verification'}</span></p>
+                <div class="flex justify-between items-center text-[10px] font-black"><span>Order #${o._id.slice(-5)}</span><span class="bg-black text-white px-2 py-1 rounded-full text-[8px]">${o.status}</span></div>
+                <p class="text-[11px] font-black">Estimated: <span class="text-green-600">${o.estArrival || 'Verification'}</span></p>
                 <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden"><div class="bg-black h-full" style="width: ${o.status=='Pending'?'20%':o.status=='Shipped'?'70%':'100%'}"></div></div>
-            </div>`).join('') || '<p class="opacity-20 text-center">No orders yet</p>';
+            </div>`).join('') || '<p class="text-center opacity-20">No orders</p>';
     }
 
     init();
