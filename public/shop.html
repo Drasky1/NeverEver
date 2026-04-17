@@ -15,27 +15,9 @@
         .size-chip { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; text-align: center; cursor: pointer; }
         .size-chip.active { background: #000; color: #fff; }
         input, textarea { border: 1px solid #000; padding: 15px; font-size: 10px; width: 100%; margin-bottom: 10px; }
-        
-        /* THE FIX: Constraints for the gallery and images */
-        #pGallery {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-            background: #000;
-            width: 100%;
-        }
-        #pGallery img {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-        }
-        /* Prevents the right side from moving when scrolling images */
-        .sticky-info {
-            position: sticky;
-            top: 0;
-            height: fit-content;
-        }
+        #pGallery { display: flex; flex-direction: column; gap: 1px; background: #000; width: 100%; }
+        #pGallery img { width: 100%; height: auto; display: block; object-fit: contain; background: #f4f4f4; }
+        .sticky-info { position: sticky; top: 0; height: fit-content; }
     </style>
 </head>
 <body>
@@ -54,21 +36,6 @@
 </nav>
 
 <main class="yeezy-grid" id="main-grid"></main>
-
-<a href="https://t.me/tfuwnthuh" class="fixed bottom-6 right-6 bg-black text-white p-4 rounded-full text-[8px] font-black z-50">SUPPORT</a>
-
-<div id="authModal" class="modal flex items-center justify-center bg-black/10">
-    <div class="max-w-sm w-full p-10 border border-black bg-white space-y-4">
-        <h2 class="text-center font-black text-[10px] mb-4 italic">LOGIN</h2>
-        <input type="text" id="userIn" placeholder="USERNAME">
-        <input type="password" id="passIn" placeholder="PASSWORD">
-        <button onclick="handleManualAuth()" class="btn-black">CONTINUE</button>
-        <div class="flex items-center gap-2 opacity-20"><hr class="grow border-black"><span>OR</span><hr class="grow border-black"></div>
-        <div id="g_id_onload" data-client_id="866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com" data-callback="handleGoogle"></div>
-        <div class="g_id_signin flex justify-center" data-type="standard"></div>
-        <button onclick="closeModal('authModal')" class="w-full text-[8px] mt-2 underline">CLOSE</button>
-    </div>
-</div>
 
 <div id="productModal" class="modal">
     <div class="p-6 border-b border-black flex justify-between bg-white sticky top-0 z-50">
@@ -101,11 +68,8 @@
         <input type="text" id="custPhone" placeholder="PHONE NUMBER">
         <input type="text" id="custTG" placeholder="TELEGRAM USERNAME">
         <textarea id="custAddr" placeholder="SHIPPING ADDRESS" class="h-32"></textarea>
-        <div class="border border-black p-6 text-center">
-            <p class="text-[10px] font-black mb-4 italic">K-PAY / WAVE: 0977xxxxxxx</p>
-            <button id="payBtn" class="border border-black p-2 text-[8px] font-black">UPLOAD SCREENSHOT</button>
-        </div>
-        <button onclick="submitOrder()" class="btn-black">CONFIRM ORDER</button>
+        <button id="payBtn" class="border border-black p-4 text-[10px] font-black w-full">📸 UPLOAD PAYMENT SCREENSHOT</button>
+        <button onclick="submitOrder()" class="btn-black mt-4">CONFIRM ORDER</button>
     </div>
 </div>
 
@@ -114,132 +78,94 @@
     <div id="orderStream" class="space-y-10"></div>
 </div>
 
+<div id="authModal" class="modal flex items-center justify-center bg-black/10">
+    <div class="max-w-sm w-full p-10 border border-black bg-white space-y-4">
+        <h2 class="text-center font-black text-[10px] italic">LOGIN</h2>
+        <input type="text" id="userIn" placeholder="USERNAME">
+        <input type="password" id="passIn" placeholder="PASSWORD">
+        <button onclick="handleManualAuth()" class="btn-black">CONTINUE</button>
+        <div id="g_id_onload" data-client_id="866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com" data-callback="handleGoogle"></div>
+        <div class="g_id_signin flex justify-center" data-type="standard"></div>
+        <button onclick="closeModal('authModal')" class="w-full text-[8px] underline">CLOSE</button>
+    </div>
+</div>
+
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
     let allItems = [], cart = [], user = JSON.parse(localStorage.getItem('neverUser')), currentItem = null, selectedSize = null, payImg = "";
 
-   async function init() {
-    const res = await fetch('/items'); 
-    allItems = await res.json();
-    filter('Instock');
-    
-    if(user) {
-        document.getElementById('authBtn').innerText = "LOGOUT";
-        document.getElementById('authBtn').onclick = () => { 
-            localStorage.removeItem('neverUser'); 
-            location.reload(); 
-        };
-        document.getElementById('authModal').style.display = 'none';
-    } else {
-        document.getElementById('authModal').style.display = 'flex';
+    async function init() {
+        const res = await fetch('/items'); allItems = await res.json();
+        filter('Instock');
+        if(user) {
+            document.getElementById('authBtn').innerText = "LOGOUT";
+            document.getElementById('authBtn').onclick = () => { localStorage.removeItem('neverUser'); location.reload(); };
+        }
     }
-}
 
     function filter(cat) {
-    document.querySelectorAll('nav button').forEach(b => {
-        if (b.innerText === cat) {
-            b.classList.remove('opacity-40');
-        } else {
-            b.classList.add('opacity-40');
-        }
-    });
-
-    const filtered = allItems.filter(i => i.category === cat);
-    document.getElementById('main-grid').innerHTML = filtered.map(i => `
-        <div class="product-card pb-10" onclick="openProduct('${i._id}')">
-            ${i.isSoldOut ? '<div class="absolute inset-0 bg-white/80 flex items-center justify-center font-black text-red-600 text-[10px] z-10">SOLD OUT</div>' : ''}
-            <img src="${i.images[0]}" class="w-full aspect-square object-contain bg-gray-50">
-            <div class="p-4 text-center">
-                <p class="text-[10px] font-black">${i.name}</p>
-                <p class="text-[9px] opacity-40 mt-1">${i.price.toLocaleString()} MMK</p>
-            </div>
-        </div>`).join('');
-}
+        document.querySelectorAll('nav button').forEach(b => b.classList.toggle('opacity-40', b.innerText !== cat && b.innerText !== 'My Orders'));
+        const filtered = allItems.filter(i => i.category === cat);
+        document.getElementById('main-grid').innerHTML = filtered.map(i => `
+            <div class="product-card pb-10" onclick="openProduct('${i._id}')">
+                ${i.isSoldOut ? '<div class="absolute inset-0 bg-white/80 flex items-center justify-center font-black text-red-600 text-[10px] z-10">SOLD OUT</div>' : ''}
+                <img src="${i.images[0]}" class="w-full aspect-square object-contain bg-[#f4f4f4]">
+                <div class="p-4 text-center">
+                    <p class="text-[10px] font-black">${i.name}</p>
+                    <p class="text-[9px] opacity-40 mt-1">${i.price.toLocaleString()} MMK</p>
+                </div>
+            </div>`).join('');
+    }
 
     function openProduct(id) {
-    currentItem = allItems.find(i => i._id === id); 
-    selectedSize = null;
-    document.getElementById('pName').innerText = currentItem.name;
-    document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
-    
-    // Fix: object-contain for the main product modal image
-    document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `
-        <img src="${img}" class="w-full object-contain bg-gray-50 border-b border-black">
-    `).join('');
-
-    // Fix: Correctly maps the size array into individual clickable boxes
-    const sizes = Array.isArray(currentItem.availableSizes) ? currentItem.availableSizes : [];
-    document.getElementById('sizeGrid').innerHTML = sizes.map(s => `
-        <div class="size-chip border border-black p-3 text-center cursor-pointer hover:bg-black hover:text-white transition-all" 
-             onclick="selSize(this, '${s}')">
-            ${s}
-        </div>`).join('');
-    
-    document.getElementById('addBtn').innerText = currentItem.isSoldOut ? "SOLD OUT" : "ADD TO CART";
-    document.getElementById('addBtn').disabled = currentItem.isSoldOut;
-    document.getElementById('productModal').style.display = 'block';
-}
-
-    function handleGoogle(response) {
-        localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'}));
-        closeModal('authModal');
-        location.reload(); 
+        currentItem = allItems.find(i => i._id === id); selectedSize = null;
+        document.getElementById('pName').innerText = currentItem.name;
+        document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
+        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}">`).join('');
+        const sizes = Array.isArray(currentItem.availableSizes) ? currentItem.availableSizes : [];
+        document.getElementById('sizeGrid').innerHTML = sizes.map(s => `<div class="size-chip" onclick="selSize(this, '${s}')">${s}</div>`).join('');
+        document.getElementById('addBtn').innerText = currentItem.isSoldOut ? "SOLD OUT" : "ADD TO CART";
+        document.getElementById('addBtn').disabled = currentItem.isSoldOut;
+        document.getElementById('productModal').style.display = 'block';
     }
 
-    function handleManualAuth() {
-        const u = document.getElementById('userIn').value;
-        if(u) {
-            localStorage.setItem('neverUser', JSON.stringify({username: u, id: Date.now()}));
-            closeModal('authModal');
-            location.reload();
-        }
-    }
-
+    function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
+    function addToCart() { if(!selectedSize) return; cart.push({...currentItem, size: selectedSize, qty: 1}); updateCartUI(); closeModal('productModal'); }
+    function toggleCart(s) { document.getElementById('cartModal').style.display = s ? 'block' : 'none'; updateCartUI(); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openAuth() { document.getElementById('authModal').style.display = 'flex'; }
+    function openCheckout() { document.getElementById('checkoutModal').style.display = 'block'; }
+    
     function updateCartUI() {
-        document.getElementById('cartCount').innerText = cart.length;
         let total = 0;
         document.getElementById('cartItems').innerHTML = cart.map((i, idx) => {
             total += i.price;
-            return `<div class="flex justify-between items-center border-b border-black pb-4">
-                <div class="flex gap-4"><img src="${i.images[0]}" class="w-16 h-20 object-cover">
-                <div class="text-[10px] font-black"><p>${i.name}</p><p class="opacity-40">${i.size}</p></div></div>
-                <button onclick="cart.splice(${idx},1);updateCartUI()" class="text-[8px] underline">REMOVE</button></div>`;
+            return `<div class="flex justify-between items-center border-b border-black pb-4 text-[10px] font-black">
+                <p>${i.name} (${i.size})</p><button onclick="cart.splice(${idx},1);updateCartUI()">REMOVE</button></div>`;
         }).join('');
         document.getElementById('cartTotal').innerText = `${total.toLocaleString()} MMK`;
+        document.getElementById('cartCount').innerText = cart.length;
     }
 
     const payWidget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") payImg = r.info.secure_url; });
     document.getElementById('payBtn').onclick = () => payWidget.open();
 
     async function submitOrder() {
-        const order = {
-            userId: user?.id || 'guest', username: document.getElementById('custName').value,
-            items: cart, totalMMK: cart.reduce((a,b) => a + b.price, 0),
-            phone: document.getElementById('custPhone').value, tgUsername: document.getElementById('custTG').value,
-            address: document.getElementById('custAddr').value, paymentScreenshot: payImg
-        };
+        const order = { userId: user?.id || 'guest', username: document.getElementById('custName').value, items: cart, totalMMK: cart.reduce((a,b) => a + b.price, 0), phone: document.getElementById('custPhone').value, tgUsername: document.getElementById('custTG').value, address: document.getElementById('custAddr').value, paymentScreenshot: payImg, status: 'Pending' };
         await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(order)});
         location.reload();
     }
 
     async function openOrders() {
         if(!user) return openAuth();
-        const res = await fetch(`/my-orders/${user.id}`);
-        const orders = await res.json();
-        document.getElementById('orderStream').innerHTML = orders.map(o => `
-            <div class="flex gap-6 border-b border-black pb-6">
-                <img src="${o.items[0].images[0]}" class="w-20 h-24 object-cover">
-                <div class="text-[10px] font-black"><p class="text-blue-600">${o.status}</p><p class="mt-1">${o.items.map(i => i.name).join(', ')}</p>
-                <p class="opacity-40">ARRIVAL: ${o.estArrival || 'PENDING'}</p></div></div>`).join('');
+        const res = await fetch(`/my-orders/${user.id}`); const orders = await res.json();
+        document.getElementById('orderStream').innerHTML = orders.map(o => `<div class="border-b border-black pb-6 text-[10px] font-black"><p>${o.status}</p><p>${o.items.map(i => i.name).join(', ')}</p></div>`).join('');
         document.getElementById('ordersModal').style.display = 'block';
     }
 
-    function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
-    function addToCart() { if(!selectedSize) return; cart.push({...currentItem, size: selectedSize, qty: 1}); updateCartUI(); closeModal('productModal'); }
-    function toggleCart(s) { document.getElementById('cartModal').style.display = s ? 'block' : 'none'; }
-    function openCheckout() { document.getElementById('checkoutModal').style.display = 'block'; }
-    function openAuth() { document.getElementById('authModal').style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function handleGoogle(r) { localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'})); location.reload(); }
+    function handleManualAuth() { const u = document.getElementById('userIn').value; if(u) { localStorage.setItem('neverUser', JSON.stringify({username: u, id: Date.now()})); location.reload(); } }
+
     init();
 </script>
 </body>
