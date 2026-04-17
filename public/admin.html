@@ -183,7 +183,7 @@
             let rev = 0; let profit = 0;
             orders.forEach(o => {
                 rev += o.totalMMK;
-                if (o.status === 'Delivered') {
+                if (o.status && o.status.toLowerCase() === 'delivered') {
                     if (o.profitMMK !== undefined) {
                         profit += o.profitMMK;
                     } else {
