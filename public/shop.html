@@ -28,17 +28,34 @@
 
     <div id="main-grid" class="yeezy-grid"></div>
 
+    <div id="productModal" class="modal">
+        <div class="p-6 border-b border-black flex justify-between sticky top-0 bg-white">
+            <button onclick="closeModal()" class="font-black text-[10px]">← CLOSE</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2">
+            <div id="pGallery"></div>
+            <div class="p-10">
+                <h1 id="pName" class="text-4xl font-black italic"></h1>
+                <p id="pPrice" class="text-xl font-bold mt-2"></p>
+                <div id="sizeGrid" class="size-grid"></div>
+                <button id="addBtn" class="btn-black">ADD TO BAG</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let allItems = [];
+        let allItems = [], selectedSize = null, currentItem = null;
+
         async function init() {
             const res = await fetch('/items');
             allItems = await res.json();
             render('Instock');
         }
+
         function render(cat) {
             const filtered = allItems.filter(i => i.category === cat);
             document.getElementById('main-grid').innerHTML = filtered.map(i => `
-                <div class="product-card">
+                <div class="product-card" onclick="openP('${i._id}')">
                     <img src="${i.images[0]}">
                     <div class="p-4 text-[10px] font-black">
                         <p>${i.name}</p>
@@ -46,6 +63,29 @@
                     </div>
                 </div>`).join('');
         }
+
+        function openP(id) {
+            currentItem = allItems.find(i => i._id === id);
+            document.getElementById('pName').innerText = currentItem.name;
+            document.getElementById('pPrice').innerText = currentItem.price.toLocaleString() + ' MMK';
+            document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full">`).join('');
+            
+            const sizes = currentItem.availableSizes || [];
+            document.getElementById('sizeGrid').innerHTML = sizes.map(s => `
+                <div class="size-box ${currentItem.stock <= 0 ? 'out' : ''}" onclick="setS(this, '${s}')">${s}</div>
+            `).join('');
+
+            document.getElementById('addBtn').innerText = currentItem.stock <= 0 ? 'SOLD OUT' : 'ADD TO BAG';
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        function setS(el, s) {
+            document.querySelectorAll('.size-box').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            selectedSize = s;
+        }
+
+        function closeModal() { document.getElementById('productModal').style.display = 'none'; }
         init();
     </script>
 </body>

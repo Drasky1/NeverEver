@@ -6,9 +6,7 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-
-// This tells the server to serve ALL files in your project folder
-app.use(express.static(__dirname));
+app.use(express.static(__dirname)); 
 
 const mongoURI = "mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority";
 
@@ -29,10 +27,12 @@ const Order = mongoose.model('Order', {
     createdAt: { type: Date, default: Date.now } 
 });
 
-// API ROUTES
+// --- API ROUTES ---
 app.get('/items', async (req, res) => res.json(await Item.find()));
+
 app.post('/add-item', async (req, res) => {
     const data = req.body;
+    // Keeping your auto-price logic exactly as is
     data.price = Math.floor(Number(data.costTHB) * 1.5 * 125);
     data.stock = Number(data.stock) || 0;
     const item = new Item(data);
@@ -47,6 +47,7 @@ app.post('/submit-order', async (req, res) => {
         await Item.findByIdAndUpdate(item._id, { $inc: { stock: -1 } });
     }
     const msg = `🚨 NEW ORDER: ${req.body.username}\nTotal: ${req.body.totalMMK} MMK`;
+    // Telegram Alert
     fetch(`https://api.telegram.org/bot8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ/sendMessage?chat_id=1923704168&text=${encodeURIComponent(msg)}`).catch(e => console.log("TG fail"));
     res.json(order);
 });
@@ -64,13 +65,9 @@ app.get('/orders', async (req, res) => res.json(await Order.find().sort({created
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body)));
 
-// PAGE ROUTING - This fixes the ENOENT error
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'shop.html'));
-});
-
-// Catch-all: if user goes to any other link, show shop.html
-app.get('*', (req, res) => {
+// --- PAGE ROUTING ---
+// FIXED: Changed '*' to '(.*)' to fix the PathError crash
+app.get('(.*)', (req, res) => {
     res.sendFile(path.join(__dirname, 'shop.html'));
 });
 

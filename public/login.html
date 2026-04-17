@@ -17,19 +17,17 @@
        async function handleAuth() {
             const u = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
-            
             const res = await fetch('/login', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ username: u, password: p })
             });
-            
             if(res.ok) {
                 const data = await res.json();
                 localStorage.setItem('neverUser', JSON.stringify(data.user));
                 window.location.href = '/'; 
             } else {
-                alert("Login failed! Check your username/password.");
+                alert("Login failed!");
             }
         }
     </script>
