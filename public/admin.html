@@ -45,12 +45,13 @@
     <script>
         // Password is now fixed to never2026
         function checkPass() { 
-            if(document.getElementById('adminPass').value === 'never2026') {
-                document.getElementById('authOverlay').style.display = 'none'; 
-            } else {
-                alert("Incorrect Password");
-            }
-        }
+    const input = document.getElementById('adminPass').value;
+    if(input === 'never2026') {
+        document.getElementById('authOverlay').style.display = 'none'; 
+    } else {
+        alert("Incorrect Password");
+    }
+}
 
         let photos = [];
         var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd', maxFiles: 5 }, (e, r) => {
