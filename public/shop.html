@@ -148,7 +148,7 @@
     document.getElementById('main-grid').innerHTML = filtered.map(i => `
         <div class="product-card pb-10" onclick="openProduct('${i._id}')">
             ${i.isSoldOut ? '<div class="absolute inset-0 bg-white/80 flex items-center justify-center font-black text-red-600 text-[10px] z-10">SOLD OUT</div>' : ''}
-            <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover">
+            <img src="${i.images[0]}" class="w-full aspect-square object-contain bg-gray-50">
             <div class="p-4 text-center">
                 <p class="text-[10px] font-black">${i.name}</p>
                 <p class="text-[9px] opacity-40 mt-1">${i.price.toLocaleString()} MMK</p>
@@ -157,27 +157,28 @@
 }
 
     function openProduct(id) {
-        currentItem = allItems.find(i => i._id === id); selectedSize = null;
-        document.getElementById('pName').innerText = currentItem.name;
-        document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
-        
-        // Render images inside the gallery
-        const displayImages = currentItem.images || []; 
-        document.getElementById('pGallery').innerHTML = displayImages.map(img => `
-            <img src="${img}" alt="product">
-        `).join('');
+    currentItem = allItems.find(i => i._id === id); 
+    selectedSize = null;
+    document.getElementById('pName').innerText = currentItem.name;
+    document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
+    
+    // Fix: object-contain for the main product modal image
+    document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `
+        <img src="${img}" class="w-full object-contain bg-gray-50 border-b border-black">
+    `).join('');
 
-        const sizes = currentItem.availableSizes[0].split(',').map(s => s.trim());
-        document.getElementById('sizeGrid').innerHTML = sizes.map(s => `
-            <div class="size-chip border border-black p-3 text-center cursor-pointer hover:bg-black hover:text-white transition-all" 
-                 onclick="selSize(this, '${s}')">
-                ${s}
-            </div>`).join('');
-        
-        document.getElementById('addBtn').innerText = currentItem.isSoldOut ? "SOLD OUT" : "ADD TO CART";
-        document.getElementById('addBtn').disabled = currentItem.isSoldOut;
-        document.getElementById('productModal').style.display = 'block';
-    }
+    // Fix: Correctly maps the size array into individual clickable boxes
+    const sizes = Array.isArray(currentItem.availableSizes) ? currentItem.availableSizes : [];
+    document.getElementById('sizeGrid').innerHTML = sizes.map(s => `
+        <div class="size-chip border border-black p-3 text-center cursor-pointer hover:bg-black hover:text-white transition-all" 
+             onclick="selSize(this, '${s}')">
+            ${s}
+        </div>`).join('');
+    
+    document.getElementById('addBtn').innerText = currentItem.isSoldOut ? "SOLD OUT" : "ADD TO CART";
+    document.getElementById('addBtn').disabled = currentItem.isSoldOut;
+    document.getElementById('productModal').style.display = 'block';
+}
 
     function handleGoogle(response) {
         localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'}));
