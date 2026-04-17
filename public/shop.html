@@ -14,6 +14,7 @@
         .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; width: 100%; }
         .size-chip { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; text-align: center; cursor: pointer; }
         .size-chip.active { background: #000; color: #fff; }
+        input, textarea { border: 1px solid #000; padding: 15px; font-size: 10px; width: 100%; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -22,6 +23,7 @@
     <div class="flex gap-4">
         <button onclick="filter('Instock')" class="text-[10px] font-black">Instock</button>
         <button onclick="filter('Preorder')" class="text-[10px] font-black opacity-40">Preorder</button>
+        <button onclick="openOrders()" class="text-[10px] font-black opacity-40">My Orders</button>
     </div>
     <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776407597/izsqh19ttd1purqiscmx.jpg" class="h-8 cursor-pointer" onclick="location.reload()">
     <div class="flex gap-4">
@@ -32,13 +34,18 @@
 
 <main class="yeezy-grid" id="main-grid"></main>
 
-<a href="https://t.me/NEVEREVER_SUPPORT" class="fixed bottom-6 right-6 bg-black text-white p-4 rounded-full text-[8px] font-black z-50">SUPPORT</a>
+<a href="https://t.me/tfuwnthuh" class="fixed bottom-6 right-6 bg-black text-white p-4 rounded-full text-[8px] font-black z-50">SUPPORT</a>
 
-<div id="authModal" class="modal flex items-center justify-center">
-    <div class="max-w-xs w-full p-10 border border-black bg-white">
+<div id="authModal" class="modal flex items-center justify-center bg-black/10">
+    <div class="max-w-sm w-full p-10 border border-black bg-white space-y-4">
+        <h2 class="text-center font-black text-[10px] mb-4 italic">LOGIN</h2>
+        <input type="text" id="userIn" placeholder="USERNAME">
+        <input type="password" id="passIn" placeholder="PASSWORD">
+        <button onclick="handleManualAuth()" class="btn-black">CONTINUE</button>
+        <div class="flex items-center gap-2 opacity-20"><hr class="grow border-black"><span>OR</span><hr class="grow border-black"></div>
         <div id="g_id_onload" data-client_id="866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com" data-callback="handleGoogle"></div>
-        <div class="g_id_signin" data-type="standard"></div>
-        <button onclick="closeModal('authModal')" class="w-full text-[8px] mt-6 font-bold underline">CLOSE</button>
+        <div class="g_id_signin flex justify-center" data-type="standard"></div>
+        <button onclick="closeModal('authModal')" class="w-full text-[8px] mt-2 underline">CLOSE</button>
     </div>
 </div>
 
@@ -46,7 +53,7 @@
     <div class="p-6 border-b border-black flex justify-between"><button onclick="closeModal('productModal')" class="text-[10px] font-black">← BACK</button></div>
     <div class="grid grid-cols-1 md:grid-cols-2">
         <div id="pGallery" class="flex flex-col gap-1 bg-black"></div>
-        <div class="p-10 md:p-20 space-y-10">
+        <div class="p-10 md:p-20 space-y-10 bg-white">
             <h1 id="pName" class="text-2xl font-black italic"></h1>
             <p id="pPrice" class="text-lg font-bold"></p>
             <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
@@ -66,12 +73,13 @@
 
 <div id="checkoutModal" class="modal p-10">
     <button onclick="closeModal('checkoutModal')" class="text-[10px] font-black mb-10">← BACK</button>
-    <div class="max-w-md mx-auto space-y-4">
-        <input type="text" id="custName" placeholder="FULL NAME" class="w-full border border-black p-4 text-[10px]">
-        <input type="text" id="custPhone" placeholder="PHONE NUMBER" class="w-full border border-black p-4 text-[10px]">
-        <textarea id="custAddr" placeholder="SHIPPING ADDRESS" class="w-full border border-black p-4 text-[10px] h-32"></textarea>
+    <div class="max-w-md mx-auto space-y-2">
+        <input type="text" id="custName" placeholder="FULL NAME">
+        <input type="text" id="custPhone" placeholder="PHONE NUMBER">
+        <input type="text" id="custTG" placeholder="TELEGRAM USERNAME">
+        <textarea id="custAddr" placeholder="SHIPPING ADDRESS" class="h-32"></textarea>
         <div class="border border-black p-6 text-center">
-            <p class="text-[10px] font-black mb-4">K-PAY / WAVE: 0977xxxxxxx</p>
+            <p class="text-[10px] font-black mb-4 italic">K-PAY / WAVE: 0977xxxxxxx</p>
             <button id="payBtn" class="border border-black p-2 text-[8px] font-black">UPLOAD SCREENSHOT</button>
         </div>
         <button onclick="submitOrder()" class="btn-black">CONFIRM ORDER</button>
@@ -97,8 +105,6 @@
     }
 
     function filter(cat) {
-        document.querySelectorAll('nav button').forEach(b => b.classList.add('opacity-40'));
-        event?.target?.classList?.remove('opacity-40');
         const filtered = allItems.filter(i => i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
             <div class="product-card pb-10" onclick="openProduct('${i._id}')">
@@ -118,16 +124,24 @@
         document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full">`).join('');
         const sizes = currentItem.availableSizes[0].split(',');
         document.getElementById('sizeGrid').innerHTML = sizes.map(s => `<div class="size-chip" onclick="selSize(this, '${s.trim()}')">${s.trim()}</div>`).join('');
+        document.getElementById('addBtn').innerText = currentItem.isSoldOut ? "SOLD OUT" : "ADD TO CART";
+        document.getElementById('addBtn').disabled = currentItem.isSoldOut;
         document.getElementById('productModal').style.display = 'block';
     }
 
-    function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
+    function handleGoogle(response) {
+        localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'}));
+        closeModal('authModal');
+        location.reload(); 
+    }
 
-    function addToCart() {
-        if(!selectedSize) return alert("SELECT SIZE");
-        cart.push({...currentItem, size: selectedSize, qty: 1});
-        updateCartUI();
-        closeModal('productModal');
+    function handleManualAuth() {
+        const u = document.getElementById('userIn').value;
+        if(u) {
+            localStorage.setItem('neverUser', JSON.stringify({username: u, id: Date.now()}));
+            closeModal('authModal');
+            location.reload();
+        }
     }
 
     function updateCartUI() {
@@ -136,12 +150,9 @@
         document.getElementById('cartItems').innerHTML = cart.map((i, idx) => {
             total += i.price;
             return `<div class="flex justify-between items-center border-b border-black pb-4">
-                <div class="flex gap-4">
-                    <img src="${i.images[0]}" class="w-16 h-20 object-cover">
-                    <div class="text-[10px] font-black"><p>${i.name}</p><p class="opacity-40">SIZE: ${i.size}</p></div>
-                </div>
-                <button onclick="cart.splice(${idx},1);updateCartUI()" class="text-[8px] underline">REMOVE</button>
-            </div>`;
+                <div class="flex gap-4"><img src="${i.images[0]}" class="w-16 h-20 object-cover">
+                <div class="text-[10px] font-black"><p>${i.name}</p><p class="opacity-40">${i.size}</p></div></div>
+                <button onclick="cart.splice(${idx},1);updateCartUI()" class="text-[8px] underline">REMOVE</button></div>`;
         }).join('');
         document.getElementById('cartTotal').innerText = `${total.toLocaleString()} MMK`;
     }
@@ -153,17 +164,11 @@
         const order = {
             userId: user?.id || 'guest', username: document.getElementById('custName').value,
             items: cart, totalMMK: cart.reduce((a,b) => a + b.price, 0),
-            phone: document.getElementById('custPhone').value, address: document.getElementById('custAddr').value,
-            paymentScreenshot: payImg
+            phone: document.getElementById('custPhone').value, tgUsername: document.getElementById('custTG').value,
+            address: document.getElementById('custAddr').value, paymentScreenshot: payImg
         };
         await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(order)});
-        alert("ORDER PLACED"); location.reload();
-    }
-
-    function handleGoogle(response) {
-        localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'}));
-        document.getElementById('authModal').style.display = 'none'; // Auto-close
-        location.reload(); 
+        location.reload();
     }
 
     async function openOrders() {
@@ -173,17 +178,15 @@
         document.getElementById('orderStream').innerHTML = orders.map(o => `
             <div class="flex gap-6 border-b border-black pb-6">
                 <img src="${o.items[0].images[0]}" class="w-20 h-24 object-cover">
-                <div class="text-[10px] font-black">
-                    <p class="text-blue-600">${o.status}</p>
-                    <p class="mt-1">${o.items.map(i => i.name).join(', ')}</p>
-                    <p class="opacity-40">ARRIVAL: ${o.estArrival || 'PENDING'}</p>
-                </div>
-            </div>`).join('');
+                <div class="text-[10px] font-black"><p class="text-blue-600">${o.status}</p><p class="mt-1">${o.items.map(i => i.name).join(', ')}</p>
+                <p class="opacity-40">ARRIVAL: ${o.estArrival || 'PENDING'}</p></div></div>`).join('');
         document.getElementById('ordersModal').style.display = 'block';
     }
 
+    function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
+    function addToCart() { if(!selectedSize) return; cart.push({...currentItem, size: selectedSize, qty: 1}); updateCartUI(); closeModal('productModal'); }
     function toggleCart(s) { document.getElementById('cartModal').style.display = s ? 'block' : 'none'; }
-    function openCheckout() { if(cart.length==0) return; document.getElementById('checkoutModal').style.display = 'block'; }
+    function openCheckout() { document.getElementById('checkoutModal').style.display = 'block'; }
     function openAuth() { document.getElementById('authModal').style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     init();

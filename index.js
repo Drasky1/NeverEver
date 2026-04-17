@@ -24,17 +24,17 @@ const Item = mongoose.model('Item', new mongoose.Schema({
 
 const Order = mongoose.model('Order', new mongoose.Schema({
     userId: String, username: String, items: Array, totalMMK: Number,
-    address: String, phone: String, paymentScreenshot: String, 
+    address: String, phone: String, tgUsername: String, paymentScreenshot: String, 
     status: { type: String, default: 'Pending' }, 
     estArrival: { type: String, default: '' }, 
     createdAt: { type: Date, default: Date.now }
 }));
 
-// ROUTES TO PREVENT "CANNOT GET"
+// ROUTE HANDLERS
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
-// API
+// API ENDPOINTS
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId })));
@@ -50,11 +50,11 @@ app.post('/submit-order', async (req, res) => {
     await order.save();
     try {
         const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
-        const message = `🚨 NEW ORDER: ${order.username}\n📞 ${order.phone}\n📍 ${order.address}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\nITEMS:\n- ${itemList}`;
+        const message = `🚨 NEW ORDER: ${order.username}\n📞 ${order.phone}\n✈️ TG: ${order.tgUsername}\n📍 ${order.address}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\nITEMS:\n- ${itemList}`;
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
             chat_id: TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
         });
-    } catch (e) { console.error("Telegram error"); }
+    } catch (e) { console.error("Telegram fail"); }
     res.json({ success: true });
 });
 

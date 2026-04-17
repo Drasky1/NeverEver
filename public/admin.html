@@ -5,20 +5,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #f4f4f4; font-family: Helvetica; text-transform: uppercase; }
-        .stat-card { background: #fff; border: 1px solid #000; padding: 30px; }
-        input, select, textarea { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; width: 100%; }
+        .stat-card { background: #fff; border: 1px solid #000; padding: 25px; }
+        input, select { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; width: 100%; }
         .btn-black { background: #000; color: #fff; padding: 15px; font-size: 10px; font-weight: 900; width: 100%; }
     </style>
 </head>
 <body class="p-10">
-    <div class="max-w-7xl mx-auto space-y-10">
+    <div class="max-w-7xl mx-auto space-y-8">
         <div class="grid grid-cols-3 gap-6">
             <div class="stat-card">
-                <p class="text-[8px] font-black opacity-40">TOTAL REVENUE</p>
+                <p class="text-[8px] font-black opacity-30">REVENUE</p>
                 <h1 id="revTotal" class="text-2xl font-black italic">0 MMK</h1>
             </div>
             <div class="stat-card">
-                <p class="text-[8px] font-black text-emerald-600">TOTAL PROFIT</p>
+                <p class="text-[8px] font-black text-emerald-600">DELIVERED PROFIT</p>
                 <h1 id="profitTotal" class="text-2xl font-black italic text-emerald-600">0 MMK</h1>
             </div>
             <div class="stat-card">
@@ -27,10 +27,10 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="space-y-6">
                 <div class="stat-card">
-                    <h2 class="text-[10px] font-black mb-6">ADD PRODUCT</h2>
+                    <h2 class="text-[10px] font-black mb-4 italic">ADD PRODUCT</h2>
                     <input type="text" id="itemName" placeholder="NAME" class="mb-2">
                     <input type="number" id="itemCost" placeholder="COST (THB)" class="mb-2">
                     <input type="text" id="itemSizes" placeholder="SIZES (S, M, L)" class="mb-2">
@@ -40,16 +40,16 @@
                 </div>
 
                 <div class="stat-card">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-[10px] font-black">INVENTORY</h2>
-                        <input type="text" id="invSearch" onkeyup="renderInv()" placeholder="SEARCH..." class="!w-48 !p-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-[10px] font-black italic">INVENTORY</h2>
+                        <input type="text" id="invSearch" onkeyup="renderInv()" placeholder="SEARCH..." class="!w-40 !p-2">
                     </div>
                     <div id="invList" class="space-y-2 max-h-96 overflow-y-auto"></div>
                 </div>
             </div>
 
             <div class="stat-card">
-                <h2 class="text-[10px] font-black mb-6">ORDER STREAM</h2>
+                <h2 class="text-[10px] font-black mb-6 italic">ORDER STREAM</h2>
                 <div id="orderList" class="space-y-4 max-h-[800px] overflow-y-auto"></div>
             </div>
         </div>
@@ -62,9 +62,7 @@
         async function load() {
             items = await (await fetch('/items')).json();
             orders = await (await fetch('/orders')).json();
-            renderStats();
-            renderInv();
-            renderOrders();
+            renderStats(); renderInv(); renderOrders();
         }
 
         function renderStats() {
@@ -72,6 +70,7 @@
             orders.forEach(o => {
                 rev += o.totalMMK;
                 if(o.status !== 'Delivered') active++;
+                // Fixed Profit Logic: Calculate for ALL delivered items, regardless of current instock status
                 if(o.status === 'Delivered') {
                     o.items.forEach(oi => {
                         const original = items.find(i => i.name === oi.name);
@@ -87,52 +86,36 @@
         function renderInv() {
             const query = document.getElementById('invSearch').value.toLowerCase();
             document.getElementById('invList').innerHTML = items.filter(i => i.name.toLowerCase().includes(query)).map(i => `
-                <div class="flex justify-between items-center border border-black p-3 bg-gray-50">
-                    <div class="flex items-center gap-3">
-                        <img src="${i.images[0]}" class="w-10 h-10 object-cover border border-black">
-                        <span class="text-[9px] font-black">${i.name}</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="toggleSoldOut('${i._id}', ${i.isSoldOut})" class="text-[8px] underline">${i.isSoldOut ? 'RESTOCK' : 'SOLD OUT'}</button>
-                    </div>
-                </div>`).join('');
+                <div class="flex justify-between items-center border border-black p-4 ${i.isSoldOut ? 'bg-gray-100 opacity-50' : 'bg-white'}">
+                    <div class="flex items-center gap-4"><img src="${i.images[0]}" class="w-10 h-10 object-cover border border-black">
+                    <span class="text-[9px] font-black">${i.name}</span></div>
+                    <button onclick="toggleSoldOut('${i._id}', ${i.isSoldOut})" class="text-[8px] underline font-black">
+                        ${i.isSoldOut ? 'RESTOCK' : 'MARK SOLD OUT'}
+                    </button></div>`).join('');
         }
 
         function renderOrders() {
             document.getElementById('orderList').innerHTML = orders.map(o => `
                 <div class="border border-black p-6 bg-white space-y-4">
                     <div class="flex justify-between font-black text-[10px]">
-                        <span>${o.username}</span>
-                        <a href="${o.paymentScreenshot}" target="_blank" class="underline text-blue-600 italic">VIEW RECEIPT</a>
+                        <span>${o.username || 'GUEST'} | ${o.tgUsername || 'No TG'}</span>
+                        <a href="${o.paymentScreenshot}" target="_blank" class="underline text-blue-600 italic">RECEIPT</a>
                     </div>
-                    <div class="flex gap-4">
-                        <img src="${o.items[0].images[0]}" class="w-16 h-20 object-cover border border-black">
-                        <div class="text-[9px] font-bold">
-                            <p>${o.items.map(i => i.name + ' (' + i.size + ')').join(', ')}</p>
-                            <p class="mt-2 text-emerald-600">${o.totalMMK.toLocaleString()} MMK</p>
-                        </div>
-                    </div>
-                    <select id="status-${o._id}" class="!p-2 font-black">
-                        <option value="Pending" ${o.status=='Pending'?'selected':''}>Pending</option>
-                        <option value="Shipped" ${o.status=='Shipped'?'selected':''}>Shipped</option>
-                        <option value="Delivered" ${o.status=='Delivered'?'selected':''}>Delivered</option>
-                    </select>
-                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="ESTIMATED ARRIVAL (E.G. 2 WEEKS)" class="!p-2">
-                    <button onclick="updateOrder('${o._id}')" class="btn-black !p-2">UPDATE ORDER</button>
-                </div>`).join('');
+                    <div class="flex gap-4"><img src="${o.items[0].images[0]}" class="w-16 h-20 object-cover border border-black">
+                    <div class="text-[9px] font-bold"><p>${o.items.map(i => i.name + ' (' + i.size + ')').join(', ')}</p>
+                    <p class="mt-1">${o.phone}</p><p class="mt-1 text-emerald-600">${o.totalMMK.toLocaleString()} MMK</p></div></div>
+                    <select id="status-${o._id}" class="!p-2 font-black"><option value="Pending" ${o.status=='Pending'?'selected':''}>Pending</option>
+                    <option value="Delivered" ${o.status=='Delivered'?'selected':''}>Delivered</option></select>
+                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="ARRIVAL UPDATE" class="!p-2">
+                    <button onclick="updateOrder('${o._id}')" class="btn-black !p-2">UPDATE</button></div>`).join('');
         }
 
         const widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") photos.push(r.info.secure_url); });
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
-            const data = { 
-                name: document.getElementById('itemName').value, 
-                costTHB: document.getElementById('itemCost').value, 
-                availableSizes: [document.getElementById('itemSizes').value],
-                category: document.getElementById('itemCat').value, 
-                images: photos 
-            };
+            const data = { name: document.getElementById('itemName').value, costTHB: document.getElementById('itemCost').value, 
+                availableSizes: [document.getElementById('itemSizes').value], category: document.getElementById('itemCat').value, images: photos };
             await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
             location.reload();
         }
@@ -148,7 +131,6 @@
             await fetch(`/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({isSoldOut: !current})});
             load();
         }
-
         load();
     </script>
 </body>
