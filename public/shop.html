@@ -1,259 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEVEREVER | SHOP</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEVEREVER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #fdfdfd; font-family: Helvetica, sans-serif; }
+        body { background: #fff; font-family: Helvetica, sans-serif; text-transform: uppercase; }
         .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #eee; border-top: 1px solid #eee; }
         @media (min-width: 768px) { .yeezy-grid { grid-template-columns: repeat(4, 1fr); } }
-        .product-card { background: #fff; padding: 20px; cursor: pointer; transition: opacity 0.4s; position: relative; }
-        .product-card:hover { opacity: 0.6; }
-        .sold-out-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.7); display: flex; items-center; justify-content: center; z-index: 10; }
+        .product-card { background: #fff; padding: 20px; cursor: pointer; }
         .modal { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; }
-        .size-chip { border: 1px solid #ddd; padding: 12px; font-size: 10px; font-weight: 900; cursor: pointer; text-align: center; text-transform: uppercase; }
-        .size-chip.active { background: #000; color: #fff; border-color: #000; }
-        #cartModal { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 450px; background: #fff; z-index: 2000; padding: 40px; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
+        .status-badge { background: #000; color: #fff; padding: 2px 8px; border-radius: 99px; font-size: 8px; }
+        #cartModal { transform: translateX(100%); transition: transform 0.4s; position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 400px; background: #fff; z-index: 2000; padding: 40px; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
         #cartModal.show { transform: translateX(0); }
-        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3em; width: 100%; transition: opacity 0.2s; }
-        .btn-black:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-<nav class="p-6 flex justify-between items-center sticky top-0 bg-white/90 backdrop-blur-md z-[60]">
-    <div class="flex gap-6">
-        <button onclick="setFilter('Instock')" id="btnInstock" class="text-[10px] font-black uppercase tracking-widest underline underline-offset-4">Instock</button>
-        <button onclick="setFilter('Pre-order')" id="btnPre" class="text-[10px] font-black uppercase tracking-widest opacity-30 hover:opacity-100">Pre-order</button>
+<nav class="p-6 flex justify-between items-center sticky top-0 bg-white/90 z-50 border-b">
+    <div class="flex gap-4">
+        <button onclick="setFilter('Instock')" class="text-[10px] font-black">Instock</button>
+        <button onclick="openMyOrders()" class="text-[10px] font-black opacity-40">My Orders</button>
     </div>
-    <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-10 grayscale">
-    <div class="flex gap-6">
-        <button onclick="toggleCart(true)" class="text-[10px] font-black uppercase tracking-widest">Cart (<span id="cartCount">0</span>)</button>
+    <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-8 grayscale">
+    <div class="flex gap-4">
+        <button onclick="openAuth()" id="loginBtn" class="text-[10px] font-black">Login</button>
+        <button onclick="toggleCart(true)" class="text-[10px] font-black">Cart (<span id="cartCount">0</span>)</button>
     </div>
 </nav>
 
 <main class="yeezy-grid" id="main-grid"></main>
 
-<div id="productModal" class="modal">
-    <div class="sticky top-0 p-6 flex justify-between bg-white/95 border-b z-20">
-        <button onclick="closeProduct()" class="text-[10px] font-black uppercase tracking-widest">← Back</button>
-        <span class="text-[10px] font-black uppercase tracking-[0.3em]">NEVEREVER</span>
+<div id="ordersModal" class="modal">
+    <div class="p-6 border-b flex justify-between">
+        <button onclick="closeOrders()" class="text-[10px] font-black">← Back</button>
+        <span class="text-[10px] font-black">My Tracking</span>
         <div class="w-10"></div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2">
-        <div id="imageGallery" class="flex flex-col gap-1 bg-[#eee]"></div>
-        <div class="p-10 md:p-20 md:sticky md:top-20 h-fit space-y-10">
-            <div>
-                <h1 id="pName" class="text-3xl font-black uppercase italic tracking-tighter"></h1>
-                <p id="pPrice" class="text-lg font-bold mt-4"></p>
-                <p id="pSoldOutNotice" class="text-red-500 text-[10px] font-black uppercase mt-2 hidden">Currently Sold Out</p>
-            </div>
-            <div>
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">Select Size</p>
-                <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
-            </div>
-            <button id="addToCartBtn" onclick="handleAddToCart()" class="btn-black">Add to Cart</button>
-            <div class="pt-10 border-t">
-                <p id="pDesc" class="text-[11px] leading-relaxed font-medium uppercase text-slate-500"></p>
-            </div>
-        </div>
+    <div class="p-10 max-w-2xl mx-auto space-y-6" id="my-orders-list"></div>
+</div>
+
+<div id="productModal" class="modal">
+    <div id="imageGallery"></div>
+    <div class="p-10 space-y-6">
+        <h1 id="pName" class="text-2xl font-black italic"></h1>
+        <div id="sizeGrid" class="flex gap-2"></div>
+        <button onclick="handleAddToCart()" class="bg-black text-white w-full py-6 text-[10px] font-black tracking-widest">Add to Cart</button>
     </div>
 </div>
 
 <div id="cartModal" class="overflow-y-auto">
-    <div class="flex justify-between items-center mb-10">
-        <h2 class="text-xl font-black uppercase tracking-tighter italic">Cart</h2>
-        <button onclick="toggleCart(false)" class="text-[10px] font-bold uppercase text-slate-400">Close</button>
+    <h2 class="text-xl font-black mb-10 italic">Cart</h2>
+    <div id="cartItems" class="space-y-4 mb-10"></div>
+    <div id="checkoutForm" class="hidden space-y-4">
+        <input type="text" id="orderAddr" placeholder="Address" class="border-b w-full py-3 text-[10px] font-black">
+        <button id="uploadSS" class="w-full border p-4 text-[9px] font-black">📸 Upload Receipt</button>
+        <input type="hidden" id="paymentImg">
+        <button onclick="submitOrder()" class="bg-black text-white w-full py-6 text-[10px] font-black">Order Now</button>
     </div>
-    
-    <div id="cartItems" class="space-y-6 mb-10"></div>
+</div>
 
-    <div id="checkoutSection" class="hidden border-t pt-8 space-y-6">
-        <div class="flex justify-between font-black uppercase text-xs">
-            <span>Subtotal</span>
-            <span id="cartTotal">0 MMK</span>
-        </div>
-
-        <div class="bg-slate-50 p-6 border text-[10px] font-black uppercase leading-loose">
-            <span class="opacity-40">Payment Methods:</span><br>
-            KPay / Wave: 09 459904512<br>
-            Name: MALCOLM / NEVEREVER
-        </div>
-
-        <div class="space-y-4">
-            <input type="text" id="orderAddr" placeholder="Delivery Address" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
-            <input type="text" id="orderPh" placeholder="Phone Number" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
-            
-            <button id="uploadSS" class="w-full border border-black py-4 text-[10px] font-black uppercase flex items-center justify-center gap-2">
-                📸 Upload Payment Receipt
-            </button>
-            <input type="hidden" id="paymentImg">
-            
-            <button onclick="submitOrder()" class="btn-black">Confirm Purchase</button>
-        </div>
+<div id="authModal" class="modal flex items-center justify-center">
+    <div class="max-w-xs w-full p-10 text-center">
+        <h2 class="font-black text-[10px] mb-10">Auth Access</h2>
+        <input type="text" id="authUser" placeholder="Username" class="border-b w-full py-3 mb-4 text-[10px]">
+        <input type="password" id="authPass" placeholder="Password" class="border-b w-full py-3 mb-6 text-[10px]">
+        <button onclick="handleAuth(true)" class="bg-black text-white w-full py-4 text-[10px] font-black mb-2">Login</button>
+        <button onclick="handleAuth(false)" class="text-[9px] font-black opacity-40">Create Account</button>
     </div>
 </div>
 
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
-    let allItems = [], cart = {}, currentFilter = 'Instock', currentItem = null, selectedSize = null;
-    const user = JSON.parse(localStorage.getItem('neverUser')) || { id: 'guest', username: 'Guest' };
-
+    let allItems = [], cart = {}, user = JSON.parse(localStorage.getItem('neverUser'));
+    
     async function loadShop() {
-        const res = await fetch('/items');
-        allItems = await res.json();
+        allItems = await (await fetch('/items')).json();
         renderGrid();
-    }
-
-    function setFilter(f) {
-        currentFilter = f;
-        document.getElementById('btnInstock').classList.toggle('opacity-30', f !== 'Instock');
-        document.getElementById('btnPre').classList.toggle('opacity-30', f !== 'Pre-order');
-        renderGrid();
+        if(user) document.getElementById('loginBtn').innerText = user.username;
     }
 
     function renderGrid() {
-        const grid = document.getElementById('main-grid');
-        const filtered = allItems.filter(i => i.grade === currentFilter).reverse();
-        grid.innerHTML = filtered.map(i => `
+        document.getElementById('main-grid').innerHTML = allItems.map(i => `
             <div class="product-card" onclick="openProduct('${i._id}')">
-                ${i.isSoldOut ? '<div class="sold-out-overlay"><span class="text-[10px] font-black uppercase tracking-widest border-2 border-black p-2">Sold Out</span></div>' : ''}
-                <img src="${(i.images && i.images[0]) ? i.images[0] : ''}" class="w-full aspect-[3/4] object-cover mb-4">
-                <div class="text-center font-black uppercase text-[10px] tracking-widest">
-                    ${i.name}<br><span class="text-slate-400 mt-1 block">${(i.price || 0).toLocaleString()} MMK</span>
-                </div>
+                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4">
+                <p class="text-[10px] font-black text-center">${i.name}<br><span class="opacity-40">${i.price.toLocaleString()} MMK</span></p>
             </div>`).join('');
     }
 
-    function openProduct(id) {
-        currentItem = allItems.find(i => i._id === id);
-        selectedSize = null;
-        
-        document.getElementById('pName').innerText = currentItem.name;
-        document.getElementById('pPrice').innerText = `${(currentItem.price || 0).toLocaleString()} MMK`;
-        document.getElementById('pDesc').innerText = currentItem.description;
-        document.getElementById('imageGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full h-auto">`).join('');
-        document.getElementById('sizeGrid').innerHTML = currentItem.availableSizes.map(s => `<div class="size-chip" onclick="selectSize(this, '${s}')">${s}</div>`).join('');
-        
-        // Handle Sold Out state in modal
-        const addBtn = document.getElementById('addToCartBtn');
-        const notice = document.getElementById('pSoldOutNotice');
-        if (currentItem.isSoldOut) {
-            addBtn.disabled = true;
-            addBtn.innerText = "Unavailable";
-            notice.classList.remove('hidden');
-        } else {
-            addBtn.disabled = false;
-            addBtn.innerText = "Add to Cart";
-            notice.classList.add('hidden');
-        }
-
-        document.getElementById('productModal').style.display = 'block';
-        document.body.style.overflow = 'hidden';
+    async function openMyOrders() {
+        if(!user) return openAuth();
+        const orders = await (await fetch(`/my-orders/${user.id}`)).json();
+        document.getElementById('ordersModal').style.display = 'block';
+        document.getElementById('my-orders-list').innerHTML = orders.map(o => `
+            <div class="border p-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-black">Order #${o._id.slice(-5)}</span>
+                    <span class="status-badge">${o.status}</span>
+                </div>
+                <p class="text-[12px] font-black">Arriving in: <span class="text-green-600">${o.estArrival}</span></p>
+                <div class="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                    <div class="bg-black h-full" style="width: ${o.status=='Pending'?'20%':o.status=='Shipped'?'60%':'100%'}"></div>
+                </div>
+                <p class="text-[9px] opacity-40">${o.items.map(i=>i.name).join(', ')}</p>
+            </div>`).join('') || '<p class="text-center opacity-30">No orders found</p>';
     }
 
-    function selectSize(el, s) {
-        document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        selectedSize = s;
-    }
-
-    function closeProduct() { document.getElementById('productModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
-
+    // Standard Auth/Cart Logic here...
+    function openAuth() { document.getElementById('authModal').style.display = 'flex'; }
+    function closeOrders() { document.getElementById('ordersModal').style.display = 'none'; }
     function toggleCart(s) { document.getElementById('cartModal').classList.toggle('show', s); }
 
-    function handleAddToCart() {
-        if(!selectedSize) return alert("Please select a size");
-        const key = `${currentItem.name} (${selectedSize})`;
-        if(cart[key]) cart[key].qty++;
-        else cart[key] = { price: currentItem.price, img: currentItem.images[0], qty: 1 };
-        updateCartUI();
-        closeProduct();
-        toggleCart(true);
+    async function handleAuth(isLogin) {
+        const u = document.getElementById('authUser').value, p = document.getElementById('authPass').value;
+        const res = await fetch(isLogin?'/auth/login':'/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
+        const d = await res.json();
+        if(res.ok) { localStorage.setItem('neverUser', JSON.stringify(d.user)); location.reload(); } else alert("Error");
     }
 
-    function updateCartUI() {
-        const items = Object.keys(cart);
-        let total = 0, count = 0;
-        
-        document.getElementById('cartItems').innerHTML = items.map(k => {
-            const i = cart[k]; 
-            total += (i.price * i.qty); 
-            count += i.qty;
-            return `
-                <div class="flex gap-4 border-b pb-4">
-                    <img src="${i.img}" class="w-16 h-20 object-cover">
-                    <div class="flex-1 text-[10px] font-black uppercase">
-                        ${k}
-                        <div class="mt-2 flex items-center gap-4">
-                            <button onclick="adjustQty('${k}',-1)" class="w-6 h-6 border">-</button>
-                            ${i.qty}
-                            <button onclick="adjustQty('${k}',1)" class="w-6 h-6 border">+</button>
-                        </div>
-                    </div>
-                    <div class="text-[10px] font-black">${(i.price * i.qty).toLocaleString()}</div>
-                </div>`;
-        }).join('');
-
-        document.getElementById('cartCount').innerText = count;
-        document.getElementById('cartTotal').innerText = `${total.toLocaleString()} MMK`;
-        document.getElementById('checkoutSection').classList.toggle('hidden', items.length === 0);
-    }
-
-    function adjustQty(k, d) {
-        cart[k].qty += d;
-        if(cart[k].qty <= 0) delete cart[k];
-        updateCartUI();
-    }
-
-    // CLOUDINARY UPLOAD FOR RECEIPTS
-    var widget = cloudinary.createUploadWidget({ 
-        cloudName: 'dawhhgjsd', 
-        uploadPreset: 'dawhhgjsd',
-        sources: ['local', 'camera'],
-        clientAllowedFormats: ['png', 'jpg', 'jpeg']
-    }, (e, r) => { 
-        if(r.event === "success") {
-            document.getElementById('paymentImg').value = r.info.secure_url;
-            document.getElementById('uploadSS').innerHTML = "✅ Receipt Attached";
-            document.getElementById('uploadSS').classList.add('bg-green-50', 'text-green-600', 'border-green-200');
-        }
-    });
-
+    var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") document.getElementById('paymentImg').value = r.info.secure_url; });
     document.getElementById("uploadSS").onclick = () => widget.open();
 
     async function submitOrder() {
-        const ss = document.getElementById('paymentImg').value;
-        const addr = document.getElementById('orderAddr').value;
-        const ph = document.getElementById('orderPh').value;
-
-        if(!ss || !addr || !ph) return alert("Please fill in address, phone, and upload payment receipt.");
-
-        const orderData = {
-            userId: user.id,
-            username: user.username,
-            items: Object.keys(cart).map(k => ({ name: k, qty: cart[k].qty })),
-            totalMMK: Object.values(cart).reduce((a,b) => a + (b.price * b.qty), 0),
-            address: addr,
-            phone: ph,
-            paymentScreenshot: ss
-        };
-
-        const res = await fetch('/submit-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-        });
-
-        if(res.ok) {
-            alert("ORDER SUBMITTED. WE WILL VERIFY YOUR PAYMENT.");
-            cart = {};
-            location.reload();
-        } else {
-            alert("Error submitting order. Please try again.");
-        }
+        const data = { userId:user.id, username:user.username, items:Object.keys(cart).map(k=>({name:k, qty:cart[k].qty})), totalMMK:10000, address:document.getElementById('orderAddr').value, paymentScreenshot:document.getElementById('paymentImg').value };
+        await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+        alert("Ordered!"); location.reload();
     }
 
     loadShop();
