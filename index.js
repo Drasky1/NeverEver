@@ -82,6 +82,16 @@ app.post('/auth/signup', async (req, res) => {
     } catch (err) { res.status(400).json({ error: "Username already exists" }); }
 });
 
+app.post('/auth/signup', async (req, res) => {
+    try {
+        const { username, password, phone, address } = req.body;
+        const hashed = await bcrypt.hash(password, 10);
+        const user = new User({ username, password: hashed, phone, address });
+        await user.save();
+        res.json({ success: true });
+    } catch (err) { res.status(400).json({ error: "Username already exists" }); }
+});
+
 app.post('/auth/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
@@ -93,15 +103,14 @@ app.post('/auth/login', async (req, res) => {
     }
 });
 
-// --- ADMIN CONTROLS ---
-app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
-app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
-app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
-
-// --- CATCH-ALL ROUTE (FIXED FOR EXPRESS 5) ---
-// Using regex (.*) instead of :path* or *
-app.get('(.*)', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+// --- THE ULTIMATE FAILSAFE CATCH-ALL ---
+// This does NOT use path-to-regexp, so it CANNOT throw that error.
+app.use((req, res, next) => {
+    // If it's a GET request and not an API call, send the HTML
+    if (req.method === 'GET' && !req.path.startsWith('/auth') && !req.path.startsWith('/items')) {
+        return res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+    }
+    next();
 });
 
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));
