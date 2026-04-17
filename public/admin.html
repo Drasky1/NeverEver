@@ -1,50 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | NeverEver</title>
+    <meta charset="UTF-8"><title>ADMIN | NEVEREVER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        input, select, textarea { background: #fff; border: 1px solid #ddd; padding: 15px; font-size: 11px; font-weight: bold; outline: none; width: 100%; text-transform: uppercase; }
-        .btn-black { background: #000; color: #fff; font-weight: 900; text-transform: uppercase; font-size: 10px; padding: 20px; letter-spacing: 0.2em; }
+        body { background: #f9f9f9; font-family: Helvetica, sans-serif; }
+        input, select, textarea { border: 1px solid #ddd; padding: 15px; font-size: 11px; font-weight: 900; text-transform: uppercase; width: 100%; outline: none; margin-bottom: 10px; }
+        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3em; width: 100%; }
     </style>
 </head>
-<body class="bg-[#f2f2f2] p-6 md:p-20 font-sans">
+<body class="p-6 md:p-20">
+    <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-6">
+        <div class="max-w-xs w-full space-y-4">
+            <h1 class="text-center font-black text-[10px] uppercase tracking-widest mb-10 italic">NEVEREVER INTERNAL</h1>
+            <input type="password" id="adminPass" placeholder="ADMIN PASSWORD">
+            <button onclick="checkPass()" class="btn-black">Access</button>
+        </div>
+    </div>
 
-    <div class="max-w-4xl mx-auto space-y-10">
-        <h1 class="text-[10px] font-black uppercase tracking-[0.5em] text-center mb-20">NeverEver Admin</h1>
-
-        <section class="bg-white p-10 space-y-6 shadow-sm">
-            <h2 class="text-[10px] font-black uppercase border-b pb-4">New Product Deployment</h2>
+    <div class="max-w-4xl mx-auto space-y-12">
+        <div class="bg-white p-10 border">
+            <h2 class="font-black text-[10px] uppercase tracking-widest mb-8">Deploy New Product</h2>
             <div class="grid grid-cols-2 gap-4">
-                <input type="text" id="itemName" placeholder="Name">
+                <input type="text" id="itemName" placeholder="Product Name">
                 <input type="number" id="itemCost" placeholder="Cost (THB)">
             </div>
-            <textarea id="itemDesc" placeholder="Product Description" class="h-32"></textarea>
+            <textarea id="itemDesc" placeholder="Description" class="h-24"></textarea>
             <div class="grid grid-cols-2 gap-4">
                 <select id="itemGrade"><option value="Instock">Instock</option><option value="Pre-order">Pre-order</option></select>
                 <input type="text" id="itemSizes" placeholder="Sizes (e.g. S, M, L, XL)">
             </div>
-            <div id="imgStatus" class="text-[9px] font-black uppercase text-slate-400">Photos: 0 / 5</div>
-            <button id="uploadBtn" class="w-full border-2 border-dashed p-10 text-[10px] font-black uppercase opacity-50">📸 Upload Editorial Photos</button>
-            <button onclick="deployItem()" class="btn-black w-full">Deploy to Mainframe</button>
-        </section>
+            <p id="imgCount" class="text-[9px] font-black text-slate-400 uppercase mb-4">Images: 0 / 5</p>
+            <button id="uploadBtn" class="w-full border-2 border-dashed p-10 text-[10px] font-black uppercase opacity-40 mb-6 hover:opacity-100 transition-opacity">📸 Upload Editorial Set</button>
+            <button onclick="saveItem()" class="btn-black">Confirm & Deploy</button>
+        </div>
 
-        <section class="bg-white p-10 shadow-sm">
-            <h2 class="text-[10px] font-black uppercase border-b pb-4 mb-6">Inventory List</h2>
-            <div id="inv-list" class="space-y-4"></div>
-        </section>
+        <div class="bg-white p-10 border">
+            <h2 class="font-black text-[10px] uppercase tracking-widest mb-8">Current Inventory</h2>
+            <div id="inv-list" class="divide-y"></div>
+        </div>
     </div>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
+        function checkPass() { if(document.getElementById('adminPass').value === 'neveradmin') document.getElementById('authOverlay').remove(); }
         let photos = [];
         var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd', maxFiles: 5 }, (e, r) => {
-            if(r.event==="success") { photos.push(r.info.secure_url); document.getElementById('imgStatus').innerText = `Photos: ${photos.length} / 5`; }
+            if(r.event==="success") { photos.push(r.info.secure_url); document.getElementById('imgCount').innerText = `Images: ${photos.length} / 5`; }
         });
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
-        async function deployItem() {
+        async function saveItem() {
             const data = {
                 name: document.getElementById('itemName').value,
                 costTHB: document.getElementById('itemCost').value,
@@ -53,21 +59,21 @@
                 sizes: document.getElementById('itemSizes').value.split(',').map(s=>s.trim()),
                 images: photos
             };
-            const res = await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-            if(res.ok) location.reload();
+            if(!data.name || photos.length === 0) return alert("Fill all fields and upload images.");
+            await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            location.reload();
         }
 
-        async function loadInv() {
-            const res = await fetch('/items');
-            const items = await res.json();
+        async function load() {
+            const res = await fetch('/items'); const items = await res.json();
             document.getElementById('inv-list').innerHTML = items.reverse().map(i => `
-                <div class="flex justify-between items-center py-4 border-b">
+                <div class="flex justify-between items-center py-4">
                     <div class="flex items-center gap-4"><img src="${i.images[0]}" class="w-10 h-10 object-cover">${i.name}</div>
-                    <button onclick="deleteItem('${i._id}')" class="text-[10px] font-black uppercase opacity-30 hover:opacity-100">Delete</button>
+                    <button onclick="del('${i._id}')" class="text-[9px] font-black uppercase text-red-400">Remove</button>
                 </div>`).join('');
         }
-        async function deleteItem(id) { if(confirm('Delete?')) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); loadInv(); }}
-        loadInv();
+        async function del(id) { if(confirm('Delete?')) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); load(); } }
+        load();
     </script>
 </body>
 </html>

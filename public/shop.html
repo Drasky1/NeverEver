@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEVEREVER | Official</title>
+    <title>NEVEREVER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #fdfdfd; font-family: 'Helvetica', sans-serif; color: #000; }
+        body { background: #fdfdfd; font-family: Helvetica, sans-serif; }
         .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #eee; border-top: 1px solid #eee; }
         @media (min-width: 768px) { .yeezy-grid { grid-template-columns: repeat(4, 1fr); } }
-        .product-card { background: #fdfdfd; padding: 20px; cursor: pointer; transition: opacity 0.4s; }
+        .product-card { background: #fff; padding: 20px; cursor: pointer; transition: opacity 0.4s; }
         .product-card:hover { opacity: 0.6; }
         .modal { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; }
-        .size-chip { border: 1px solid #ddd; padding: 12px; font-size: 10px; font-weight: 900; cursor: pointer; text-align: center; }
+        .size-chip { border: 1px solid #ddd; padding: 12px; font-size: 10px; font-weight: 900; cursor: pointer; text-align: center; text-transform: uppercase; }
         .size-chip.active { background: #000; color: #fff; border-color: #000; }
         #cartModal { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #cartModal.show { transform: translateX(0); }
@@ -26,7 +26,7 @@
     </div>
     <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-10 grayscale">
     <div class="flex gap-6">
-        <a href="https://t.me/YOUR_USERNAME" class="text-[10px] font-black uppercase tracking-widest">Request</a>
+        <a href="https://t.me/YOUR_TELEGRAM" class="text-[10px] font-black uppercase tracking-widest">Request</a>
         <button onclick="toggleCart(true)" class="text-[10px] font-black uppercase tracking-widest">Cart (<span id="cartCount">0</span>)</button>
     </div>
 </nav>
@@ -34,7 +34,7 @@
 <main class="yeezy-grid" id="main-grid"></main>
 
 <div id="productModal" class="modal">
-    <div class="sticky top-0 p-6 flex justify-between bg-white/90 backdrop-blur-md border-b z-20">
+    <div class="sticky top-0 p-6 flex justify-between bg-white/95 border-b z-20">
         <button onclick="closeProduct()" class="text-[10px] font-black uppercase tracking-widest">← Back</button>
         <span class="text-[10px] font-black uppercase tracking-[0.3em]">NEVEREVER</span>
         <div class="w-10"></div>
@@ -43,17 +43,16 @@
         <div id="imageGallery" class="flex flex-col gap-1 bg-[#eee]"></div>
         <div class="p-10 md:p-20 md:sticky md:top-20 h-fit space-y-10">
             <div>
-                <h1 id="pName" class="text-3xl font-black uppercase tracking-tighter italic"></h1>
+                <h1 id="pName" class="text-3xl font-black uppercase italic tracking-tighter"></h1>
                 <p id="pPrice" class="text-lg font-bold mt-4"></p>
             </div>
             <div>
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">Size Selector</p>
+                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">Select Size</p>
                 <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
             </div>
-            <button onclick="handleAddToCart()" class="w-full bg-black text-white py-6 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-800 transition-colors">Add to Cart</button>
-            <div class="pt-10 border-t border-black/5">
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">Details</p>
-                <p id="pDesc" class="text-[12px] leading-relaxed font-medium uppercase text-slate-600"></p>
+            <button onclick="handleAddToCart()" class="w-full bg-black text-white py-6 text-[10px] font-black uppercase tracking-[0.3em]">Add to Cart</button>
+            <div class="pt-10 border-t">
+                <p id="pDesc" class="text-[11px] leading-relaxed font-medium uppercase text-slate-500"></p>
             </div>
         </div>
     </div>
@@ -65,12 +64,9 @@
         <button onclick="toggleCart(false)" class="text-[10px] font-bold uppercase text-slate-400">Close</button>
     </div>
     <div id="cartItems" class="space-y-6 mb-10"></div>
-    <div id="checkoutArea" class="hidden border-t border-black pt-8 space-y-4">
+    <div id="checkoutArea" class="hidden border-t pt-8 space-y-4">
         <div class="flex justify-between font-black uppercase text-xs"><span>Total</span><span id="cartTotal"></span></div>
-        <div class="bg-slate-50 p-4 text-[10px] font-bold uppercase space-y-2 border">
-            <div class="flex justify-between"><span>KPay</span><span>09xxxxxxxxx</span></div>
-            <div class="flex justify-between"><span>Wave</span><span>09xxxxxxxxx</span></div>
-        </div>
+        <div class="bg-slate-50 p-4 text-[10px] font-bold uppercase border">KPay / Wave: 09xxxxxxxxx</div>
         <input type="text" id="orderAddr" placeholder="ADDRESS" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
         <input type="text" id="orderPh" placeholder="PHONE" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
         <button id="uploadSS" class="w-full border border-black py-4 text-[10px] font-black uppercase">📸 Upload Receipt</button>
@@ -102,7 +98,7 @@
         const filtered = allItems.filter(i => i.grade === currentFilter).reverse();
         grid.innerHTML = filtered.map(i => `
             <div class="product-card" onclick="openProduct('${i._id}')">
-                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4 mix-blend-multiply">
+                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4">
                 <div class="text-center font-black uppercase text-[10px] tracking-widest">
                     ${i.name}<br><span class="text-slate-400 mt-1 block">${i.price.toLocaleString()} MMK</span>
                 </div>
@@ -134,9 +130,7 @@
         const key = `${currentItem.name} (${selectedSize})`;
         if(cart[key]) cart[key].qty++;
         else cart[key] = { price: currentItem.price, img: currentItem.images[0], qty: 1 };
-        updateCartUI();
-        closeProduct();
-        toggleCart(true);
+        updateCartUI(); closeProduct(); toggleCart(true);
     }
 
     function updateCartUI() {
@@ -144,7 +138,7 @@
         let total = 0, count = 0;
         document.getElementById('cartItems').innerHTML = items.map(k => {
             const i = cart[k]; total += (i.price * i.qty); count += i.qty;
-            return `<div class="flex gap-4 items-center border-b pb-4"><img src="${i.img}" class="w-16 h-16 object-contain bg-slate-50"><div class="flex-1 text-[10px] font-black uppercase">${k}<div class="mt-2 flex items-center gap-3"><button onclick="adjustQty('${k}',-1)">-</button><span>${i.qty}</span><button onclick="adjustQty('${k}',1)">+</button></div></div><div>${(i.price * i.qty).toLocaleString()}</div></div>`;
+            return `<div class="flex gap-4 border-b pb-4"><img src="${i.img}" class="w-16 h-16"><div class="flex-1 text-[10px] font-black uppercase">${k}<div class="mt-2 flex gap-3"><button onclick="adjustQty('${k}',-1)">-</button>${i.qty}<button onclick="adjustQty('${k}',1)">+</button></div></div><div>${(i.price*i.qty).toLocaleString()}</div></div>`;
         }).join('');
         document.getElementById('cartCount').innerText = count;
         document.getElementById('cartTotal').innerText = `${total.toLocaleString()} MMK`;
@@ -159,8 +153,8 @@
 
     async function submitOrder() {
         const ss = document.getElementById('paymentImg').value; if(!ss) return alert("Upload Proof");
-        const res = await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ userId:user.id, username:user.username, items:Object.keys(cart).map(k=>({name:k, qty:cart[k].qty})), totalMMK:Object.values(cart).reduce((a,b)=>a+(b.price*b.qty),0), address:document.getElementById('orderAddr').value, phone:document.getElementById('orderPh').value, paymentScreenshot:ss })});
-        if(res.ok) { alert("ORDERED"); location.reload(); }
+        await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ userId:user.id, username:user.username, items:Object.keys(cart).map(k=>({name:k, qty:cart[k].qty})), totalMMK:Object.values(cart).reduce((a,b)=>a+(b.price*b.qty),0), address:document.getElementById('orderAddr').value, phone:document.getElementById('orderPh').value, paymentScreenshot:ss })});
+        alert("ORDERED"); location.reload();
     }
 
     loadShop();

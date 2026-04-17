@@ -20,7 +20,7 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
-// --- MODELS ---
+// MODELS
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
     grade: { type: String, default: 'Instock' }, 
@@ -45,72 +45,53 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// --- API ROUTES ---
+// SHOP & ADMIN API
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
 
 app.post('/add-item', async (req, res) => {
-    try {
-        const { name, costTHB, images, grade, description, sizes } = req.body;
-        const newItem = new Item({
-            name, grade, costTHB,
-            price: parseFloat(costTHB) * RATE,
-            images, description, availableSizes: sizes
-        });
-        await newItem.save();
-        res.json({ success: true });
-    } catch (err) { res.status(500).json(err); }
+    const { name, costTHB, images, grade, description, sizes } = req.body;
+    const newItem = new Item({
+        name, grade, costTHB,
+        price: parseFloat(costTHB) * RATE,
+        images, description, availableSizes: sizes
+    });
+    await newItem.save();
+    res.json({ success: true });
 });
 
 app.post('/submit-order', async (req, res) => {
-    try {
-        await new Order(req.body).save();
-        const message = `🔥 *NEW ORDER*\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK`;
-        axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: ADMIN_IDS[0], text: message, parse_mode: 'Markdown' });
-        res.json({ success: true });
-    } catch (err) { res.status(500).json(err); }
+    await new Order(req.body).save();
+    const message = `🔥 *NEW ORDER*\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK`;
+    axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: ADMIN_IDS[0], text: message, parse_mode: 'Markdown' });
+    res.json({ success: true });
 });
 
-// --- AUTH ROUTES ---
-app.post('/auth/signup', async (req, res) => {
-    try {
-        const { username, password, phone, address } = req.body;
-        const hashed = await bcrypt.hash(password, 10);
-        const user = new User({ username, password: hashed, phone, address });
-        await user.save();
-        res.json({ success: true });
-    } catch (err) { res.status(400).json({ error: "Username already exists" }); }
-});
+app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
+// AUTH API
 app.post('/auth/signup', async (req, res) => {
     try {
-        const { username, password, phone, address } = req.body;
-        const hashed = await bcrypt.hash(password, 10);
-        const user = new User({ username, password: hashed, phone, address });
+        const hashed = await bcrypt.hash(req.body.password, 10);
+        const user = new User({...req.body, password: hashed});
         await user.save();
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: "Username already exists" }); }
 });
 
 app.post('/auth/login', async (req, res) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (user && await bcrypt.compare(password, user.password)) {
+    const user = await User.findOne({ username: req.body.username });
+    if (user && await bcrypt.compare(req.body.password, user.password)) {
         const token = jwt.sign({ id: user._id }, JWT_SECRET);
         res.json({ token, user: { id: user._id, username: user.username, phone: user.phone, address: user.address } });
-    } else {
-        res.status(401).json({ error: "Invalid credentials" });
-    }
+    } else { res.status(401).json({ error: "Invalid credentials" }); }
 });
 
-// --- THE ULTIMATE FAILSAFE CATCH-ALL ---
-// This does NOT use path-to-regexp, so it CANNOT throw that error.
+// ROUTING FAILSAFE
 app.use((req, res, next) => {
-    // If it's a GET request and not an API call, send the HTML
-    if (req.method === 'GET' && !req.path.startsWith('/auth') && !req.path.startsWith('/items')) {
-        return res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-    }
-    next();
+    if (req.method === 'GET' && !req.path.includes('.')) {
+        res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+    } else { next(); }
 });
 
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));
