@@ -85,6 +85,6 @@ app.post('/auth/login', async (req, res) => {
 
 // Route everything else to the main app (SPA behavior)
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/(.*)', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 app.listen(10000, () => console.log("✅ SERVER RUNNING ON PORT 10000"));
