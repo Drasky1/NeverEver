@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const bcrypt = require('bcryptjs');
 const axios = require('axios');
 
 const app = express();
@@ -19,14 +18,10 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .catch(err => console.error("❌ DB ERROR:", err));
 
 const Item = mongoose.model('Item', new mongoose.Schema({
-    name: String, grade: String, costTHB: Number, price: Number,
-    images: [String], description: String, availableSizes: [String],
+    name: String, costTHB: Number, price: Number,
+    images: [String], availableSizes: [String],
     category: { type: String, default: 'Instock' }, 
     isSoldOut: { type: Boolean, default: false }
-}));
-
-const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, unique: true }, password: { type: String }, email: String, googleId: String
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
@@ -36,6 +31,11 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     estArrival: { type: String, default: '' }, 
     createdAt: { type: Date, default: Date.now }
 }));
+
+// FIX: This serves the shop.html when you visit the site
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+});
 
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
@@ -56,7 +56,7 @@ app.post('/submit-order', async (req, res) => {
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
             chat_id: TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
         });
-    } catch (err) { console.error("Telegram fail"); }
+    } catch (err) { console.error("Telegram error"); }
     res.json({ success: true });
 });
 
@@ -68,15 +68,6 @@ app.put('/update-order/:id', async (req, res) => {
 app.put('/update-item/:id', async (req, res) => {
     await Item.findByIdAndUpdate(req.params.id, req.body);
     res.json({ success: true });
-});
-
-app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
-
-app.post('/auth/login', async (req, res) => {
-    const user = await User.findOne({ username: req.body.username });
-    if (user && await bcrypt.compare(req.body.password, user.password)) {
-        res.json({ success: true, user: { id: user._id, username: user.username } });
-    } else { res.status(401).json({ error: "Invalid credentials" }); }
 });
 
 app.listen(10000, () => console.log("Server running on port 10000"));
