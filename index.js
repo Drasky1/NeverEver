@@ -7,17 +7,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('./'));
 
-// Your direct connection string - no dotenv needed
 const mongoURI = "mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority";
 
 mongoose.connect(mongoURI)
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.log("❌ DB ERROR:", err));
 
+// Schema with Stock added
 const Item = mongoose.model('Item', { 
     name: String, price: Number, costTHB: Number, images: Array, 
     category: String, availableSizes: Array, isSoldOut: Boolean,
-    stock: { type: Number, default: 0 } // Added Stock field
+    stock: { type: Number, default: 0 }
 });
 
 const Order = mongoose.model('Order', { 
@@ -27,6 +27,7 @@ const Order = mongoose.model('Order', {
     createdAt: { type: Date, default: Date.now } 
 });
 
+// Routes
 app.get('/items', async (req, res) => res.json(await Item.find()));
 
 app.post('/add-item', async (req, res) => {
@@ -42,10 +43,15 @@ app.post('/submit-order', async (req, res) => {
     const order = new Order(req.body);
     await order.save();
     
-    // AUTO-SUBTRACT STOCK
+    // Auto-Decrement Stock
     for (const item of req.body.items) {
         await Item.findByIdAndUpdate(item._id, { $inc: { stock: -1 } });
     }
+
+    // Telegram Alert (Using native fetch for zero-dependency)
+    const msg = `🚨 NEW ORDER: ${req.body.username}\nTotal: ${req.body.totalMMK} MMK`;
+    fetch(`https://api.telegram.org/bot8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ/sendMessage?chat_id=1923704168&text=${encodeURIComponent(msg)}`).catch(e => console.log("TG fail"));
+    
     res.json(order);
 });
 
