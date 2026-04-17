@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -12,8 +11,6 @@ app.use(cors());
 app.use(express.static('public'));
 
 const JWT_SECRET = 'never-ever-2026-secure-key-999'; 
-const TELE_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ';
-const ADMIN_IDS = ['1923704168'];
 const RATE = 125; 
 
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
@@ -28,14 +25,14 @@ const Item = mongoose.model('Item', new mongoose.Schema({
 }));
 
 const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, unique: true }, password: { type: String }, phone: String, address: String
+    username: { type: String, unique: true }, password: { type: String }
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
     userId: String, username: String, items: Array, totalMMK: Number,
     address: String, phone: String, paymentScreenshot: String, 
     status: { type: String, default: 'Pending' }, 
-    estArrival: String, // e.g., "3-5 Days"
+    estArrival: { type: String, default: '' }, 
     createdAt: { type: Date, default: Date.now }
 }));
 
@@ -51,7 +48,7 @@ app.post('/add-item', async (req, res) => {
 });
 
 app.post('/submit-order', async (req, res) => {
-    const order = new Order({...req.body, estArrival: "Calculating..."});
+    const order = new Order({...req.body});
     await order.save();
     res.json({ success: true });
 });
@@ -63,11 +60,27 @@ app.put('/update-order/:id', async (req, res) => {
 
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
-// FAILSAFE ROUTING
+// AUTH
+app.post('/auth/signup', async (req, res) => {
+    try {
+        const hashed = await bcrypt.hash(req.body.password, 10);
+        const user = new User({username: req.body.username, password: hashed});
+        await user.save();
+        res.json({ success: true, user: { id: user._id, username: user.username } });
+    } catch (err) { res.status(400).json({ error: "User exists" }); }
+});
+
+app.post('/auth/login', async (req, res) => {
+    const user = await User.findOne({ username: req.body.username });
+    if (user && await bcrypt.compare(req.body.password, user.password)) {
+        res.json({ success: true, user: { id: user._id, username: user.username } });
+    } else { res.status(401).json({ error: "Invalid" }); }
+});
+
+// ROUTING
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.includes('.')) res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-    else next();
+app.get('*', (req, res) => {
+    if (!req.path.includes('.')) res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));

@@ -1,53 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>ADMIN | NEVEREVER</title>
+    <meta charset="UTF-8"><title>NEVEREVER | ADMIN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #f9f9f9; font-family: Helvetica, sans-serif; text-transform: uppercase; }
+        body { background: #f4f4f4; font-family: Helvetica, sans-serif; text-transform: uppercase; }
         input, select, textarea { border: 1px solid #ddd; padding: 12px; font-size: 10px; font-weight: 900; width: 100%; outline: none; margin-bottom: 8px; }
-        .card { background: #fff; padding: 30px; border: 1px solid #eee; margin-bottom: 20px; }
-        .btn-black { background: #000; color: #fff; padding: 15px; font-size: 10px; font-weight: 900; width: 100%; }
+        .card { background: #fff; padding: 25px; border: 1px solid #eee; }
+        .btn-black { background: #000; color: #fff; padding: 15px; font-size: 10px; font-weight: 900; width: 100%; transition: opacity 0.2s; }
+        .order-scroll { max-height: 500px; overflow-y: auto; padding-right: 10px; }
+        .order-scroll::-webkit-scrollbar { width: 4px; }
+        .order-scroll::-webkit-scrollbar-thumb { background: #000; }
     </style>
 </head>
 <body class="p-6 md:p-20">
-    <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex items-center justify-center">
-        <div class="max-w-xs w-full p-10"><input type="password" id="adminPass" placeholder="PASSWORD"><button onclick="checkPass()" class="btn-black">Login</button></div>
+    <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-10">
+        <div class="max-w-xs w-full"><input type="password" id="adminPass" placeholder="ADMIN PASS"><button onclick="checkPass()" class="btn-black">Access</button></div>
     </div>
 
-    <div class="max-w-6xl mx-auto">
-        <div class="grid grid-cols-2 gap-4 mb-10">
-            <div class="card">
-                <p class="text-[9px] opacity-50">Total Revenue</p>
-                <h1 id="revTotal" class="text-2xl font-black italic">0 MMK</h1>
-            </div>
-            <div class="card">
-                <p class="text-[9px] opacity-50">Estimated Profit</p>
-                <h1 id="profitTotal" class="text-2xl font-black italic text-green-600">0 MMK</h1>
-            </div>
+    <div class="max-w-6xl mx-auto space-y-8">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="card text-center"><p class="text-[9px] opacity-40">Revenue</p><h1 id="revTotal" class="text-xl font-black italic">0 MMK</h1></div>
+            <div class="card text-center"><p class="text-[9px] opacity-40">Inventory Count</p><h1 id="invTotal" class="text-xl font-black italic">0 Items</h1></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="card">
                 <h2 class="text-[10px] font-black mb-6">Product Entry</h2>
                 <input type="text" id="itemName" placeholder="Name">
                 <input type="number" id="itemCost" placeholder="Cost THB">
                 <textarea id="itemDesc" placeholder="Description"></textarea>
-                <input type="text" id="itemSizes" placeholder="Sizes (S, M, L)">
-                <button id="uploadBtn" class="border-2 border-dashed p-10 text-[9px] w-full mb-4">📸 Upload Photos</button>
-                <button onclick="saveItem()" class="btn-black">Deploy</button>
+                <input type="text" id="itemSizes" placeholder="Sizes (e.g. S, M, L, XL)">
+                <button id="uploadBtn" class="border-2 border-dashed p-10 text-[9px] w-full mb-4 opacity-50">📸 Upload Images</button>
+                <button onclick="saveItem()" class="btn-black">Deploy Product</button>
             </div>
 
             <div class="card">
-                <h2 class="text-[10px] font-black mb-6">Customer Orders</h2>
-                <div id="order-list" class="space-y-4"></div>
+                <h2 class="text-[10px] font-black mb-6">Order Stream</h2>
+                <div id="order-list" class="order-scroll space-y-4"></div>
             </div>
         </div>
 
         <div class="card">
-            <h2 class="text-[10px] font-black mb-6">Inventory</h2>
-            <input type="text" id="invSearch" placeholder="Search..." oninput="load()" class="mb-6">
-            <div id="inv-list" class="divide-y"></div>
+            <h2 class="text-[10px] font-black mb-6">Inventory Search</h2>
+            <input type="text" id="invSearch" placeholder="Type to search..." oninput="load()">
+            <div id="inv-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"></div>
         </div>
     </div>
 
@@ -59,15 +56,21 @@
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
-            const data = { name: document.getElementById('itemName').value, costTHB: document.getElementById('itemCost').value, description: document.getElementById('itemDesc').value, sizes: document.getElementById('itemSizes').value.split(','), images: photos };
+            const data = { 
+                name: document.getElementById('itemName').value, 
+                costTHB: document.getElementById('itemCost').value, 
+                description: document.getElementById('itemDesc').value, 
+                availableSizes: document.getElementById('itemSizes').value.split(',').map(s=>s.trim()), 
+                images: photos 
+            };
             await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
             location.reload();
         }
 
-        async function updateStatus(id) {
+        async function updateOrder(id) {
             const status = document.getElementById(`status-${id}`).value;
-            const est = document.getElementById(`est-${id}`).value;
-            await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival: est})});
+            const estArrival = document.getElementById(`est-${id}`).value;
+            await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival})});
             alert("Updated");
         }
 
@@ -77,18 +80,31 @@
             
             let rev = 0; orders.forEach(o => rev += o.totalMMK);
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+            document.getElementById('invTotal').innerText = `${items.length} Items`;
 
             document.getElementById('order-list').innerHTML = orders.map(o => `
-                <div class="border p-4 space-y-2">
-                    <div class="flex justify-between font-black text-[9px]"><span>${o.username}</span><a href="${o.paymentScreenshot}" target="_blank" class="text-blue-500">View Receipt</a></div>
-                    <select id="status-${o._id}" class="!m-0"><option ${o.status=='Pending'?'selected':''}>Pending</option><option ${o.status=='Shipped'?'selected':''}>Shipped</option><option ${o.status=='Delivered'?'selected':''}>Delivered</option></select>
-                    <input type="text" id="est-${o._id}" value="${o.estArrival}" placeholder="Est Arrival (e.g. 3 Days)" class="!m-0">
-                    <button onclick="updateStatus('${o._id}')" class="btn-black !p-2">Update</button>
+                <div class="border p-4 space-y-3 bg-gray-50">
+                    <div class="flex justify-between text-[9px] font-black">
+                        <span>${o.username}</span>
+                        <a href="${o.paymentScreenshot}" target="_blank" class="text-blue-500 underline">View Receipt</a>
+                    </div>
+                    <select id="status-${o._id}" class="!mb-0">
+                        <option value="Pending" ${o.status==='Pending'?'selected':''}>Pending</option>
+                        <option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option>
+                        <option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option>
+                    </select>
+                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="Est. Arrival (e.g. 5 Days)" class="!mb-0 border-t-0">
+                    <button onclick="updateOrder('${o._id}')" class="btn-black !p-2 !text-[8px]">Update Order</button>
                 </div>`).join('');
 
             const q = document.getElementById('invSearch').value.toLowerCase();
-            document.getElementById('inv-list').innerHTML = items.filter(i=>i.name.toLowerCase().includes(q)).map(i => `<div class="flex justify-between py-2 text-[10px]"><span>${i.name}</span><button onclick="del('${i._id}')" class="text-red-500">Delete</button></div>`).join('');
+            document.getElementById('inv-list').innerHTML = items.filter(i=>i.name.toLowerCase().includes(q)).map(i => `
+                <div class="flex justify-between items-center p-3 border">
+                    <span class="text-[9px] font-black">${i.name}</span>
+                    <button onclick="del('${i._id}')" class="text-red-500 text-[8px] font-black">Delete</button>
+                </div>`).join('');
         }
+        async function del(id) { if(confirm('Delete?')) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); load(); } }
         load();
     </script>
 </body>
