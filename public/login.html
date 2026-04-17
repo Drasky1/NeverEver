@@ -27,9 +27,9 @@
             document.getElementById('signupFields').classList.toggle('hidden');
             document.getElementById('toggleTxt').innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login";
         }
-        async function handleManualAuth() {
-    const u = document.getElementById('userIn').value;
-    const p = document.getElementById('passIn').value;
+       async function handleAuth() {
+    const u = document.getElementById('user').value;
+    const p = document.getElementById('pass').value;
     
     const res = await fetch('/login', {
         method: 'POST',
@@ -37,12 +37,12 @@
         body: JSON.stringify({ username: u, password: p })
     });
     
-    const data = await res.json();
-    if(data.success) {
+    if(res.ok) {
+        const data = await res.json();
         localStorage.setItem('neverUser', JSON.stringify(data.user));
-        window.location.href = 'shop.html'; // Auto-redirect after login
+        window.location.href = 'shop.html'; 
     } else {
-        alert("Login Failed");
+        alert("Login failed!");
     }
 }
     </script>
