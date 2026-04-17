@@ -29,7 +29,8 @@ const Item = mongoose.model('Item', new mongoose.Schema({
     price: Number,
     images: [String], 
     description: String,
-    availableSizes: [String] 
+    availableSizes: [String],
+    isSoldOut: { type: Boolean, default: false } // NEW FIELD
 }));
 
 const User = mongoose.model('User', new mongoose.Schema({
@@ -97,6 +98,13 @@ app.post('/auth/login', async (req, res) => {
         const token = jwt.sign({ id: user._id }, JWT_SECRET);
         res.json({ token, user: { id: user._id, username: user.username, phone: user.phone, address: user.address } });
     } else { res.status(401).json({ error: "Invalid credentials" }); }
+});
+
+app.put('/toggle-sold-out/:id', async (req, res) => {
+    const item = await Item.findById(req.params.id);
+    item.isSoldOut = !item.isSoldOut;
+    await item.save();
+    res.json({ success: true, isSoldOut: item.isSoldOut });
 });
 
 // --- FINAL ROUTING (THE FIX) ---

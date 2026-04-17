@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEVEREVER</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEVEREVER | SHOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #fdfdfd; font-family: Helvetica, sans-serif; }
         .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #eee; border-top: 1px solid #eee; }
         @media (min-width: 768px) { .yeezy-grid { grid-template-columns: repeat(4, 1fr); } }
-        .product-card { background: #fff; padding: 20px; cursor: pointer; transition: opacity 0.4s; }
+        .product-card { background: #fff; padding: 20px; cursor: pointer; transition: opacity 0.4s; position: relative; }
         .product-card:hover { opacity: 0.6; }
+        .sold-out-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.7); display: flex; items-center; justify-content: center; z-index: 10; }
         .modal { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; }
         .size-chip { border: 1px solid #ddd; padding: 12px; font-size: 10px; font-weight: 900; cursor: pointer; text-align: center; text-transform: uppercase; }
         .size-chip.active { background: #000; color: #fff; border-color: #000; }
-        #cartModal { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        #cartModal { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 450px; background: #fff; z-index: 2000; padding: 40px; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
         #cartModal.show { transform: translateX(0); }
+        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3em; width: 100%; transition: opacity 0.2s; }
+        .btn-black:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -26,7 +30,6 @@
     </div>
     <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-10 grayscale">
     <div class="flex gap-6">
-        <a href="https://t.me/YOUR_TELEGRAM" class="text-[10px] font-black uppercase tracking-widest">Request</a>
         <button onclick="toggleCart(true)" class="text-[10px] font-black uppercase tracking-widest">Cart (<span id="cartCount">0</span>)</button>
     </div>
 </nav>
@@ -45,12 +48,13 @@
             <div>
                 <h1 id="pName" class="text-3xl font-black uppercase italic tracking-tighter"></h1>
                 <p id="pPrice" class="text-lg font-bold mt-4"></p>
+                <p id="pSoldOutNotice" class="text-red-500 text-[10px] font-black uppercase mt-2 hidden">Currently Sold Out</p>
             </div>
             <div>
                 <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">Select Size</p>
                 <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
             </div>
-            <button onclick="handleAddToCart()" class="w-full bg-black text-white py-6 text-[10px] font-black uppercase tracking-[0.3em]">Add to Cart</button>
+            <button id="addToCartBtn" onclick="handleAddToCart()" class="btn-black">Add to Cart</button>
             <div class="pt-10 border-t">
                 <p id="pDesc" class="text-[11px] leading-relaxed font-medium uppercase text-slate-500"></p>
             </div>
@@ -58,27 +62,44 @@
     </div>
 </div>
 
-<div id="cartModal" class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-[100] p-10 shadow-2xl overflow-y-auto">
+<div id="cartModal" class="overflow-y-auto">
     <div class="flex justify-between items-center mb-10">
         <h2 class="text-xl font-black uppercase tracking-tighter italic">Cart</h2>
         <button onclick="toggleCart(false)" class="text-[10px] font-bold uppercase text-slate-400">Close</button>
     </div>
+    
     <div id="cartItems" class="space-y-6 mb-10"></div>
-    <div id="checkoutArea" class="hidden border-t pt-8 space-y-4">
-        <div class="flex justify-between font-black uppercase text-xs"><span>Total</span><span id="cartTotal"></span></div>
-        <div class="bg-slate-50 p-4 text-[10px] font-bold uppercase border">KPay / Wave: 09xxxxxxxxx</div>
-        <input type="text" id="orderAddr" placeholder="ADDRESS" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
-        <input type="text" id="orderPh" placeholder="PHONE" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
-        <button id="uploadSS" class="w-full border border-black py-4 text-[10px] font-black uppercase">📸 Upload Receipt</button>
-        <input type="hidden" id="paymentImg">
-        <button onclick="submitOrder()" class="w-full bg-black text-white py-6 text-[10px] font-black uppercase tracking-widest">Confirm Purchase</button>
+
+    <div id="checkoutSection" class="hidden border-t pt-8 space-y-6">
+        <div class="flex justify-between font-black uppercase text-xs">
+            <span>Subtotal</span>
+            <span id="cartTotal">0 MMK</span>
+        </div>
+
+        <div class="bg-slate-50 p-6 border text-[10px] font-black uppercase leading-loose">
+            <span class="opacity-40">Payment Methods:</span><br>
+            KPay / Wave: 09 459904512<br>
+            Name: MALCOLM / NEVEREVER
+        </div>
+
+        <div class="space-y-4">
+            <input type="text" id="orderAddr" placeholder="Delivery Address" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
+            <input type="text" id="orderPh" placeholder="Phone Number" class="w-full border-b py-4 text-[11px] font-bold outline-none uppercase">
+            
+            <button id="uploadSS" class="w-full border border-black py-4 text-[10px] font-black uppercase flex items-center justify-center gap-2">
+                📸 Upload Payment Receipt
+            </button>
+            <input type="hidden" id="paymentImg">
+            
+            <button onclick="submitOrder()" class="btn-black">Confirm Purchase</button>
+        </div>
     </div>
 </div>
 
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
     let allItems = [], cart = {}, currentFilter = 'Instock', currentItem = null, selectedSize = null;
-    const user = JSON.parse(localStorage.getItem('neverUser'));
+    const user = JSON.parse(localStorage.getItem('neverUser')) || { id: 'guest', username: 'Guest' };
 
     async function loadShop() {
         const res = await fetch('/items');
@@ -94,32 +115,41 @@
     }
 
     function renderGrid() {
-    const grid = document.getElementById('main-grid');
-    const filtered = allItems.filter(i => i.grade === currentFilter).reverse();
-    
-    grid.innerHTML = filtered.map(i => {
-        // FIX: Check if images exists and has at least 1 photo
-        const imgUrl = (i.images && i.images.length > 0) ? i.images[0] : 'https://placehold.co/400x600?text=No+Image';
-        
-        return `
+        const grid = document.getElementById('main-grid');
+        const filtered = allItems.filter(i => i.grade === currentFilter).reverse();
+        grid.innerHTML = filtered.map(i => `
             <div class="product-card" onclick="openProduct('${i._id}')">
-                <img src="${imgUrl}" class="w-full aspect-[3/4] object-cover mb-4">
+                ${i.isSoldOut ? '<div class="sold-out-overlay"><span class="text-[10px] font-black uppercase tracking-widest border-2 border-black p-2">Sold Out</span></div>' : ''}
+                <img src="${(i.images && i.images[0]) ? i.images[0] : ''}" class="w-full aspect-[3/4] object-cover mb-4">
                 <div class="text-center font-black uppercase text-[10px] tracking-widest">
-                    ${i.name}<br>
-                    <span class="text-slate-400 mt-1 block">${(i.price || 0).toLocaleString()} MMK</span>
+                    ${i.name}<br><span class="text-slate-400 mt-1 block">${(i.price || 0).toLocaleString()} MMK</span>
                 </div>
-            </div>`;
-    }).join('');
-}
+            </div>`).join('');
+    }
 
     function openProduct(id) {
         currentItem = allItems.find(i => i._id === id);
         selectedSize = null;
+        
         document.getElementById('pName').innerText = currentItem.name;
-        document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
+        document.getElementById('pPrice').innerText = `${(currentItem.price || 0).toLocaleString()} MMK`;
         document.getElementById('pDesc').innerText = currentItem.description;
-        document.getElementById('imageGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full h-auto mix-blend-multiply">`).join('');
+        document.getElementById('imageGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full h-auto">`).join('');
         document.getElementById('sizeGrid').innerHTML = currentItem.availableSizes.map(s => `<div class="size-chip" onclick="selectSize(this, '${s}')">${s}</div>`).join('');
+        
+        // Handle Sold Out state in modal
+        const addBtn = document.getElementById('addToCartBtn');
+        const notice = document.getElementById('pSoldOutNotice');
+        if (currentItem.isSoldOut) {
+            addBtn.disabled = true;
+            addBtn.innerText = "Unavailable";
+            notice.classList.remove('hidden');
+        } else {
+            addBtn.disabled = false;
+            addBtn.innerText = "Add to Cart";
+            notice.classList.add('hidden');
+        }
+
         document.getElementById('productModal').style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
@@ -132,36 +162,98 @@
 
     function closeProduct() { document.getElementById('productModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
+    function toggleCart(s) { document.getElementById('cartModal').classList.toggle('show', s); }
+
     function handleAddToCart() {
-        if(!selectedSize) return alert("Select Size");
+        if(!selectedSize) return alert("Please select a size");
         const key = `${currentItem.name} (${selectedSize})`;
         if(cart[key]) cart[key].qty++;
         else cart[key] = { price: currentItem.price, img: currentItem.images[0], qty: 1 };
-        updateCartUI(); closeProduct(); toggleCart(true);
+        updateCartUI();
+        closeProduct();
+        toggleCart(true);
     }
 
     function updateCartUI() {
         const items = Object.keys(cart);
         let total = 0, count = 0;
+        
         document.getElementById('cartItems').innerHTML = items.map(k => {
-            const i = cart[k]; total += (i.price * i.qty); count += i.qty;
-            return `<div class="flex gap-4 border-b pb-4"><img src="${i.img}" class="w-16 h-16"><div class="flex-1 text-[10px] font-black uppercase">${k}<div class="mt-2 flex gap-3"><button onclick="adjustQty('${k}',-1)">-</button>${i.qty}<button onclick="adjustQty('${k}',1)">+</button></div></div><div>${(i.price*i.qty).toLocaleString()}</div></div>`;
+            const i = cart[k]; 
+            total += (i.price * i.qty); 
+            count += i.qty;
+            return `
+                <div class="flex gap-4 border-b pb-4">
+                    <img src="${i.img}" class="w-16 h-20 object-cover">
+                    <div class="flex-1 text-[10px] font-black uppercase">
+                        ${k}
+                        <div class="mt-2 flex items-center gap-4">
+                            <button onclick="adjustQty('${k}',-1)" class="w-6 h-6 border">-</button>
+                            ${i.qty}
+                            <button onclick="adjustQty('${k}',1)" class="w-6 h-6 border">+</button>
+                        </div>
+                    </div>
+                    <div class="text-[10px] font-black">${(i.price * i.qty).toLocaleString()}</div>
+                </div>`;
         }).join('');
+
         document.getElementById('cartCount').innerText = count;
         document.getElementById('cartTotal').innerText = `${total.toLocaleString()} MMK`;
-        document.getElementById('checkoutArea').classList.toggle('hidden', items.length === 0 || !user);
+        document.getElementById('checkoutSection').classList.toggle('hidden', items.length === 0);
     }
 
-    function adjustQty(k, d) { cart[k].qty += d; if(cart[k].qty <= 0) delete cart[k]; updateCartUI(); }
-    function toggleCart(s) { document.getElementById('cartModal').classList.toggle('show', s); }
+    function adjustQty(k, d) {
+        cart[k].qty += d;
+        if(cart[k].qty <= 0) delete cart[k];
+        updateCartUI();
+    }
 
-    var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if(r.event==="success") document.getElementById('paymentImg').value = r.info.secure_url; });
+    // CLOUDINARY UPLOAD FOR RECEIPTS
+    var widget = cloudinary.createUploadWidget({ 
+        cloudName: 'dawhhgjsd', 
+        uploadPreset: 'dawhhgjsd',
+        sources: ['local', 'camera'],
+        clientAllowedFormats: ['png', 'jpg', 'jpeg']
+    }, (e, r) => { 
+        if(r.event === "success") {
+            document.getElementById('paymentImg').value = r.info.secure_url;
+            document.getElementById('uploadSS').innerHTML = "✅ Receipt Attached";
+            document.getElementById('uploadSS').classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+        }
+    });
+
     document.getElementById("uploadSS").onclick = () => widget.open();
 
     async function submitOrder() {
-        const ss = document.getElementById('paymentImg').value; if(!ss) return alert("Upload Proof");
-        await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ userId:user.id, username:user.username, items:Object.keys(cart).map(k=>({name:k, qty:cart[k].qty})), totalMMK:Object.values(cart).reduce((a,b)=>a+(b.price*b.qty),0), address:document.getElementById('orderAddr').value, phone:document.getElementById('orderPh').value, paymentScreenshot:ss })});
-        alert("ORDERED"); location.reload();
+        const ss = document.getElementById('paymentImg').value;
+        const addr = document.getElementById('orderAddr').value;
+        const ph = document.getElementById('orderPh').value;
+
+        if(!ss || !addr || !ph) return alert("Please fill in address, phone, and upload payment receipt.");
+
+        const orderData = {
+            userId: user.id,
+            username: user.username,
+            items: Object.keys(cart).map(k => ({ name: k, qty: cart[k].qty })),
+            totalMMK: Object.values(cart).reduce((a,b) => a + (b.price * b.qty), 0),
+            address: addr,
+            phone: ph,
+            paymentScreenshot: ss
+        };
+
+        const res = await fetch('/submit-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        if(res.ok) {
+            alert("ORDER SUBMITTED. WE WILL VERIFY YOUR PAYMENT.");
+            cart = {};
+            location.reload();
+        } else {
+            alert("Error submitting order. Please try again.");
+        }
     }
 
     loadShop();

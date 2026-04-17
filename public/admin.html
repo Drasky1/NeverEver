@@ -18,6 +18,21 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-2 gap-4 mb-10">
+    <div class="bg-black text-white p-6">
+        <p class="text-[9px] font-black uppercase tracking-widest opacity-50">Total Revenue</p>
+        <h1 id="revTotal" class="text-xl font-black italic">0 MMK</h1>
+    </div>
+    <div class="bg-white border p-6 text-black">
+        <p class="text-[9px] font-black uppercase tracking-widest opacity-50">Estimated Profit</p>
+        <h1 id="profitTotal" class="text-xl font-black italic">0 MMK</h1>
+    </div>
+</div>
+
+<div class="mb-6">
+    <input type="text" id="invSearch" placeholder="SEARCH INVENTORY..." oninput="filterInventory()" class="border-b-2 border-black!">
+</div>
+
     <div class="max-w-4xl mx-auto space-y-12">
         <div class="bg-white p-10 border shadow-sm">
             <h2 class="font-black text-[10px] uppercase tracking-widest mb-8">New Product</h2>
@@ -73,17 +88,48 @@
             location.reload();
         }
 
-        async function load() {
-            const res = await fetch('/items'); const items = await res.json();
-            document.getElementById('inv-list').innerHTML = items.reverse().map(i => `
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center gap-4 text-[11px] font-bold uppercase">
-                        <img src="${(i.images && i.images[0]) ? i.images[0] : ''}" class="w-10 h-10 object-cover bg-gray-100">
-                        ${i.name}
-                    </div>
-                    <button onclick="del('${i._id}')" class="text-[9px] font-black uppercase text-red-500">Delete</button>
-                </div>`).join('');
-        }
+        let allItemsCache = [];
+
+async function load() {
+    const res = await fetch('/items'); 
+    allItemsCache = await res.json();
+    
+    // Calculate Dashboard
+    const resOrders = await fetch('/orders');
+    const orders = await resOrders.json();
+    let rev = 0;
+    orders.forEach(o => rev += o.totalMMK);
+    document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+    
+    renderInventory(allItemsCache);
+}
+
+function renderInventory(list) {
+    document.getElementById('inv-list').innerHTML = list.reverse().map(i => `
+        <div class="flex justify-between items-center py-4 border-b ${i.isSoldOut ? 'opacity-40' : ''}">
+            <div class="flex items-center gap-4 text-[11px] font-bold uppercase">
+                <img src="${i.images[0]}" class="w-10 h-10 object-cover">
+                <span>${i.name} ${i.isSoldOut ? '(SOLD OUT)' : ''}</span>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="toggleSoldOut('${i._id}')" class="text-[9px] font-black uppercase ${i.isSoldOut ? 'text-green-500' : 'text-orange-500'}">
+                    ${i.isSoldOut ? 'Restock' : 'Mark Sold Out'}
+                </button>
+                <button onclick="del('${i._id}')" class="text-[9px] font-black uppercase text-red-500">Delete</button>
+            </div>
+        </div>`).join('');
+}
+
+function filterInventory() {
+    const q = document.getElementById('invSearch').value.toLowerCase();
+    const filtered = allItemsCache.filter(i => i.name.toLowerCase().includes(q));
+    renderInventory(filtered);
+}
+
+async function toggleSoldOut(id) {
+    await fetch(`/toggle-sold-out/${id}`, { method: 'PUT' });
+    load();
+}
         async function del(id) { if(confirm('Delete?')) { await fetch(`/delete-item/${id}`, {method:'DELETE'}); load(); } }
         load();
     </script>
