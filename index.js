@@ -20,13 +20,13 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
-// --- UPDATED MODEL ---
+// --- MODELS ---
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
     grade: { type: String, default: 'Instock' }, 
     costTHB: Number,
     price: Number,
-    images: [String], // Array for 5 pictures
+    images: [String], 
     description: String,
     availableSizes: [String] 
 }));
@@ -50,30 +50,58 @@ app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
 
 app.post('/add-item', async (req, res) => {
-    const { name, costTHB, images, grade, description, sizes } = req.body;
-    const newItem = new Item({
-        name, grade, costTHB,
-        price: parseFloat(costTHB) * RATE,
-        images, description, availableSizes: sizes
-    });
-    await newItem.save();
-    res.json({ success: true });
+    try {
+        const { name, costTHB, images, grade, description, sizes } = req.body;
+        const newItem = new Item({
+            name, grade, costTHB,
+            price: parseFloat(costTHB) * RATE,
+            images, description, availableSizes: sizes
+        });
+        await newItem.save();
+        res.json({ success: true });
+    } catch (err) { res.status(500).json(err); }
 });
 
 app.post('/submit-order', async (req, res) => {
-    await new Order(req.body).save();
-    const message = `🔥 *NEW ORDER*\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK`;
-    axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: ADMIN_IDS[0], text: message, parse_mode: 'Markdown' });
-    res.json({ success: true });
+    try {
+        await new Order(req.body).save();
+        const message = `🔥 *NEW ORDER*\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK`;
+        axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: ADMIN_IDS[0], text: message, parse_mode: 'Markdown' });
+        res.json({ success: true });
+    } catch (err) { res.status(500).json(err); }
 });
 
+// --- AUTH ROUTES ---
+app.post('/auth/signup', async (req, res) => {
+    try {
+        const { username, password, phone, address } = req.body;
+        const hashed = await bcrypt.hash(password, 10);
+        const user = new User({ username, password: hashed, phone, address });
+        await user.save();
+        res.json({ success: true });
+    } catch (err) { res.status(400).json({ error: "Username already exists" }); }
+});
+
+app.post('/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (user && await bcrypt.compare(password, user.password)) {
+        const token = jwt.sign({ id: user._id }, JWT_SECRET);
+        res.json({ token, user: { id: user._id, username: user.username, phone: user.phone, address: user.address } });
+    } else {
+        res.status(401).json({ error: "Invalid credentials" });
+    }
+});
+
+// --- ADMIN CONTROLS ---
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' })));
 
-// AUTH (Signup/Login omitted for brevity but remains same as your previous working code)
-app.post('/auth/signup', async (req, res) => { /* same as before */ });
-app.post('/auth/login', async (req, res) => { /* same as before */ });
+// --- CATCH-ALL ROUTE (FIXED FOR EXPRESS 5) ---
+// Using regex (.*) instead of :path* or *
+app.get('(.*)', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+});
 
-app.get('/:path*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));
