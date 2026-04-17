@@ -32,7 +32,6 @@ app.get('/items', async (req, res) => res.json(await Item.find()));
 
 app.post('/add-item', async (req, res) => {
     const data = req.body;
-    // Keeping your auto-price logic exactly as is
     data.price = Math.floor(Number(data.costTHB) * 1.5 * 125);
     data.stock = Number(data.stock) || 0;
     const item = new Item(data);
@@ -47,7 +46,6 @@ app.post('/submit-order', async (req, res) => {
         await Item.findByIdAndUpdate(item._id, { $inc: { stock: -1 } });
     }
     const msg = `🚨 NEW ORDER: ${req.body.username}\nTotal: ${req.body.totalMMK} MMK`;
-    // Telegram Alert
     fetch(`https://api.telegram.org/bot8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ/sendMessage?chat_id=1923704168&text=${encodeURIComponent(msg)}`).catch(e => console.log("TG fail"));
     res.json(order);
 });
@@ -66,8 +64,8 @@ app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ us
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body)));
 
 // --- PAGE ROUTING ---
-// FIXED: Changed '*' to '(.*)' to fix the PathError crash
-app.get('(.*)', (req, res) => {
+// This is the specific fix for the PathError
+app.get('/:path*', (req, res) => {
     res.sendFile(path.join(__dirname, 'shop.html'));
 });
 

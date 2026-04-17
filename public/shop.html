@@ -54,14 +54,14 @@
 
         function render(cat) {
             const filtered = allItems.filter(i => i.category === cat);
-            document.getElementById('main-grid').innerHTML = filtered.map(i => `
+            filtered.length ? document.getElementById('main-grid').innerHTML = filtered.map(i => `
                 <div class="product-card" onclick="openP('${i._id}')">
                     <img src="${i.images[0]}">
                     <div class="p-4 text-[10px] font-black">
                         <p>${i.name}</p>
                         <p class="opacity-40">${i.price.toLocaleString()} MMK</p>
                     </div>
-                </div>`).join('');
+                </div>`).join('') : document.getElementById('main-grid').innerHTML = '<p class="p-10 font-bold">No items found.</p>';
         }
 
         function openP(id) {
