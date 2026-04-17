@@ -64,11 +64,13 @@
                     <h2 class="text-[11px] font-bold tracking-widest mb-8 text-gray-400">DEPLOY NEW PRODUCT</h2>
                     <input type="text" id="itemName" placeholder="PRODUCT NAME">
                     <div class="flex gap-4">
-                        <input type="number" id="itemCost" placeholder="COST (THB)" class="w-1/3">
-                        <input type="number" id="itemQty" placeholder="QTY" value="1" class="w-1/3">
-                        <select id="itemCat" class="w-1/3">
+                        <input type="number" id="itemCost" placeholder="COST (THB)" class="w-1/4">
+                        <input type="number" id="itemPrice" placeholder="SELLING PRICE (MMK)" class="w-1/4">
+                        <input type="number" id="itemQty" placeholder="QTY" value="1" class="w-1/4">
+                        <select id="itemCat" class="w-1/4">
                             <option value="Instock">INSTOCK</option>
                             <option value="Preorder">PREORDER</option>
+                            <option value="Sold Out">SOLD OUT</option>
                         </select>
                     </div>
                     <textarea id="itemDesc" placeholder="PRODUCT DESCRIPTION (LOWERCASE ENCOURAGED)" rows="3"></textarea>
@@ -149,6 +151,7 @@
             const data = { 
                 name: document.getElementById('itemName').value, 
                 costTHB: document.getElementById('itemCost').value, 
+                priceMMK: document.getElementById('itemPrice').value,
                 quantity: document.getElementById('itemQty').value,
                 category: document.getElementById('itemCat').value, 
                 description: document.getElementById('itemDesc').value, 
@@ -163,6 +166,11 @@
         }
 
         // Order Management API
+        async function markSoldOut(id) {
+            await fetch(`/api/update-item-cat/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category: 'Sold Out'})});
+            load();
+        }
+
         async function updateOrder(id) {
             const status = document.getElementById(`status-${id}`).value;
             const estArrival = document.getElementById(`est-${id}`).value;
@@ -244,7 +252,10 @@
                         <span class="font-bold">${i.name}</span>
                         <span class="text-gray-400 ml-2">[${i.category}]</span>
                     </div>
-                    <button onclick="delItem('${i._id}')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">REMOVE</button>
+                    <div class="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="markSoldOut('${i._id}')" class="text-gray-400 hover:text-black">MARK SOLD OUT</button>
+                        <button onclick="delItem('${i._id}')" class="text-gray-300 hover:text-red-500">REMOVE</button>
+                    </div>
                 </div>`).join('');
         }
     </script>

@@ -37,6 +37,7 @@
     <div class="flex gap-6">
         <button onclick="filter('Instock')" class="hover:underline">INSTOCK</button>
         <button onclick="filter('Preorder')" class="hover:underline text-gray-400">PREORDER</button>
+        <button onclick="filter('Sold Out')" class="hover:underline text-gray-400">SOLD OUT</button>
     </div>
     <div class="h-10 flex items-center justify-center">
         <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg" class="h-full object-contain" alt="NEVEREVER">
@@ -124,14 +125,18 @@
     }
 
     function filter(cat) {
-        const filtered = allItems.filter(i => i.category === cat);
+        const filtered = allItems.filter(i => cat === 'All' ? true : i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="cursor-pointer group relative bg-gray-50 flex items-center justify-center p-4 border-r border-b border-gray-100" onclick="openProduct('${i._id}')">
-                <img src="${i.images[0]}" class="w-full aspect-square object-contain group-hover:opacity-90 transition-opacity">
-                <div class="absolute bottom-4 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p class="text-[11px] bg-white inline-block px-4 py-2 shadow-sm font-bold">${i.name} — ${i.price.toLocaleString()}</p>
+            <div class="cursor-pointer group flex flex-col p-4 border-r border-b border-gray-100 hover:bg-gray-50 transition-colors" onclick="openProduct('${i._id}')">
+                <div class="bg-white flex items-center justify-center w-full aspect-square relative mb-4 border border-gray-100">
+                    <img src="${i.images[0]}" class="w-full h-full object-contain group-hover:opacity-90 transition-opacity">
                 </div>
-            </div>`).join('');
+                <div class="text-left pb-2">
+                    <p class="text-[11px] font-bold mb-1">${i.name}</p>
+                    <p class="text-[11px] text-gray-500 mb-2">${i.price.toLocaleString()} MMK</p>
+                    <p class="text-[10px] text-gray-400 lowercase line-clamp-2 leading-relaxed">${i.description || 'no description'}</p>
+                </div>
+            </div>`).join('') || '<p class="text-[11px] text-gray-400 p-8">NO PRODUCTS FOUND.</p>';
     }
 
     function openProduct(id) {

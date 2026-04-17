@@ -44,8 +44,14 @@ app.get('/api/orders', async (req, res) => res.json(await Order.find().sort({ cr
 app.get('/api/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
 
 app.post('/api/add-item', async (req, res) => {
-    const newItem = new Item({...req.body, price: Number(req.body.costTHB) * RATE});
+    const calculatedPrice = req.body.priceMMK ? Number(req.body.priceMMK) : Number(req.body.costTHB) * RATE;
+    const newItem = new Item({...req.body, price: calculatedPrice});
     await newItem.save();
+    res.json({ success: true });
+});
+
+app.put('/api/update-item-cat/:id', async (req, res) => {
+    await Item.findByIdAndUpdate(req.params.id, { category: req.body.category });
     res.json({ success: true });
 });
 
