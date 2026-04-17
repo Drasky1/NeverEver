@@ -26,7 +26,7 @@ const Item = mongoose.model('Item', new mongoose.Schema({
 }));
 
 const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, unique: true }, password: { type: String }, email: String
+    username: { type: String, unique: true }, password: { type: String }, email: String, googleId: String
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
@@ -52,11 +52,11 @@ app.post('/submit-order', async (req, res) => {
     await order.save();
     try {
         const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
-        const message = `🚨 NEVER EVER: NEW ORDER\n\nUSER: ${order.username}\nPHONE: ${order.phone}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\n\nITEMS:\n- ${itemList}\n\nADDRESS: ${order.address}`;
+        const message = `🚨 NEW ORDER: ${order.username}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\nITEMS:\n- ${itemList}`;
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
             chat_id: TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
         });
-    } catch (err) { console.error("❌ Telegram failed:", err.message); }
+    } catch (err) { console.error("Telegram fail"); }
     res.json({ success: true });
 });
 
@@ -65,17 +65,12 @@ app.put('/update-order/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
-app.delete('/delete-order/:id', async (req, res) => { await Order.findByIdAndDelete(req.params.id); res.json({ success: true }); });
-
-app.post('/auth/signup', async (req, res) => {
-    try {
-        const hashed = await bcrypt.hash(req.body.password, 10);
-        const user = new User({username: req.body.username, password: hashed});
-        await user.save();
-        res.json({ success: true, user: { id: user._id, username: user.username } });
-    } catch (err) { res.status(400).json({ error: "User exists" }); }
+app.put('/update-item/:id', async (req, res) => {
+    await Item.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ success: true });
 });
+
+app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
 app.post('/auth/login', async (req, res) => {
     const user = await User.findOne({ username: req.body.username });
@@ -84,10 +79,4 @@ app.post('/auth/login', async (req, res) => {
     } else { res.status(401).json({ error: "Invalid credentials" }); }
 });
 
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.use((req, res, next) => {
-    if (req.path.startsWith('/items') || req.path.startsWith('/auth') || path.extname(req.path)) return next();
-    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
-
-app.listen(10000);
+app.listen(10000, () => console.log("Server running on port 10000"));
