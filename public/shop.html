@@ -5,75 +5,86 @@
     <title>NEVEREVER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #fff; font-family: Helvetica, sans-serif; text-transform: uppercase; }
-        .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #eee; border-top: 1px solid #eee; }
+        body { background: #fff; color: #000; font-family: Helvetica, sans-serif; text-transform: uppercase; }
+        .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #000; border-top: 1px solid #000; }
+        .product-card { background: #fff; cursor: pointer; }
         @media (min-width: 768px) { .yeezy-grid { grid-template-columns: repeat(4, 1fr); } }
         .modal { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; }
-        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; width: 100%; letter-spacing: 0.2em; }
-        .size-chip { border: 1px solid #eee; padding: 12px; font-size: 10px; font-weight: 900; text-align: center; cursor: pointer; }
-        .size-chip.active { background: #000; color: #fff; border-color: #000; }
-        #cartSide { transform: translateX(100%); transition: 0.4s; position: fixed; top:0; right:0; height:100%; width:100%; max-width:400px; background:#fff; z-index:2000; padding:40px; box-shadow: -20px 0 50px rgba(0,0,0,0.05); }
+        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; width: 100%; letter-spacing: 0.2em; border: 1px solid #000; transition: 0.2s;}
+        .btn-black:hover { background: #fff; color: #000; }
+        .size-chip { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; text-align: center; cursor: pointer; }
+        .size-chip.active { background: #000; color: #fff; }
+        #cartSide { transform: translateX(100%); transition: 0.4s; position: fixed; top:0; right:0; height:100%; width:100%; max-width:400px; background:#fff; z-index:2000; padding:40px; border-left: 1px solid #000; overflow-y: auto;}
         #cartSide.show { transform: translateX(0); }
+        input { border-radius: 0; } /* Remove default iOS rounding */
     </style>
 </head>
 <body>
 
-<nav class="p-6 flex justify-between items-center sticky top-0 bg-white/90 z-50 border-b">
+<nav class="p-6 flex justify-between items-center sticky top-0 bg-white z-50 border-b border-black">
     <div class="flex gap-4">
         <button onclick="filter('Instock')" class="text-[10px] font-black hover:underline">Instock</button>
-        <button onclick="filter('Preorder')" class="text-[10px] font-black opacity-40 hover:underline">Preorder</button>
-        <button onclick="openOrders()" class="text-[10px] font-black opacity-40 hover:underline">Tracking</button>
+        <button onclick="filter('Preorder')" class="text-[10px] font-black opacity-40 hover:opacity-100 transition-opacity">Preorder</button>
+        <button onclick="openOrders()" class="text-[10px] font-black opacity-40 hover:opacity-100 transition-opacity">Tracking</button>
     </div>
-    <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-8 grayscale">
+    <div class="text-xl font-black tracking-widest">NEVEREVER</div>
     <div class="flex gap-4">
-        <button id="authBtn" onclick="openAuth()" class="text-[10px] font-black">Login</button>
-        <button onclick="toggleCart(true)" class="text-[10px] font-black">Cart (<span id="cartCount">0</span>)</button>
+        <button id="authBtn" onclick="openAuth()" class="text-[10px] font-black hover:underline">Login</button>
+        <button onclick="toggleCart(true)" class="text-[10px] font-black hover:underline">Cart (<span id="cartCount">0</span>)</button>
     </div>
 </nav>
 
 <main class="yeezy-grid" id="main-grid"></main>
 
 <div id="authModal" class="modal flex items-center justify-center">
-    <div class="max-w-xs w-full p-10 space-y-4">
+    <div class="max-w-xs w-full p-10 space-y-4 border border-black">
         <h2 id="authTitle" class="text-center font-black text-[10px] mb-6">Login</h2>
-        <input type="text" id="authUser" placeholder="Username" class="border-b w-full py-4 text-[10px] font-black outline-none">
-        <input type="password" id="authPass" placeholder="Password" class="border-b w-full py-4 text-[10px] font-black outline-none">
+        <input type="text" id="authUser" placeholder="Username" class="border-b border-black w-full py-4 text-[10px] font-black outline-none bg-transparent">
+        <input type="password" id="authPass" placeholder="Password" class="border-b border-black w-full py-4 text-[10px] font-black outline-none bg-transparent">
         <button onclick="handleAuth()" class="btn-black">Continue</button>
-        <button onclick="alert('Google Login Redirecting...')" class="w-full border p-4 text-[9px] font-black flex items-center justify-center gap-2">
-            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="h-4"> Gmail Connect
-        </button>
-        <p onclick="toggleMode()" id="modeText" class="text-center text-[8px] font-black opacity-40 cursor-pointer pt-4">Need an account? Sign up</p>
-        <button onclick="document.getElementById('authModal').style.display='none'" class="w-full text-[8px] mt-4">Close</button>
+        <p onclick="toggleMode()" id="modeText" class="text-center text-[8px] font-black opacity-40 cursor-pointer pt-4 hover:underline">Need an account? Sign up</p>
+        <button onclick="document.getElementById('authModal').style.display='none'" class="w-full text-[8px] mt-4 font-bold hover:underline">Close</button>
     </div>
 </div>
 
 <div id="ordersModal" class="modal">
-    <div class="p-6 border-b flex justify-between items-center"><button onclick="document.getElementById('ordersModal').style.display='none'" class="text-[10px] font-black">← Back</button><span class="text-[10px] font-black">Tracking</span><div class="w-10"></div></div>
+    <div class="p-6 border-b border-black flex justify-between items-center"><button onclick="document.getElementById('ordersModal').style.display='none'" class="text-[10px] font-black hover:underline">← Back</button><span class="text-[10px] font-black">Tracking</span><div class="w-10"></div></div>
     <div id="my-orders-list" class="p-10 max-w-xl mx-auto space-y-6"></div>
 </div>
 
 <div id="productModal" class="modal">
-    <div class="p-6 border-b flex justify-between"><button onclick="document.getElementById('productModal').style.display='none'" class="text-[10px] font-black">← Back</button></div>
+    <div class="p-6 border-b border-black flex justify-between"><button onclick="document.getElementById('productModal').style.display='none'" class="text-[10px] font-black hover:underline">← Back</button></div>
     <div class="grid grid-cols-1 md:grid-cols-2">
-        <div id="pGallery" class="flex flex-col gap-1"></div>
-        <div class="p-10 md:p-20 space-y-10">
-            <div><h1 id="pName" class="text-2xl font-black italic"></h1><p id="pPrice" class="text-lg font-bold mt-2"></p></div>
-            <div><p class="text-[9px] font-black opacity-30 mb-4">Select Size</p><div id="sizeGrid" class="grid grid-cols-4 gap-2"></div></div>
+        <div id="pGallery" class="flex flex-col gap-1 bg-black"></div>
+        <div class="p-10 md:p-20 space-y-10 bg-white">
+            <div>
+                <h1 id="pName" class="text-2xl font-black italic"></h1>
+                <p id="pPrice" class="text-lg font-bold mt-2"></p>
+                <p id="pDesc" class="text-[10px] font-bold mt-4 opacity-60 normal-case tracking-normal leading-relaxed"></p>
+            </div>
+            <div>
+                <p class="text-[9px] font-black opacity-30 mb-4">Select Size</p>
+                <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
+            </div>
             <button onclick="addToCart()" class="btn-black">Add To Cart</button>
         </div>
     </div>
 </div>
 
 <div id="cartSide">
-    <div class="flex justify-between items-center mb-10"><h2 class="text-xl font-black italic">Cart</h2><button onclick="toggleCart(false)" class="text-[10px] font-black opacity-30">Close</button></div>
+    <div class="flex justify-between items-center mb-10"><h2 class="text-xl font-black italic">Cart</h2><button onclick="toggleCart(false)" class="text-[10px] font-black opacity-30 hover:underline">Close</button></div>
     <div id="cartItems" class="space-y-4 mb-6"></div>
-    <div id="checkoutForm" class="mt-10 pt-10 border-t space-y-4 hidden">
-        <div class="bg-gray-50 p-4 text-[9px] font-black space-y-1">
+    
+    <div id="checkoutForm" class="mt-10 pt-10 border-t border-black space-y-4 hidden">
+        <div class="flex justify-between items-center mb-6"><span class="font-black">TOTAL:</span><span id="cartTotal" class="font-black"></span></div>
+        <div class="border border-black p-4 text-[9px] font-black space-y-1">
+            <p>TRANSFER TO:</p>
             <p>K-PAY / WAVE: 09 777 666 555</p>
             <p>NAME: NEVEREVER SHOP</p>
         </div>
-        <input type="text" id="orderAddr" placeholder="Delivery Address" class="w-full border-b py-3 text-[10px] font-black">
-        <button id="uploadSS" class="w-full border p-4 text-[9px] font-black">📸 Upload Receipt</button>
+        <input type="text" id="orderPhone" placeholder="Phone Number" class="w-full border-b border-black py-3 text-[10px] font-black outline-none">
+        <input type="text" id="orderAddr" placeholder="Delivery Address" class="w-full border-b border-black py-3 text-[10px] font-black outline-none mb-4">
+        <button id="uploadSS" class="w-full border border-black p-4 text-[9px] font-black hover:bg-black hover:text-white transition-colors">📸 Upload Receipt</button>
         <input type="hidden" id="paymentImg">
         <button onclick="checkout()" class="btn-black">Place Order</button>
     </div>
@@ -93,9 +104,9 @@
     function filter(cat) {
         const filtered = allItems.filter(i => i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="product-card" onclick="openProduct('${i._id}')">
+            <div class="product-card pb-6" onclick="openProduct('${i._id}')">
                 <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4">
-                <p class="text-[10px] font-black text-center">${i.name}<br><span class="opacity-30">${i.price.toLocaleString()} MMK</span></p>
+                <p class="text-[10px] font-black text-center">${i.name}<br><span class="opacity-40">${i.price.toLocaleString()} MMK</span></p>
             </div>`).join('');
     }
 
@@ -104,7 +115,8 @@
         selectedSize = null;
         document.getElementById('pName').innerText = currentItem.name;
         document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
-        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}">`).join('');
+        document.getElementById('pDesc').innerText = currentItem.description || "NO DESCRIPTION AVAILABLE.";
+        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full">`).join('');
         document.getElementById('sizeGrid').innerHTML = currentItem.availableSizes.map(s => `<div class="size-chip" onclick="selSize(this, '${s}')">${s}</div>`).join('');
         document.getElementById('productModal').style.display = 'block';
     }
@@ -120,34 +132,69 @@
         const d = await res.json();
         if(res.ok) { 
             localStorage.setItem('neverUser', JSON.stringify(d.user)); 
-            document.getElementById('authModal').style.display = 'none'; // CRITICAL FIX: Close on success
+            document.getElementById('authModal').style.display = 'none'; 
             location.reload(); 
-        } else alert("Failed");
+        } else alert("Authentication Failed");
+    }
+
+    function addToCart() {
+        if(!selectedSize) return alert("SELECT A SIZE");
+        const key = `${currentItem._id}-${selectedSize}`;
+        if(cart[key]) {
+            cart[key].qty += 1;
+        } else {
+            cart[key] = { item: currentItem, size: selectedSize, qty: 1 };
+        }
+        toggleCart(true);
     }
 
     function updateCart() {
         const keys = Object.keys(cart);
-        document.getElementById('cartCount').innerText = keys.length;
-        document.getElementById('cartItems').innerHTML = keys.map(k => `<div class="flex justify-between text-[10px] font-black"><span>${k} x${cart[k]}</span><button onclick="delete cart['${k}'];updateCart()">Remove</button></div>`).join('');
+        let totalMMK = 0;
+        let totalItems = 0;
+        
+        document.getElementById('cartItems').innerHTML = keys.map(k => {
+            const c = cart[k];
+            totalMMK += c.item.price * c.qty;
+            totalItems += c.qty;
+            return `<div class="flex justify-between items-center text-[10px] font-black border-b border-black pb-4">
+                <div><span>${c.item.name} (${c.size})</span><br><span class="opacity-40">${c.item.price.toLocaleString()} MMK</span></div>
+                <div class="flex items-center gap-4"><span>x${c.qty}</span><button onclick="delete cart['${k}'];updateCart()" class="underline opacity-40 hover:opacity-100">Remove</button></div>
+            </div>`;
+        }).join('');
+        
+        document.getElementById('cartCount').innerText = totalItems;
+        document.getElementById('cartTotal').innerText = `${totalMMK.toLocaleString()} MMK`;
         document.getElementById('checkoutForm').classList.toggle('hidden', keys.length === 0);
     }
 
-    function addToCart() {
-        if(!selectedSize) return alert("Select size");
-        const key = `${currentItem.name} (${selectedSize})`;
-        cart[key] = (cart[key] || 0) + 1;
-        toggleCart(true);
-    }
-
-    var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") { document.getElementById('paymentImg').value = r.info.secure_url; document.getElementById('uploadSS').innerText = "✅ Attached"; }});
+    var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") { document.getElementById('paymentImg').value = r.info.secure_url; document.getElementById('uploadSS').innerText = "✅ RECEIPT ATTACHED"; document.getElementById('uploadSS').classList.add('bg-black', 'text-white'); }});
     document.getElementById("uploadSS").onclick = () => widget.open();
 
     async function checkout() {
         if(!user) return openAuth();
-        if(!document.getElementById('paymentImg').value) return alert("Upload Receipt First");
-        const data = { userId:user.id, username:user.username, items:Object.keys(cart), address:document.getElementById('orderAddr').value, paymentScreenshot:document.getElementById('paymentImg').value, totalMMK: 10000 };
+        if(!document.getElementById('paymentImg').value) return alert("UPLOAD RECEIPT FIRST");
+        if(!document.getElementById('orderPhone').value || !document.getElementById('orderAddr').value) return alert("ENTER PHONE AND ADDRESS");
+        
+        let total = 0;
+        const formattedItems = Object.values(cart).map(c => {
+            total += c.item.price * c.qty;
+            return { name: c.item.name, size: c.size, qty: c.qty, price: c.item.price };
+        });
+
+        const data = { 
+            userId: user.id, 
+            username: user.username, 
+            phone: document.getElementById('orderPhone').value,
+            address: document.getElementById('orderAddr').value, 
+            items: formattedItems, 
+            paymentScreenshot: document.getElementById('paymentImg').value, 
+            totalMMK: total 
+        };
+        
         await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-        alert("Ordered!"); location.reload();
+        alert("ORDER PLACED SUCCESSFULLY."); 
+        location.reload();
     }
 
     async function openOrders() {
@@ -155,11 +202,11 @@
         const orders = await (await fetch(`/my-orders/${user.id}`)).json();
         document.getElementById('ordersModal').style.display = 'block';
         document.getElementById('my-orders-list').innerHTML = orders.map(o => `
-            <div class="border p-6 space-y-4 bg-gray-50">
-                <div class="flex justify-between items-center text-[10px] font-black"><span>Order #${o._id.slice(-5)}</span><span class="bg-black text-white px-2 py-1 rounded-full text-[8px]">${o.status}</span></div>
-                <p class="text-[11px] font-black">Estimated: <span class="text-green-600">${o.estArrival || 'Wait for Admin'}</span></p>
-                <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden"><div class="bg-black h-full" style="width: ${o.status=='Pending'?'20%':o.status=='Shipped'?'70%':'100%'}"></div></div>
-            </div>`).join('') || '<p class="text-center opacity-20">No orders</p>';
+            <div class="border border-black p-6 space-y-4">
+                <div class="flex justify-between items-center text-[10px] font-black"><span>ORDER #${o._id.slice(-5)}</span><span class="border border-black px-2 py-1 text-[8px] uppercase">${o.status}</span></div>
+                <p class="text-[11px] font-black">ESTIMATED ARRIVAL: <span class="opacity-50">${o.estArrival || 'AWAITING DISPATCH'}</span></p>
+                <div class="w-full border border-black h-2 overflow-hidden"><div class="bg-black h-full transition-all" style="width: ${o.status=='Pending'?'20%':o.status=='Shipped'?'70%':'100%'}"></div></div>
+            </div>`).join('') || '<p class="text-center opacity-40 font-black text-[10px]">NO ACTIVE ORDERS</p>';
     }
     init();
 </script>
