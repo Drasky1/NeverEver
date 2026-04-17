@@ -12,9 +12,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 app.use(express.static('public')); // ALL HTML/JS/CSS GOES IN 'public' FOLDER
 
-const RATE = 125; 
-const TELEGRAM_BOT_TOKEN = '8680111413:AAGQrF3NzoJ7oQduth5dSp5c-3Uo9fBHN0o'; 
-const TELEGRAM_CHAT_ID = '1923704168';
+const RATE = 125;
+const TELEGRAM_BOT_TOKEN = '8680111413:AAGQrF3NzoJ7oQduth5dSp5c-3Uo9fBHN0o';
+const TELEGRAM_CHAT_ID = '-5248393169';
 
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
     .then(() => console.log("✅ DB CONNECTED"))
@@ -33,9 +33,9 @@ const User = mongoose.model('User', new mongoose.Schema({
 const Order = mongoose.model('Order', new mongoose.Schema({
     userId: String, username: String, customerName: String, telegram: String, items: Array, totalMMK: Number,
     totalCostMMK: Number, profitMMK: Number,
-    address: String, phone: String, paymentScreenshot: String, 
-    status: { type: String, default: 'Pending' }, 
-    estArrival: { type: String, default: '' }, 
+    address: String, phone: String, paymentScreenshot: String,
+    status: { type: String, default: 'Pending' },
+    estArrival: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now }
 }));
 
@@ -45,7 +45,7 @@ app.get('/api/my-orders/:userId', async (req, res) => res.json(await Order.find(
 
 app.post('/api/add-item', async (req, res) => {
     const calculatedPrice = req.body.priceMMK ? Number(req.body.priceMMK) : Number(req.body.costTHB) * RATE;
-    const newItem = new Item({...req.body, price: calculatedPrice});
+    const newItem = new Item({ ...req.body, price: calculatedPrice });
     await newItem.save();
     res.json({ success: true });
 });
@@ -62,7 +62,7 @@ app.post('/api/submit-order', async (req, res) => {
             const dbItem = await Item.findOne({ name: item.name });
             if (dbItem) { totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty; }
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
     req.body.totalCostMMK = totalCostMMK;
     req.body.profitMMK = req.body.totalMMK - totalCostMMK;
 
@@ -71,7 +71,7 @@ app.post('/api/submit-order', async (req, res) => {
 
     try {
         const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
-        const tgLabel = order.telegram ? `\nTELEGRAM: @${order.telegram.replace('@','')}` : '';
+        const tgLabel = order.telegram ? `\nTELEGRAM: @${order.telegram.replace('@', '')}` : '';
         const nameLabel = order.customerName || order.username;
         const message = `🚨 NEW ORDER\n\nUSER: ${nameLabel}${tgLabel}\nPHONE: ${order.phone}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\n\nITEMS:\n- ${itemList}\n\nADDRESS: ${order.address}`;
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
@@ -107,7 +107,7 @@ app.post('/auth/google', async (req, res) => {
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashed = await bcrypt.hash(req.body.password, 10);
-        const user = new User({username: req.body.username, password: hashed});
+        const user = new User({ username: req.body.username, password: hashed });
         await user.save();
         res.json({ success: true, user: { id: user._id, username: user.username } });
     } catch (err) { res.status(400).json({ error: "Username taken" }); }
