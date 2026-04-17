@@ -31,7 +31,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
-    userId: String, username: String, items: Array, totalMMK: Number,
+    userId: String, username: String, customerName: String, telegram: String, items: Array, totalMMK: Number,
     totalCostMMK: Number, profitMMK: Number,
     address: String, phone: String, paymentScreenshot: String, 
     status: { type: String, default: 'Pending' }, 
@@ -71,7 +71,9 @@ app.post('/api/submit-order', async (req, res) => {
 
     try {
         const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
-        const message = `🚨 NEW ORDER\n\nUSER: ${order.username}\nPHONE: ${order.phone}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\n\nITEMS:\n- ${itemList}\n\nADDRESS: ${order.address}`;
+        const tgLabel = order.telegram ? `\nTELEGRAM: @${order.telegram.replace('@','')}` : '';
+        const nameLabel = order.customerName || order.username;
+        const message = `🚨 NEW ORDER\n\nUSER: ${nameLabel}${tgLabel}\nPHONE: ${order.phone}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\n\nITEMS:\n- ${itemList}\n\nADDRESS: ${order.address}`;
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
             chat_id: TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
         });

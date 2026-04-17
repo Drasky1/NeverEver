@@ -214,8 +214,9 @@
                 <div class="border-b border-gray-200 pb-6 text-[11px]">
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <p class="font-bold text-sm mb-1">${o.username}</p>
+                            <p class="font-bold text-sm mb-1 uppercase">${o.customerName || o.username}</p>
                             <p class="text-gray-500">${o.phone || 'NO PHONE'} • ${o.address || 'NO ADDRESS'}</p>
+                            ${o.telegram ? `<p class="text-blue-500 text-[10px] uppercase">TG: @${o.telegram.replace('@','')}</p>` : ''}
                             <p class="mt-2 text-gray-500">${o.items.map(i => `${i.qty}x ${i.name} (${i.size})`).join('<br>')}</p>
                         </div>
                         <div class="text-right">

@@ -78,6 +78,8 @@
             <p>TRANSFER EXACT AMOUNT TO:</p>
             <p class="text-black">K-PAY / WAVE: 09 777 666 555 (NEVEREVER)</p>
         </div>
+        <input type="text" id="orderName" placeholder="YOUR FULL NAME">
+        <input type="text" id="orderTg" placeholder="TELEGRAM USERNAME">
         <input type="text" id="orderPhone" placeholder="PHONE NUMBER">
         <input type="text" id="orderAddr" placeholder="DELIVERY ADDRESS">
         <button id="uploadSS" class="w-full border border-gray-300 p-4 text-[11px] mb-4 hover:border-black transition-colors">UPLOAD PAYMENT RECEIPT</button>
@@ -242,6 +244,7 @@
             return openPanel('authPanel');
         }
         if(!document.getElementById('paymentImg').value) return alert("PLEASE UPLOAD RECEIPT");
+        if(!document.getElementById('orderName').value || !document.getElementById('orderTg').value) return alert("FULL NAME AND TELEGRAM REQUIRED");
         if(!document.getElementById('orderPhone').value || !document.getElementById('orderAddr').value) return alert("ADDRESS AND PHONE REQUIRED");
         
         let total = 0;
@@ -252,6 +255,8 @@
 
         const data = { 
             userId: user.id, username: user.username, 
+            customerName: document.getElementById('orderName').value,
+            telegram: document.getElementById('orderTg').value,
             phone: document.getElementById('orderPhone').value,
             address: document.getElementById('orderAddr').value, 
             items: formattedItems, paymentScreenshot: document.getElementById('paymentImg').value, totalMMK: total 
