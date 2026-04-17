@@ -242,7 +242,7 @@
         let total = 0;
         const formattedItems = Object.values(cart).map(c => {
             total += c.item.price * c.qty;
-            return { name: c.item.name, size: c.size, qty: c.qty, price: c.item.price };
+            return { name: c.item.name, size: c.size, qty: c.qty, price: c.item.price, image: c.item.images[0] };
         });
 
         const data = { 
@@ -263,8 +263,17 @@
         openPanel('ordersPanel');
         document.getElementById('my-orders-list').innerHTML = orders.map(o => `
             <div class="text-[11px] pb-6 border-b border-gray-200">
-                <div class="flex justify-between mb-2"><span class="font-bold">#${o._id.slice(-6)}</span><span class="${o.status === 'Pending' ? 'text-gray-400' : 'text-black'}">${o.status}</span></div>
-                <p class="text-gray-500 mb-2">${o.items.map(i => `${i.qty}x ${i.name} (${i.size})`).join(', ')}</p>
+                <div class="flex justify-between mb-4"><span class="font-bold">#${o._id.slice(-6)}</span><span class="${o.status === 'Pending' ? 'text-gray-400' : 'text-black'}">${o.status}</span></div>
+                <div class="space-y-4 mb-4">
+                    ${o.items.map(i => `
+                    <div class="flex items-center gap-4">
+                        ${i.image ? `<img src="${i.image}" class="w-12 h-12 object-cover bg-gray-50 border border-gray-100">` : ''}
+                        <div>
+                            <p>${i.name}</p>
+                            <p class="text-gray-500">${i.qty}x SIZE ${i.size}</p>
+                        </div>
+                    </div>`).join('')}
+                </div>
                 <p>TOTAL: ${o.totalMMK.toLocaleString()} MMK</p>
                 ${o.estArrival ? `<p class="mt-2 text-gray-500">EST: ${o.estArrival}</p>` : ''}
             </div>`).join('') || '<p class="text-[11px] text-gray-400">NO ORDERS FOUND.</p>';

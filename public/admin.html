@@ -208,9 +208,9 @@
                         <div class="w-1/3">
                             <label class="text-[9px] text-gray-400 block mb-1">STATUS</label>
                             <select id="status-${o._id}" class="!mb-0 bg-transparent border-b border-gray-300 w-full pb-1 outline-none">
-                                <option ${o.status=='Pending'?'selected':''}>PENDING</option>
-                                <option ${o.status=='Shipped'?'selected':''}>SHIPPED</option>
-                                <option ${o.status=='Delivered'?'selected':''}>DELIVERED</option>
+                                <option value="Pending" ${o.status=='Pending'?'selected':''}>PENDING</option>
+                                <option value="Shipped" ${o.status=='Shipped'?'selected':''}>SHIPPED</option>
+                                <option value="Delivered" ${o.status=='Delivered'?'selected':''}>DELIVERED</option>
                             </select>
                         </div>
                         <div class="w-1/3">
