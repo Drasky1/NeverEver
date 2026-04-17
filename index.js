@@ -15,15 +15,15 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
-// MODELS
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, grade: String, costTHB: Number, price: Number,
     images: [String], description: String, availableSizes: [String],
+    category: { type: String, default: 'Instock' }, // Preorder or Instock
     isSoldOut: { type: Boolean, default: false }
 }));
 
 const User = mongoose.model('User', new mongoose.Schema({
-    username: { type: String, unique: true }, password: { type: String }
+    username: { type: String, unique: true }, password: { type: String }, email: String
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
@@ -34,7 +34,6 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// API ROUTES
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
@@ -56,11 +55,9 @@ app.put('/update-order/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// DELETE ROUTES
 app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 app.delete('/delete-order/:id', async (req, res) => { await Order.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
-// AUTH
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashed = await bcrypt.hash(req.body.password, 10);
@@ -77,11 +74,10 @@ app.post('/auth/login', async (req, res) => {
     } else { res.status(401).json({ error: "Invalid credentials" }); }
 });
 
-// CRASH FIX FOR RENDER
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.use((req, res, next) => {
     if (req.path.startsWith('/items') || req.path.startsWith('/auth') || path.extname(req.path)) return next();
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
-app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));
+app.listen(10000);

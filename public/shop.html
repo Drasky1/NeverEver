@@ -12,14 +12,18 @@
         .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; width: 100%; letter-spacing: 0.2em; }
         .size-chip { border: 1px solid #eee; padding: 12px; font-size: 10px; font-weight: 900; text-align: center; cursor: pointer; }
         .size-chip.active { background: #000; color: #fff; border-color: #000; }
-        #cartSide { transform: translateX(100%); transition: 0.4s; position: fixed; top:0; right:0; height:100%; width:100%; max-width:400px; background:#fff; z-index:2000; padding:40px; }
+        #cartSide { transform: translateX(100%); transition: 0.4s; position: fixed; top:0; right:0; height:100%; width:100%; max-width:400px; background:#fff; z-index:2000; padding:40px; box-shadow: -20px 0 50px rgba(0,0,0,0.05); }
         #cartSide.show { transform: translateX(0); }
     </style>
 </head>
 <body>
 
 <nav class="p-6 flex justify-between items-center sticky top-0 bg-white/90 z-50 border-b">
-    <button onclick="openOrders()" class="text-[10px] font-black">Tracking</button>
+    <div class="flex gap-4">
+        <button onclick="filter('Instock')" class="text-[10px] font-black hover:underline">Instock</button>
+        <button onclick="filter('Preorder')" class="text-[10px] font-black opacity-40 hover:underline">Preorder</button>
+        <button onclick="openOrders()" class="text-[10px] font-black opacity-40 hover:underline">Tracking</button>
+    </div>
     <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776343746/NEVEREVER_LOGO_boeayw.jpg" class="h-8 grayscale">
     <div class="flex gap-4">
         <button id="authBtn" onclick="openAuth()" class="text-[10px] font-black">Login</button>
@@ -35,18 +39,21 @@
         <input type="text" id="authUser" placeholder="Username" class="border-b w-full py-4 text-[10px] font-black outline-none">
         <input type="password" id="authPass" placeholder="Password" class="border-b w-full py-4 text-[10px] font-black outline-none">
         <button onclick="handleAuth()" class="btn-black">Continue</button>
+        <button onclick="alert('Google Login Redirecting...')" class="w-full border p-4 text-[9px] font-black flex items-center justify-center gap-2">
+            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="h-4"> Gmail Connect
+        </button>
         <p onclick="toggleMode()" id="modeText" class="text-center text-[8px] font-black opacity-40 cursor-pointer pt-4">Need an account? Sign up</p>
         <button onclick="document.getElementById('authModal').style.display='none'" class="w-full text-[8px] mt-4">Close</button>
     </div>
 </div>
 
 <div id="ordersModal" class="modal">
-    <div class="p-6 border-b flex justify-between items-center"><button onclick="document.getElementById('ordersModal').style.display='none'" class="text-[10px] font-black">← Back</button><span class="text-[10px] font-black">My Tracking</span><div class="w-10"></div></div>
+    <div class="p-6 border-b flex justify-between items-center"><button onclick="document.getElementById('ordersModal').style.display='none'" class="text-[10px] font-black">← Back</button><span class="text-[10px] font-black">Tracking</span><div class="w-10"></div></div>
     <div id="my-orders-list" class="p-10 max-w-xl mx-auto space-y-6"></div>
 </div>
 
 <div id="productModal" class="modal">
-    <div class="p-6 border-b flex justify-between"><button onclick="document.getElementById('productModal').style.display='none'" class="text-[10px] font-black">← Back</button><span class="text-[10px] font-black italic">NEVEREVER</span></div>
+    <div class="p-6 border-b flex justify-between"><button onclick="document.getElementById('productModal').style.display='none'" class="text-[10px] font-black">← Back</button></div>
     <div class="grid grid-cols-1 md:grid-cols-2">
         <div id="pGallery" class="flex flex-col gap-1"></div>
         <div class="p-10 md:p-20 space-y-10">
@@ -59,10 +66,16 @@
 
 <div id="cartSide">
     <div class="flex justify-between items-center mb-10"><h2 class="text-xl font-black italic">Cart</h2><button onclick="toggleCart(false)" class="text-[10px] font-black opacity-30">Close</button></div>
-    <div id="cartItems" class="space-y-4"></div>
+    <div id="cartItems" class="space-y-4 mb-6"></div>
     <div id="checkoutForm" class="mt-10 pt-10 border-t space-y-4 hidden">
-        <input type="text" id="orderAddr" placeholder="Delivery Address" class="w-full border-b py-3 text-[10px] font-black"><button id="uploadSS" class="w-full border p-4 text-[9px] font-black">📸 Upload Receipt</button>
-        <input type="hidden" id="paymentImg"><button onclick="checkout()" class="btn-black">Place Order</button>
+        <div class="bg-gray-50 p-4 text-[9px] font-black space-y-1">
+            <p>K-PAY / WAVE: 09 777 666 555</p>
+            <p>NAME: NEVEREVER SHOP</p>
+        </div>
+        <input type="text" id="orderAddr" placeholder="Delivery Address" class="w-full border-b py-3 text-[10px] font-black">
+        <button id="uploadSS" class="w-full border p-4 text-[9px] font-black">📸 Upload Receipt</button>
+        <input type="hidden" id="paymentImg">
+        <button onclick="checkout()" class="btn-black">Place Order</button>
     </div>
 </div>
 
@@ -73,12 +86,13 @@
     async function init() {
         const res = await fetch('/items');
         allItems = await res.json();
-        renderGrid(allItems);
+        filter('Instock');
         if(user) document.getElementById('authBtn').innerText = user.username;
     }
 
-    function renderGrid(data) {
-        document.getElementById('main-grid').innerHTML = data.map(i => `
+    function filter(cat) {
+        const filtered = allItems.filter(i => i.category === cat);
+        document.getElementById('main-grid').innerHTML = filtered.map(i => `
             <div class="product-card" onclick="openProduct('${i._id}')">
                 <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4">
                 <p class="text-[10px] font-black text-center">${i.name}<br><span class="opacity-30">${i.price.toLocaleString()} MMK</span></p>
@@ -101,10 +115,14 @@
     function toggleCart(s) { document.getElementById('cartSide').classList.toggle('show', s); updateCart(); }
 
     async function handleAuth() {
-        const username = document.getElementById('authUser').value, password = document.getElementById('authPass').value;
-        const res = await fetch(isLoginMode ? '/auth/login' : '/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username, password})});
+        const u = document.getElementById('authUser').value, p = document.getElementById('authPass').value;
+        const res = await fetch(isLoginMode ? '/auth/login' : '/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
         const d = await res.json();
-        if(res.ok) { localStorage.setItem('neverUser', JSON.stringify(d.user)); location.reload(); } else alert("Failed");
+        if(res.ok) { 
+            localStorage.setItem('neverUser', JSON.stringify(d.user)); 
+            document.getElementById('authModal').style.display = 'none'; // CRITICAL FIX: Close on success
+            location.reload(); 
+        } else alert("Failed");
     }
 
     function updateCart() {
@@ -126,6 +144,7 @@
 
     async function checkout() {
         if(!user) return openAuth();
+        if(!document.getElementById('paymentImg').value) return alert("Upload Receipt First");
         const data = { userId:user.id, username:user.username, items:Object.keys(cart), address:document.getElementById('orderAddr').value, paymentScreenshot:document.getElementById('paymentImg').value, totalMMK: 10000 };
         await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
         alert("Ordered!"); location.reload();
@@ -138,11 +157,10 @@
         document.getElementById('my-orders-list').innerHTML = orders.map(o => `
             <div class="border p-6 space-y-4 bg-gray-50">
                 <div class="flex justify-between items-center text-[10px] font-black"><span>Order #${o._id.slice(-5)}</span><span class="bg-black text-white px-2 py-1 rounded-full text-[8px]">${o.status}</span></div>
-                <p class="text-[11px] font-black">Estimated: <span class="text-green-600">${o.estArrival || 'Verification'}</span></p>
+                <p class="text-[11px] font-black">Estimated: <span class="text-green-600">${o.estArrival || 'Wait for Admin'}</span></p>
                 <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden"><div class="bg-black h-full" style="width: ${o.status=='Pending'?'20%':o.status=='Shipped'?'70%':'100%'}"></div></div>
             </div>`).join('') || '<p class="text-center opacity-20">No orders</p>';
     }
-
     init();
 </script>
 </body>
