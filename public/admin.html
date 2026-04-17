@@ -1,47 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>ADMIN</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEVEREVER | SYSTEM</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
-        body { background: #f4f4f4; font-family: Helvetica; text-transform: uppercase; }
-        .stat-card { background: #fff; border: 1px solid #000; padding: 25px; }
-        input, select { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; width: 100%; margin-bottom: 10px; }
-        .btn-black { background: #000; color: #fff; padding: 15px; font-size: 10px; font-weight: 900; width: 100%; cursor: pointer; }
+        body { background: #fff; color: #000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: uppercase; -webkit-font-smoothing: antialiased; }
+        
+        /* Ultra minimal inputs */
+        input, select, textarea { border: none; border-bottom: 1px solid #e5e5e5; border-radius: 0; padding: 12px 0; width: 100%; outline: none; background: transparent; font-size: 11px; margin-bottom: 20px; transition: border-color 0.2s;}
+        input:focus, select:focus, textarea:focus { border-bottom: 1px solid #000; }
+        
+        button { background: transparent; color: #000; text-transform: uppercase; border: none; outline: none; cursor: pointer; font-size: 11px; font-weight: bold; }
+        
+        .btn-fill { background: #000; color: #fff; padding: 15px; width: 100%; letter-spacing: 1px; }
+        .btn-fill:hover { background: #333; }
+        
+        /* Minimal Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #e5e5e5; }
+        ::-webkit-scrollbar-thumb:hover { background: #000; }
     </style>
 </head>
-<body class="p-10">
-    <div class="max-w-4xl mx-auto space-y-6">
-        <div class="stat-card">
-            <h2 class="font-black mb-4">ADD PRODUCT</h2>
-            <input type="text" id="itemName" placeholder="ITEM NAME">
-            <input type="number" id="itemCost" placeholder="COST (THB)">
-            <input type="number" id="itemStock" placeholder="STOCK">
-            <input type="text" id="itemSizes" placeholder="SIZES (S,M,L)">
-            <select id="itemCat"><option>Instock</option><option>Preorder</option></select>
-            <button id="uploadBtn" class="btn-black mb-2 bg-blue-600">UPLOAD PHOTOS</button>
-            <button onclick="saveItem()" class="btn-black">SAVE</button>
+<body class="p-6 md:p-12">
+
+    <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-10">
+        <div class="max-w-xs w-full text-center space-y-8">
+            <h1 class="text-lg tracking-widest">SYSTEM ACCESS</h1>
+            <input type="password" id="adminPass" placeholder="ENTER TERMINAL KEY" class="text-center text-xl tracking-widest border-b-2 border-black pb-2">
+            <button onclick="checkPass()" class="btn-fill">LOGIN</button>
         </div>
-        <div id="ordersCont" class="space-y-4"></div>
     </div>
+
+    <div class="max-w-6xl mx-auto">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-8 border-b border-gray-200">
+            <div>
+                <h1 class="text-xl tracking-widest mb-2">NEVEREVER ADMIN</h1>
+                <p class="text-[10px] text-gray-400 tracking-widest" id="timeDisplay">SYSTEM ACTIVE</p>
+            </div>
+            <div class="flex gap-12 mt-8 md:mt-0 text-right">
+                <div>
+                    <p class="text-[10px] text-gray-400 mb-1">REVENUE</p>
+                    <h2 id="revTotal" class="text-2xl">0 MMK</h2>
+                </div>
+                <div>
+                    <p class="text-[10px] text-gray-400 mb-1">ACTIVE ORDERS</p>
+                    <h2 id="orderCount" class="text-2xl">0</h2>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+            
+            <div class="lg:col-span-5 space-y-16">
+                
+                <section>
+                    <h2 class="text-[11px] font-bold tracking-widest mb-8 text-gray-400">DEPLOY NEW PRODUCT</h2>
+                    <input type="text" id="itemName" placeholder="PRODUCT NAME">
+                    <div class="flex gap-4">
+                        <input type="number" id="itemCost" placeholder="COST (THB)">
+                        <select id="itemCat">
+                            <option value="Instock">INSTOCK</option>
+                            <option value="Preorder">PREORDER</option>
+                        </select>
+                    </div>
+                    <textarea id="itemDesc" placeholder="PRODUCT DESCRIPTION (LOWERCASE ENCOURAGED)" rows="3"></textarea>
+                    <input type="text" id="itemSizes" placeholder="SIZES (COMMA SEPARATED: S, M, L, XL)">
+                    
+                    <button id="uploadBtn" class="w-full border border-gray-200 p-6 text-[10px] mb-6 hover:border-black transition-colors text-gray-500 hover:text-black">
+                        + ATTACH PRODUCT IMAGERY
+                    </button>
+                    
+                    <button onclick="saveItem()" class="btn-fill">PUBLISH TO STORE</button>
+                </section>
+
+                <section>
+                    <div class="flex justify-between items-end mb-8">
+                        <h2 class="text-[11px] font-bold tracking-widest text-gray-400">DATABASE</h2>
+                        <input type="text" id="invSearch" placeholder="SEARCH..." oninput="load()" class="w-1/2 !mb-0 !pb-1 text-right">
+                    </div>
+                    <div id="inv-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-4"></div>
+                </section>
+
+            </div>
+
+            <div class="lg:col-span-7">
+                <h2 class="text-[11px] font-bold tracking-widest mb-8 text-gray-400">LIVE ORDER STREAM</h2>
+                <div id="order-list" class="space-y-8"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
+        // Simple security layer
+        function checkPass() { 
+            if(document.getElementById('adminPass').value === 'never2026') {
+                document.getElementById('authOverlay').remove(); 
+                load(); // Load data only after login
+            } else {
+                alert("ACCESS DENIED");
+            }
+        }
+
+        // Live Time Display
+        setInterval(() => {
+            document.getElementById('timeDisplay').innerText = new Date().toLocaleString();
+        }, 1000);
+
+        // Image Upload Logic
         let photos = [];
-        const widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { 
-            if (r.event === "success") photos.push(r.info.secure_url); 
+        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { 
+            if(r.event==="success") { 
+                photos.push(r.info.secure_url); 
+                document.getElementById('uploadBtn').innerText = `${photos.length} IMAGES ATTACHED ✓`;
+                document.getElementById('uploadBtn').style.borderColor = "#000";
+                document.getElementById('uploadBtn').style.color = "#000";
+            }
         });
         document.getElementById('uploadBtn').onclick = () => widget.open();
+
+        // Add Product API
         async function saveItem() {
             const data = { 
                 name: document.getElementById('itemName').value, 
-                costTHB: document.getElementById('itemCost').value,
-                stock: document.getElementById('itemStock').value,
-                availableSizes: document.getElementById('itemSizes').value.split(','),
+                costTHB: document.getElementById('itemCost').value, 
                 category: document.getElementById('itemCat').value, 
+                description: document.getElementById('itemDesc').value, 
+                availableSizes: document.getElementById('itemSizes').value.split(',').map(s=>s.trim()), 
                 images: photos 
             };
-            await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            if(!data.name || !data.costTHB || photos.length === 0) return alert("MISSING DATA OR IMAGES");
+
+            await fetch('/api/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            alert("PRODUCT DEPLOYED");
             location.reload();
+        }
+
+        // Order Management API
+        async function updateOrder(id) {
+            const status = document.getElementById(`status-${id}`).value;
+            const estArrival = document.getElementById(`est-${id}`).value;
+            await fetch(`/api/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival})});
+            alert("ORDER STATUS UPDATED");
+            load();
+        }
+
+        async function delOrder(id) { if(confirm('PERMANENTLY DELETE THIS ORDER?')) { await fetch(`/api/delete-order/${id}`, {method:'DELETE'}); load(); } }
+        async function delItem(id) { if(confirm('REMOVE PRODUCT FROM STORE?')) { await fetch(`/api/delete-item/${id}`, {method:'DELETE'}); load(); } }
+
+        // Data Fetching and Rendering
+        async function load() {
+            const items = await (await fetch('/api/items')).json();
+            const orders = await (await fetch('/api/orders')).json();
+            
+            // Calculate Stats
+            let rev = 0; 
+            orders.forEach(o => rev += o.totalMMK);
+            document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+            document.getElementById('orderCount').innerText = orders.length;
+
+            // Render Orders
+            document.getElementById('order-list').innerHTML = orders.map(o => `
+                <div class="border-b border-gray-200 pb-6 text-[11px]">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="font-bold text-sm mb-1">${o.username}</p>
+                            <p class="text-gray-500">${o.phone || 'NO PHONE'} • ${o.address || 'NO ADDRESS'}</p>
+                            <p class="mt-2 text-gray-500">${o.items.map(i => `${i.qty}x ${i.name} (${i.size})`).join('<br>')}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg mb-2">${o.totalMMK.toLocaleString()} MMK</p>
+                            <a href="${o.paymentScreenshot}" target="_blank" class="text-gray-400 hover:text-black underline">VIEW RECEIPT</a>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-end gap-4 bg-gray-50 p-4">
+                        <div class="w-1/3">
+                            <label class="text-[9px] text-gray-400 block mb-1">STATUS</label>
+                            <select id="status-${o._id}" class="!mb-0 bg-transparent border-b border-gray-300 w-full pb-1 outline-none">
+                                <option ${o.status=='Pending'?'selected':''}>PENDING</option>
+                                <option ${o.status=='Shipped'?'selected':''}>SHIPPED</option>
+                                <option ${o.status=='Delivered'?'selected':''}>DELIVERED</option>
+                            </select>
+                        </div>
+                        <div class="w-1/3">
+                            <label class="text-[9px] text-gray-400 block mb-1">EST. ARRIVAL</label>
+                            <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="e.g. 3-5 DAYS" class="!mb-0 bg-transparent border-b border-gray-300 w-full pb-1 outline-none">
+                        </div>
+                        <div class="w-1/3 flex gap-4 justify-end">
+                            <button onclick="updateOrder('${o._id}')" class="text-blue-600 hover:underline">UPDATE</button>
+                            <button onclick="delOrder('${o._id}')" class="text-red-500 hover:underline">DELETE</button>
+                        </div>
+                    </div>
+                </div>`).join('') || '<p class="text-gray-400 text-[11px]">NO ACTIVE ORDERS.</p>';
+
+            // Render Inventory
+            const q = document.getElementById('invSearch').value.toLowerCase();
+            document.getElementById('inv-list').innerHTML = items.filter(i=>i.name.toLowerCase().includes(q)).map(i => `
+                <div class="flex justify-between items-center text-[11px] border-b border-gray-100 pb-2 group">
+                    <div>
+                        <span class="font-bold">${i.name}</span>
+                        <span class="text-gray-400 ml-2">[${i.category}]</span>
+                    </div>
+                    <button onclick="delItem('${i._id}')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">REMOVE</button>
+                </div>`).join('');
         }
     </script>
 </body>
