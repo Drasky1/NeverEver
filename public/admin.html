@@ -61,10 +61,8 @@
 
         async function load() {
             try {
-                const itemsRes = await fetch('/items');
-                items = await itemsRes.json();
-                const ordersRes = await fetch('/orders');
-                orders = await ordersRes.json();
+                const itemsRes = await fetch('/items'); items = await itemsRes.json();
+                const ordersRes = await fetch('/orders'); orders = await ordersRes.json();
                 renderStats(); renderInv(); renderOrders();
             } catch (err) { console.error(err); }
         }

@@ -163,8 +163,21 @@
         document.getElementById('ordersModal').style.display = 'block';
     }
 
-    function handleGoogle(r) { localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'})); location.reload(); }
-    function handleManualAuth() { const u = document.getElementById('userIn').value; if(u) { localStorage.setItem('neverUser', JSON.stringify({username: u, id: Date.now()})); location.reload(); } }
+    // UPDATED: Now closes modal automatically on success
+    function handleGoogle(r) { 
+        localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'})); 
+        closeModal('authModal');
+        location.reload(); 
+    }
+    
+    function handleManualAuth() { 
+        const u = document.getElementById('userIn').value; 
+        if(u) { 
+            localStorage.setItem('neverUser', JSON.stringify({username: u, id: Date.now()})); 
+            closeModal('authModal');
+            location.reload(); 
+        } 
+    }
 
     init();
 </script>
