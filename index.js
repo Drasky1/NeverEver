@@ -44,10 +44,8 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// API ROUTES
+// API
 app.get('/items', async (req, res) => res.json(await Item.find()));
-app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
-
 app.post('/add-item', async (req, res) => {
     const { name, costTHB, images, grade, description, sizes } = req.body;
     const newItem = new Item({
@@ -58,7 +56,9 @@ app.post('/add-item', async (req, res) => {
     await newItem.save();
     res.json({ success: true });
 });
+app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
+// AUTH
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashed = await bcrypt.hash(req.body.password, 10);
@@ -76,18 +76,14 @@ app.post('/auth/login', async (req, res) => {
     } else { res.status(401).json({ error: "Invalid" }); }
 });
 
-app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+// ROUTING
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
-// --- FIXED FAILSAFE ROUTING ---
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-app.use((req, res, next) => {
-    // If it's not an API call or the admin page, send shop.html
-    if (req.method === 'GET' && !req.path.startsWith('/items') && !req.path.startsWith('/orders')) {
+app.get('*', (req, res) => {
+    // If asking for a file that doesn't exist or a route, send shop
+    if (!req.path.startsWith('/items') && !req.path.startsWith('/auth')) {
         res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-    } else { next(); }
+    }
 });
 
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));

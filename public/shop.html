@@ -95,20 +95,18 @@
 
     function renderGrid() {
     const grid = document.getElementById('main-grid');
-    // Ensure we only show items that actually have images to prevent 404s
     const filtered = allItems.filter(i => i.grade === currentFilter).reverse();
     
     grid.innerHTML = filtered.map(i => {
-        // Fallback for broken images or old data
-        const displayImg = (i.images && i.images.length > 0) ? i.images[0] : 'https://placehold.co/400x600?text=No+Image';
-        const displayPrice = i.price ? i.price.toLocaleString() : '0';
-
+        // FIX: Check if images exists and has at least 1 photo
+        const imgUrl = (i.images && i.images.length > 0) ? i.images[0] : 'https://placehold.co/400x600?text=No+Image';
+        
         return `
             <div class="product-card" onclick="openProduct('${i._id}')">
-                <img src="${displayImg}" class="w-full aspect-[3/4] object-cover mb-4 shadow-sm" onerror="this.src='https://placehold.co/400x600?text=Error+Loading'">
+                <img src="${imgUrl}" class="w-full aspect-[3/4] object-cover mb-4">
                 <div class="text-center font-black uppercase text-[10px] tracking-widest">
                     ${i.name}<br>
-                    <span class="text-slate-400 mt-1 block">${displayPrice} MMK</span>
+                    <span class="text-slate-400 mt-1 block">${(i.price || 0).toLocaleString()} MMK</span>
                 </div>
             </div>`;
     }).join('');
