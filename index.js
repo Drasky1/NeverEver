@@ -3,14 +3,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 app.use(express.static('public'));
 
-const JWT_SECRET = 'never-ever-2026-secure-key-999'; 
 const RATE = 125; 
 
 mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
@@ -32,7 +30,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     userId: String, username: String, items: Array, totalMMK: Number,
     address: String, phone: String, paymentScreenshot: String, 
     status: { type: String, default: 'Pending' }, 
-    estArrival: { type: String, default: '' }, 
+    estArrival: { type: String, default: '' }, // Prevents "undefined"
     createdAt: { type: Date, default: Date.now }
 }));
 
@@ -48,7 +46,7 @@ app.post('/add-item', async (req, res) => {
 });
 
 app.post('/submit-order', async (req, res) => {
-    const order = new Order({...req.body});
+    const order = new Order(req.body);
     await order.save();
     res.json({ success: true });
 });
@@ -58,7 +56,10 @@ app.put('/update-order/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+app.delete('/delete-item/:id', async (req, res) => { 
+    await Item.findByIdAndDelete(req.params.id); 
+    res.json({ success: true }); 
+});
 
 // AUTH
 app.post('/auth/signup', async (req, res) => {
@@ -74,13 +75,19 @@ app.post('/auth/login', async (req, res) => {
     const user = await User.findOne({ username: req.body.username });
     if (user && await bcrypt.compare(req.body.password, user.password)) {
         res.json({ success: true, user: { id: user._id, username: user.username } });
-    } else { res.status(401).json({ error: "Invalid" }); }
+    } else { res.status(401).json({ error: "Invalid credentials" }); }
 });
 
-// ROUTING
+// --- THE CRASH FIX (Bypasses path-to-regexp wildcard error) ---
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.get('*', (req, res) => {
-    if (!req.path.includes('.')) res.sendFile(path.join(__dirname, 'public', 'shop.html'));
+
+app.use((req, res, next) => {
+    // If it's an API call or a file with an extension, skip
+    if (req.path.startsWith('/items') || req.path.startsWith('/auth') || path.extname(req.path)) {
+        return next();
+    }
+    // Otherwise, send the shop page
+    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));
