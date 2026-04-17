@@ -5,7 +5,7 @@ const path = require('path');
 const axios = require('axios');
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 app.use(express.static('public'));
 
@@ -13,13 +13,11 @@ const RATE = 125;
 const TELEGRAM_BOT_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ'; 
 const TELEGRAM_CHAT_ID = '1923704168';
 
-mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
-    .then(() => console.log("✅ DB CONNECTED"))
-    .catch(err => console.error("❌ DB ERROR:", err));
+mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority');
 
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, costTHB: Number, price: Number,
-    images: [String], availableSizes: [String],
+    images: [String], description: String, availableSizes: [String],
     category: { type: String, default: 'Instock' }, 
     isSoldOut: { type: Boolean, default: false }
 }));
@@ -32,14 +30,14 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// FIX: This serves the shop.html when you visit the site
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-});
+// ROUTES TO PREVENT "CANNOT GET"
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
+// API
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
-app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
+app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId })));
 
 app.post('/add-item', async (req, res) => {
     const newItem = new Item({...req.body, price: Number(req.body.costTHB) * RATE});
@@ -52,11 +50,11 @@ app.post('/submit-order', async (req, res) => {
     await order.save();
     try {
         const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
-        const message = `🚨 NEW ORDER: ${order.username}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\nITEMS:\n- ${itemList}`;
+        const message = `🚨 NEW ORDER: ${order.username}\n📞 ${order.phone}\n📍 ${order.address}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\nITEMS:\n- ${itemList}`;
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
             chat_id: TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
         });
-    } catch (err) { console.error("Telegram error"); }
+    } catch (e) { console.error("Telegram error"); }
     res.json({ success: true });
 });
 
@@ -70,4 +68,4 @@ app.put('/update-item/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-app.listen(10000, () => console.log("Server running on port 10000"));
+app.listen(10000);

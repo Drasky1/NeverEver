@@ -7,12 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        body { background: #fff; color: #000; font-family: Helvetica, sans-serif; text-transform: uppercase; }
+        body { background: #fff; color: #000; font-family: Helvetica, sans-serif; text-transform: uppercase; overflow-x: hidden; }
         .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #000; border-top: 1px solid #000; }
         .product-card { background: #fff; cursor: pointer; position: relative; }
-        .sold-out { position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 4px 8px; font-size: 8px; font-weight: 900; }
         .modal { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; }
-        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; width: 100%; border: 1px solid #000; }
+        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 10px; font-weight: 900; width: 100%; }
         .size-chip { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; text-align: center; cursor: pointer; }
         .size-chip.active { background: #000; color: #fff; }
     </style>
@@ -22,88 +21,171 @@
 <nav class="p-6 flex justify-between items-center sticky top-0 bg-white z-50 border-b border-black">
     <div class="flex gap-4">
         <button onclick="filter('Instock')" class="text-[10px] font-black">Instock</button>
-        <button onclick="openOrders()" class="text-[10px] font-black opacity-40">My Orders</button>
+        <button onclick="filter('Preorder')" class="text-[10px] font-black opacity-40">Preorder</button>
     </div>
     <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776407597/izsqh19ttd1purqiscmx.jpg" class="h-8 cursor-pointer" onclick="location.reload()">
-    <button id="authBtn" onclick="openAuth()" class="text-[10px] font-black">Login</button>
+    <div class="flex gap-4">
+        <button id="authBtn" onclick="openAuth()" class="text-[10px] font-black italic">Login</button>
+        <button onclick="toggleCart(true)" class="text-[10px] font-black">Cart (<span id="cartCount">0</span>)</button>
+    </div>
 </nav>
 
 <main class="yeezy-grid" id="main-grid"></main>
 
+<a href="https://t.me/NEVEREVER_SUPPORT" class="fixed bottom-6 right-6 bg-black text-white p-4 rounded-full text-[8px] font-black z-50">SUPPORT</a>
+
 <div id="authModal" class="modal flex items-center justify-center">
     <div class="max-w-xs w-full p-10 border border-black bg-white">
-        <h2 class="text-center font-black text-[10px] mb-6 italic">Access</h2>
-        <div id="g_id_onload" 
-             data-client_id="866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com" 
-             data-callback="handleGoogle"></div>
+        <div id="g_id_onload" data-client_id="866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com" data-callback="handleGoogle"></div>
         <div class="g_id_signin" data-type="standard"></div>
-        <button onclick="document.getElementById('authModal').style.display='none'" class="w-full text-[8px] mt-6 font-bold underline">Close</button>
+        <button onclick="closeModal('authModal')" class="w-full text-[8px] mt-6 font-bold underline">CLOSE</button>
     </div>
 </div>
 
 <div id="productModal" class="modal">
-    <div class="p-6 border-b border-black flex justify-between"><button onclick="document.getElementById('productModal').style.display='none'" class="text-[10px] font-black">← Back</button></div>
+    <div class="p-6 border-b border-black flex justify-between"><button onclick="closeModal('productModal')" class="text-[10px] font-black">← BACK</button></div>
     <div class="grid grid-cols-1 md:grid-cols-2">
         <div id="pGallery" class="flex flex-col gap-1 bg-black"></div>
-        <div class="p-10 md:p-20 space-y-10 bg-white">
+        <div class="p-10 md:p-20 space-y-10">
             <h1 id="pName" class="text-2xl font-black italic"></h1>
             <p id="pPrice" class="text-lg font-bold"></p>
-            <div>
-                <p class="text-[9px] font-black opacity-30 mb-4">Select Size</p>
-                <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
-            </div>
-            <button id="addBtn" onclick="addToCart()" class="btn-black">Add To Cart</button>
+            <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
+            <button id="addBtn" onclick="addToCart()" class="btn-black">ADD TO CART</button>
         </div>
     </div>
 </div>
 
+<div id="cartModal" class="modal p-10">
+    <button onclick="closeModal('cartModal')" class="text-[10px] font-black mb-10">← CLOSE</button>
+    <div id="cartItems" class="space-y-6"></div>
+    <div class="border-t border-black mt-10 pt-6">
+        <div class="flex justify-between font-black text-lg"><span>TOTAL</span><span id="cartTotal">0 MMK</span></div>
+        <button onclick="openCheckout()" class="btn-black mt-6">PROCEED TO CHECKOUT</button>
+    </div>
+</div>
+
+<div id="checkoutModal" class="modal p-10">
+    <button onclick="closeModal('checkoutModal')" class="text-[10px] font-black mb-10">← BACK</button>
+    <div class="max-w-md mx-auto space-y-4">
+        <input type="text" id="custName" placeholder="FULL NAME" class="w-full border border-black p-4 text-[10px]">
+        <input type="text" id="custPhone" placeholder="PHONE NUMBER" class="w-full border border-black p-4 text-[10px]">
+        <textarea id="custAddr" placeholder="SHIPPING ADDRESS" class="w-full border border-black p-4 text-[10px] h-32"></textarea>
+        <div class="border border-black p-6 text-center">
+            <p class="text-[10px] font-black mb-4">K-PAY / WAVE: 0977xxxxxxx</p>
+            <button id="payBtn" class="border border-black p-2 text-[8px] font-black">UPLOAD SCREENSHOT</button>
+        </div>
+        <button onclick="submitOrder()" class="btn-black">CONFIRM ORDER</button>
+    </div>
+</div>
+
+<div id="ordersModal" class="modal p-10">
+    <button onclick="closeModal('ordersModal')" class="text-[10px] font-black mb-10">← BACK</button>
+    <div id="orderStream" class="space-y-10"></div>
+</div>
+
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
-    let allItems = [], user = JSON.parse(localStorage.getItem('neverUser')), currentItem = null, selectedSize = null;
+    let allItems = [], cart = [], user = JSON.parse(localStorage.getItem('neverUser')), currentItem = null, selectedSize = null, payImg = "";
 
     async function init() {
         const res = await fetch('/items'); allItems = await res.json();
         filter('Instock');
-        if(user) document.getElementById('authBtn').innerText = "Account";
+        if(user) {
+            document.getElementById('authBtn').innerText = "LOGOUT";
+            document.getElementById('authBtn').onclick = () => { localStorage.removeItem('neverUser'); location.reload(); };
+        }
     }
 
     function filter(cat) {
+        document.querySelectorAll('nav button').forEach(b => b.classList.add('opacity-40'));
+        event?.target?.classList?.remove('opacity-40');
         const filtered = allItems.filter(i => i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="product-card pb-6" onclick="openProduct('${i._id}')">
-                ${i.isSoldOut ? '<div class="sold-out">SOLD OUT</div>' : ''}
-                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4">
-                <p class="text-[10px] font-black text-center">${i.name}<br><span class="opacity-40">${i.price.toLocaleString()} MMK</span></p>
+            <div class="product-card pb-10" onclick="openProduct('${i._id}')">
+                ${i.isSoldOut ? '<div class="absolute inset-0 bg-white/80 flex items-center justify-center font-black text-red-600 text-[10px] z-10">SOLD OUT</div>' : ''}
+                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover">
+                <div class="p-4 text-center">
+                    <p class="text-[10px] font-black">${i.name}</p>
+                    <p class="text-[9px] opacity-40 mt-1">${i.price.toLocaleString()} MMK</p>
+                </div>
             </div>`).join('');
     }
 
     function openProduct(id) {
-        currentItem = allItems.find(i => i._id === id);
+        currentItem = allItems.find(i => i._id === id); selectedSize = null;
         document.getElementById('pName').innerText = currentItem.name;
         document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
         document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full">`).join('');
-        
         const sizes = currentItem.availableSizes[0].split(',');
-        document.getElementById('sizeGrid').innerHTML = sizes.map(s => `
-            <div class="size-chip" onclick="selSize(this, '${s.trim()}')">${s.trim()}</div>
-        `).join('');
-        
-        document.getElementById('addBtn').innerText = currentItem.isSoldOut ? "SOLD OUT" : "ADD TO CART";
-        document.getElementById('addBtn').disabled = currentItem.isSoldOut;
+        document.getElementById('sizeGrid').innerHTML = sizes.map(s => `<div class="size-chip" onclick="selSize(this, '${s.trim()}')">${s.trim()}</div>`).join('');
         document.getElementById('productModal').style.display = 'block';
     }
 
-    function selSize(el, s) { 
-        document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); 
-        el.classList.add('active'); 
-        selectedSize = s; 
+    function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
+
+    function addToCart() {
+        if(!selectedSize) return alert("SELECT SIZE");
+        cart.push({...currentItem, size: selectedSize, qty: 1});
+        updateCartUI();
+        closeModal('productModal');
+    }
+
+    function updateCartUI() {
+        document.getElementById('cartCount').innerText = cart.length;
+        let total = 0;
+        document.getElementById('cartItems').innerHTML = cart.map((i, idx) => {
+            total += i.price;
+            return `<div class="flex justify-between items-center border-b border-black pb-4">
+                <div class="flex gap-4">
+                    <img src="${i.images[0]}" class="w-16 h-20 object-cover">
+                    <div class="text-[10px] font-black"><p>${i.name}</p><p class="opacity-40">SIZE: ${i.size}</p></div>
+                </div>
+                <button onclick="cart.splice(${idx},1);updateCartUI()" class="text-[8px] underline">REMOVE</button>
+            </div>`;
+        }).join('');
+        document.getElementById('cartTotal').innerText = `${total.toLocaleString()} MMK`;
+    }
+
+    const payWidget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") payImg = r.info.secure_url; });
+    document.getElementById('payBtn').onclick = () => payWidget.open();
+
+    async function submitOrder() {
+        const order = {
+            userId: user?.id || 'guest', username: document.getElementById('custName').value,
+            items: cart, totalMMK: cart.reduce((a,b) => a + b.price, 0),
+            phone: document.getElementById('custPhone').value, address: document.getElementById('custAddr').value,
+            paymentScreenshot: payImg
+        };
+        await fetch('/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(order)});
+        alert("ORDER PLACED"); location.reload();
     }
 
     function handleGoogle(response) {
         localStorage.setItem('neverUser', JSON.stringify({username: 'Customer', id: 'google_user'}));
+        document.getElementById('authModal').style.display = 'none'; // Auto-close
         location.reload(); 
     }
 
+    async function openOrders() {
+        if(!user) return openAuth();
+        const res = await fetch(`/my-orders/${user.id}`);
+        const orders = await res.json();
+        document.getElementById('orderStream').innerHTML = orders.map(o => `
+            <div class="flex gap-6 border-b border-black pb-6">
+                <img src="${o.items[0].images[0]}" class="w-20 h-24 object-cover">
+                <div class="text-[10px] font-black">
+                    <p class="text-blue-600">${o.status}</p>
+                    <p class="mt-1">${o.items.map(i => i.name).join(', ')}</p>
+                    <p class="opacity-40">ARRIVAL: ${o.estArrival || 'PENDING'}</p>
+                </div>
+            </div>`).join('');
+        document.getElementById('ordersModal').style.display = 'block';
+    }
+
+    function toggleCart(s) { document.getElementById('cartModal').style.display = s ? 'block' : 'none'; }
+    function openCheckout() { if(cart.length==0) return; document.getElementById('checkoutModal').style.display = 'block'; }
     function openAuth() { document.getElementById('authModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     init();
 </script>
 </body>
