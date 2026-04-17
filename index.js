@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const axios = require('axios'); // ADDED for Telegram integration
+const axios = require('axios');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -11,7 +11,6 @@ app.use(cors());
 app.use(express.static('public'));
 
 const RATE = 125; 
-// === TELEGRAM CREDENTIALS ===
 const TELEGRAM_BOT_TOKEN = '8680111413:AAEX2fGmxKYAd3z3MPjLeIFUR8QrcWkTvUQ'; 
 const TELEGRAM_CHAT_ID = '1923704168';
 
@@ -51,21 +50,13 @@ app.post('/add-item', async (req, res) => {
 app.post('/submit-order', async (req, res) => {
     const order = new Order(req.body);
     await order.save();
-
-    // === TELEGRAM INTEGRATION ===
     try {
         const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
         const message = `🚨 NEVER EVER: NEW ORDER\n\nUSER: ${order.username}\nPHONE: ${order.phone}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\n\nITEMS:\n- ${itemList}\n\nADDRESS: ${order.address}`;
-        
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-            chat_id: TELEGRAM_CHAT_ID,
-            photo: order.paymentScreenshot,
-            caption: message
+            chat_id: TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
         });
-    } catch (err) {
-        console.error("❌ Telegram notification failed:", err.message);
-    }
-
+    } catch (err) { console.error("❌ Telegram failed:", err.message); }
     res.json({ success: true });
 });
 
@@ -99,4 +90,4 @@ app.use((req, res, next) => {
     res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
-app.listen(10000, () => console.log("✅ SERVER RUNNING ON PORT 10000"));
+app.listen(10000);

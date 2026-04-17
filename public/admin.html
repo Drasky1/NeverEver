@@ -10,8 +10,6 @@
         .btn-black { background: #000; color: #fff; padding: 15px; font-size: 10px; font-weight: 900; width: 100%; border: 1px solid #000; transition: 0.2s;}
         .btn-black:hover { background: #fff; color: #000; }
         .order-scroll { max-height: 500px; overflow-y: auto; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #000; }
     </style>
 </head>
 <body class="p-6 md:p-20">
@@ -21,8 +19,9 @@
 
     <div class="max-w-6xl mx-auto space-y-8">
         <h1 class="text-2xl font-black italic tracking-widest text-center mb-10">NEVEREVER SYSTEM</h1>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
             <div class="card text-center"><p class="text-[9px] opacity-40 mb-2">REVENUE</p><h1 id="revTotal" class="text-xl font-black italic">0 MMK</h1></div>
+            <div class="card text-center border-emerald-500"><p class="text-[9px] text-emerald-600 font-bold mb-2">TOTAL PROFIT</p><h1 id="profitTotal" class="text-xl font-black italic text-emerald-600">0 MMK</h1></div>
             <div class="card text-center"><p class="text-[9px] opacity-40 mb-2">ACTIVE ORDERS</p><h1 id="orderCount" class="text-xl font-black italic">0</h1></div>
         </div>
 
@@ -54,7 +53,7 @@
     <script>
         function checkPass() { if(document.getElementById('adminPass').value === 'never2026') document.getElementById('authOverlay').remove(); }
         let photos = [];
-        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") { photos.push(r.info.secure_url); document.getElementById('uploadBtn').innerText = `✅ ${photos.length} IMAGES ATTACHED`; }});
+        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") { photos.push(r.info.secure_url); document.getElementById('uploadBtn').innerText = `✅ ATTACHED`; }});
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
@@ -67,8 +66,7 @@
             const status = document.getElementById(`status-${id}`).value;
             const estArrival = document.getElementById(`est-${id}`).value;
             await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival})});
-            alert("ORDER UPDATED");
-            load();
+            alert("ORDER UPDATED"); load();
         }
 
         async function delOrder(id) { if(confirm('TERMINATE ORDER?')) { await fetch(`/delete-order/${id}`, {method:'DELETE'}); load(); } }
@@ -77,31 +75,35 @@
         async function load() {
             const items = await (await fetch('/items')).json();
             const orders = await (await fetch('/orders')).json();
-            let rev = 0; orders.forEach(o => rev += o.totalMMK);
+            
+            let rev = 0, profit = 0;
+            orders.forEach(o => {
+                rev += o.totalMMK;
+                // Simple profit: Total Price - (Estimated Cost based on Items)
+                o.items.forEach(oi => {
+                    const originalItem = items.find(i => i.name === oi.name);
+                    if(originalItem) profit += (oi.price - (originalItem.costTHB * 125)) * oi.qty;
+                });
+            });
+
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+            document.getElementById('profitTotal').innerText = `${profit.toLocaleString()} MMK`;
             document.getElementById('orderCount').innerText = orders.length;
 
             document.getElementById('order-list').innerHTML = orders.map(o => `
                 <div class="border border-black p-4 space-y-3">
                     <div class="flex justify-between text-[8px] font-black">
-                        <span>${o.username} <br> ${o.phone || 'NO PHONE'} <br> ${o.totalMMK.toLocaleString()} MMK</span>
-                        <div class="flex flex-col items-end gap-1">
-                            <a href="${o.paymentScreenshot}" target="_blank" class="underline">RECEIPT</a>
-                            <button onclick="delOrder('${o._id}')" class="underline opacity-50 hover:opacity-100">TERMINATE</button>
-                        </div>
+                        <span>${o.username} <br> ${o.phone || 'NO PHONE'}</span>
+                        <div class="flex flex-col items-end gap-1"><a href="${o.paymentScreenshot}" target="_blank" class="underline">RECEIPT</a><button onclick="delOrder('${o._id}')" class="underline opacity-50">TERMINATE</button></div>
                     </div>
-                    <div class="text-[8px] font-bold opacity-60 mb-2">${o.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('<br>')}</div>
-                    <select id="status-${o._id}" class="!mb-0"><option ${o.status=='Pending'?'selected':''}>PENDING</option><option ${o.status=='Shipped'?'selected':''}>SHIPPED</option><option ${o.status=='Delivered'?'selected':''}>DELIVERED</option></select>
-                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="ARRIVAL (e.g., 3 DAYS)" class="!mb-0 border-t-0">
+                    <select id="status-${o._id}"><option ${o.status=='Pending'?'selected':''}>Pending</option><option ${o.status=='Shipped'?'selected':''}>Shipped</option><option ${o.status=='Delivered'?'selected':''}>Delivered</option></select>
+                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="ARRIVAL">
                     <button onclick="updateOrder('${o._id}')" class="btn-black !p-2 !text-[8px]">UPDATE</button>
                 </div>`).join('');
 
             const q = document.getElementById('invSearch').value.toLowerCase();
             document.getElementById('inv-list').innerHTML = items.filter(i=>i.name.toLowerCase().includes(q)).map(i => `
-                <div class="flex justify-between p-4 border border-black items-center">
-                    <span class="text-[9px] font-black">${i.name} [${i.category}]</span>
-                    <button onclick="delItem('${i._id}')" class="text-[8px] underline opacity-50 hover:opacity-100 font-black">TERMINATE</button>
-                </div>`).join('');
+                <div class="flex justify-between p-4 border border-black items-center"><span class="text-[9px] font-black">${i.name} [${i.category}]</span><button onclick="delItem('${i._id}')" class="text-[8px] underline">TERMINATE</button></div>`).join('');
         }
         load();
     </script>
