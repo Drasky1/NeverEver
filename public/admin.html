@@ -110,7 +110,13 @@
                     <button onclick="updateOrder('${o._id}')" class="btn-black !p-2">UPDATE</button></div>`).join('');
         }
 
-        const widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { if(r.event==="success") photos.push(r.info.secure_url); });
+        const widget = cloudinary.createUploadWidget({ 
+    cloudName: 'dawhhgjsd', 
+    uploadPreset: 'dawhhgjsd',
+    maxFiles: 5 // This physically stops the upload after 5 photos
+}, (e, r) => { 
+    if (r.event === "success") photos.push(r.info.secure_url); 
+});
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
