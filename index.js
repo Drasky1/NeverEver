@@ -75,5 +75,5 @@ app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAn
 app.post('/auth/signup', async (req, res) => { /* same as before */ });
 app.post('/auth/login', async (req, res) => { /* same as before */ });
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
+app.get('/:path*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));
