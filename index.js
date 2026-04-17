@@ -21,7 +21,7 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .catch(err => console.error("❌ DB ERROR:", err));
 
 const Item = mongoose.model('Item', new mongoose.Schema({
-    name: String, costTHB: Number, price: Number,
+    name: String, costTHB: Number, price: Number, quantity: { type: Number, default: 1 },
     images: [String], description: String, availableSizes: [String],
     category: { type: String, default: 'Instock' }
 }));

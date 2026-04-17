@@ -38,7 +38,9 @@
         <button onclick="filter('Instock')" class="hover:underline">INSTOCK</button>
         <button onclick="filter('Preorder')" class="hover:underline text-gray-400">PREORDER</button>
     </div>
-    <div class="text-lg">NEVEREVER</div>
+    <div class="h-10 flex items-center justify-center">
+        <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg" class="h-full object-contain" alt="NEVEREVER">
+    </div>
     <div class="flex gap-6">
         <button id="authBtn" onclick="openPanel('authPanel')" class="hover:underline">LOGIN</button>
         <button onclick="openOrders()" class="hover:underline hidden" id="trackBtn">ORDERS</button>
@@ -230,7 +232,10 @@
     document.getElementById("uploadSS").onclick = () => widget.open();
 
     async function checkout() {
-        if(!user) return openPanel('authPanel');
+        if(!user) {
+            alert("YOU MUST BE SIGNED IN TO PLACE AN ORDER");
+            return openPanel('authPanel');
+        }
         if(!document.getElementById('paymentImg').value) return alert("PLEASE UPLOAD RECEIPT");
         if(!document.getElementById('orderPhone').value || !document.getElementById('orderAddr').value) return alert("ADDRESS AND PHONE REQUIRED");
         
