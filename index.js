@@ -20,7 +20,6 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
-// MODELS
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
     grade: { type: String, default: 'Instock' }, 
@@ -45,38 +44,28 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// SHOP & ADMIN API
+// API ROUTES
 app.get('/items', async (req, res) => res.json(await Item.find()));
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
 
 app.post('/add-item', async (req, res) => {
     const { name, costTHB, images, grade, description, sizes } = req.body;
     const newItem = new Item({
-        name, grade, costTHB,
-        price: parseFloat(costTHB) * RATE,
+        name, grade, costTHB: Number(costTHB),
+        price: Number(costTHB) * RATE,
         images, description, availableSizes: sizes
     });
     await newItem.save();
     res.json({ success: true });
 });
 
-app.post('/submit-order', async (req, res) => {
-    await new Order(req.body).save();
-    const message = `🔥 *NEW ORDER*\n👤 *User:* ${req.body.username}\n💰 *Total:* ${req.body.totalMMK.toLocaleString()} MMK`;
-    axios.post(`https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`, { chat_id: ADMIN_IDS[0], text: message, parse_mode: 'Markdown' });
-    res.json({ success: true });
-});
-
-app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
-
-// AUTH API
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashed = await bcrypt.hash(req.body.password, 10);
         const user = new User({...req.body, password: hashed});
         await user.save();
         res.json({ success: true });
-    } catch (err) { res.status(400).json({ error: "Username already exists" }); }
+    } catch (err) { res.status(400).json({ error: "Exists" }); }
 });
 
 app.post('/auth/login', async (req, res) => {
@@ -84,12 +73,19 @@ app.post('/auth/login', async (req, res) => {
     if (user && await bcrypt.compare(req.body.password, user.password)) {
         const token = jwt.sign({ id: user._id }, JWT_SECRET);
         res.json({ token, user: { id: user._id, username: user.username, phone: user.phone, address: user.address } });
-    } else { res.status(401).json({ error: "Invalid credentials" }); }
+    } else { res.status(401).json({ error: "Invalid" }); }
 });
 
-// ROUTING FAILSAFE
+app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+
+// --- FIXED FAILSAFE ROUTING ---
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.includes('.')) {
+    // If it's not an API call or the admin page, send shop.html
+    if (req.method === 'GET' && !req.path.startsWith('/items') && !req.path.startsWith('/orders')) {
         res.sendFile(path.join(__dirname, 'public', 'shop.html'));
     } else { next(); }
 });

@@ -94,16 +94,25 @@
     }
 
     function renderGrid() {
-        const grid = document.getElementById('main-grid');
-        const filtered = allItems.filter(i => i.grade === currentFilter).reverse();
-        grid.innerHTML = filtered.map(i => `
+    const grid = document.getElementById('main-grid');
+    // Ensure we only show items that actually have images to prevent 404s
+    const filtered = allItems.filter(i => i.grade === currentFilter).reverse();
+    
+    grid.innerHTML = filtered.map(i => {
+        // Fallback for broken images or old data
+        const displayImg = (i.images && i.images.length > 0) ? i.images[0] : 'https://placehold.co/400x600?text=No+Image';
+        const displayPrice = i.price ? i.price.toLocaleString() : '0';
+
+        return `
             <div class="product-card" onclick="openProduct('${i._id}')">
-                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover mb-4">
+                <img src="${displayImg}" class="w-full aspect-[3/4] object-cover mb-4 shadow-sm" onerror="this.src='https://placehold.co/400x600?text=Error+Loading'">
                 <div class="text-center font-black uppercase text-[10px] tracking-widest">
-                    ${i.name}<br><span class="text-slate-400 mt-1 block">${i.price.toLocaleString()} MMK</span>
+                    ${i.name}<br>
+                    <span class="text-slate-400 mt-1 block">${displayPrice} MMK</span>
                 </div>
-            </div>`).join('');
-    }
+            </div>`;
+    }).join('');
+}
 
     function openProduct(id) {
         currentItem = allItems.find(i => i._id === id);
