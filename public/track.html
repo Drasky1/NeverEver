@@ -7,20 +7,19 @@
 </head>
 <body class="p-8">
     <div class="max-w-xl mx-auto py-10">
-        <h1 class="text-[10px] font-black uppercase tracking-widest mb-10">Order Tracking</h1>
-        <div id="list" class="space-y-10"></div>
+        <h1 class="text-[10px] font-black uppercase mb-10">Order Status</h1>
+        <div id="list" class="space-y-6"></div>
     </div>
     <script>
         async function load() {
             const user = JSON.parse(localStorage.getItem('neverUser'));
-            if(!user) return document.getElementById('list').innerHTML = "Login to track orders.";
+            if(!user) return document.getElementById('list').innerHTML = "Please login first.";
             const res = await fetch(`/my-orders/${user.id}`);
             const orders = await res.json();
             document.getElementById('list').innerHTML = orders.map(o => `
-                <div class="bg-white p-6 border border-black">
-                    <p class="text-[10px] font-black uppercase">${o.status}</p>
-                    <p class="text-xl font-black italic mt-2">${o.totalMMK.toLocaleString()} MMK</p>
-                    <p class="text-[8px] opacity-40 mt-4">Arrival: ${o.estArrival || 'Pending'}</p>
+                <div class="bg-white p-6 border border-black text-[10px] font-black">
+                    <p class="uppercase text-emerald-600">${o.status}</p>
+                    <p class="text-xl italic mt-1">${o.totalMMK.toLocaleString()} MMK</p>
                 </div>`).join('');
         }
         load();
