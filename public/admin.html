@@ -6,7 +6,7 @@
     <style>
         body { background: #f4f4f4; font-family: Helvetica; text-transform: uppercase; }
         .stat-card { background: #fff; border: 1px solid #000; padding: 25px; }
-        input, select { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; width: 100%; }
+        input, select { border: 1px solid #000; padding: 12px; font-size: 10px; font-weight: 900; width: 100%; margin-bottom: 10px; }
         .btn-black { background: #000; color: #fff; padding: 15px; font-size: 10px; font-weight: 900; width: 100%; }
     </style>
 </head>
@@ -18,7 +18,7 @@
                 <h1 id="revTotal" class="text-2xl font-black italic">0 MMK</h1>
             </div>
             <div class="stat-card">
-                <p class="text-[8px] font-black text-emerald-600">DELIVERED PROFIT</p>
+                <p class="text-[8px] font-black text-emerald-600">PROFIT</p>
                 <h1 id="profitTotal" class="text-2xl font-black italic text-emerald-600">0 MMK</h1>
             </div>
             <div class="stat-card">
@@ -28,30 +28,26 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="space-y-6">
-                <div class="stat-card">
-                    <h2 class="text-[10px] font-black mb-4 italic">ADD PRODUCT</h2>
-                    <input type="text" id="itemName" placeholder="NAME" class="mb-2">
-                    <input type="number" id="itemCost" placeholder="COST (THB)" class="mb-2">
-                    <input type="text" id="itemSizes" placeholder="SIZES (S, M, L)" class="mb-2">
-                    <select id="itemCat" class="mb-2"><option value="Instock">INSTOCK</option><option value="Preorder">PREORDER</option></select>
-                    <button id="uploadBtn" class="border border-black p-4 text-[9px] font-black w-full mb-2">📸 PHOTOS</button>
-                    <button onclick="saveItem()" class="btn-black">DEPLOY</button>
-                </div>
-
-                <div class="stat-card">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-[10px] font-black italic">INVENTORY</h2>
-                        <input type="text" id="invSearch" onkeyup="renderInv()" placeholder="SEARCH..." class="!w-40 !p-2">
-                    </div>
-                    <div id="invList" class="space-y-2 max-h-96 overflow-y-auto"></div>
-                </div>
+            <div class="stat-card">
+                <h2 class="text-[10px] font-black mb-4 italic">ADD PRODUCT</h2>
+                <input type="text" id="itemName" placeholder="NAME">
+                <input type="number" id="itemCost" placeholder="COST (THB)">
+                <input type="number" id="itemStock" placeholder="QUANTITY (STOCK)">
+                <input type="text" id="itemSizes" placeholder="SIZES (S, M, L)">
+                <select id="itemCat"><option value="Instock">INSTOCK</option><option value="Preorder">PREORDER</option></select>
+                <button id="uploadBtn" class="border border-black p-4 text-[9px] font-black w-full mb-2">📸 PHOTOS</button>
+                <button onclick="saveItem()" class="btn-black">DEPLOY</button>
             </div>
 
             <div class="stat-card">
-                <h2 class="text-[10px] font-black mb-6 italic">ORDER STREAM</h2>
-                <div id="orderList" class="space-y-4 max-h-[800px] overflow-y-auto"></div>
+                <h2 class="text-[10px] font-black mb-4 italic">INVENTORY</h2>
+                <div id="invList" class="space-y-2 max-h-96 overflow-y-auto"></div>
             </div>
+        </div>
+        
+        <div class="stat-card">
+            <h2 class="text-[10px] font-black mb-6 italic">ORDER STREAM</h2>
+            <div id="orderList" class="space-y-4"></div>
         </div>
     </div>
 
@@ -60,53 +56,39 @@
         let photos = [], items = [], orders = [];
 
         async function load() {
-            try {
-                const itemsRes = await fetch('/items'); items = await itemsRes.json();
-                const ordersRes = await fetch('/orders'); orders = await ordersRes.json();
-                renderStats(); renderInv(); renderOrders();
-            } catch (err) { console.error(err); }
+            const resI = await fetch('/items'); items = await resI.json();
+            const resO = await fetch('/orders'); orders = await resO.json();
+            renderStats(); renderInv(); renderOrders();
         }
 
         function renderStats() {
-    let rev = 0, profit = 0, active = 0;
-    const rate = 125;
-    orders.forEach(o => {
-        rev += Number(o.totalMMK) || 0;
-        if(o.status !== 'Delivered') active++;
-        if(o.status === 'Delivered') {
-            o.items.forEach(oi => {
-                // Fix: Match items correctly to calculate profit
-                const invItem = items.find(i => i.name === oi.name);
-                if(invItem && invItem.costTHB) {
-                    const costMMK = Number(invItem.costTHB) * rate;
-                    const priceMMK = Number(oi.price) || (Number(o.totalMMK) / o.items.length);
-                    profit += (priceMMK - costMMK);
+            let rev = 0, prof = 0, active = 0;
+            orders.forEach(o => {
+                rev += Number(o.totalMMK);
+                if(o.status !== 'Delivered') active++;
+                if(o.status === 'Delivered') {
+                    o.items.forEach(oi => {
+                        const inv = items.find(i => i.name === oi.name);
+                        if(inv) prof += (Number(oi.price) - (Number(inv.costTHB)*125));
+                    });
                 }
             });
+            document.getElementById('revTotal').innerText = rev.toLocaleString() + ' MMK';
+            document.getElementById('profitTotal').innerText = prof.toLocaleString() + ' MMK';
+            document.getElementById('activeCount').innerText = active;
         }
-    });
-    document.getElementById('revTotal').innerText = `${Math.floor(rev).toLocaleString()} MMK`;
-    document.getElementById('profitTotal').innerText = `${Math.floor(profit).toLocaleString()} MMK`;
-    document.getElementById('activeCount').innerText = active;
-}
 
         function renderInv() {
-            const q = document.getElementById('invSearch').value.toLowerCase();
-            document.getElementById('invList').innerHTML = items.filter(i => i.name.toLowerCase().includes(q)).map(i => `
-                <div class="flex justify-between items-center border border-black p-4 ${i.isSoldOut ? 'bg-gray-100 opacity-50' : 'bg-white'}">
+            document.getElementById('invList').innerHTML = items.map(i => `
+                <div class="flex justify-between items-center border border-black p-4 bg-white">
                     <div class="flex items-center gap-4">
-                        <img src="${i.images[0]}" class="w-12 h-12 object-contain bg-gray-100 border border-black">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[9px] font-black">${i.name}</span>
-                            <div class="flex flex-wrap gap-1">
-                                ${(Array.isArray(i.availableSizes) ? i.availableSizes : []).map(s => `
-                                    <span class="border border-black px-1.5 py-0.5 text-[7px] font-bold bg-white">${s}</span>
-                                `).join('')}
-                            </div>
-                            <span class="text-[8px] opacity-50 text-emerald-600 font-bold">COST: ${i.costTHB} THB</span>
+                        <img src="${i.images[0]}" class="w-12 h-12 object-contain border border-black">
+                        <div>
+                            <p class="text-[9px] font-black">${i.name}</p>
+                            <p class="text-[8px] opacity-50">STOCK: ${i.stock}</p>
                         </div>
                     </div>
-                    <button onclick="toggleSoldOut('${i._id}', ${i.isSoldOut})" class="text-[8px] underline font-black">${i.isSoldOut ? 'RESTOCK' : 'MARK SOLD OUT'}</button>
+                    <button onclick="toggleSoldOut('${i._id}', ${i.isSoldOut})" class="text-[8px] underline font-black">${i.isSoldOut ? 'RESTOCK' : 'SOLD OUT'}</button>
                 </div>`).join('');
         }
 
@@ -114,46 +96,39 @@
             document.getElementById('orderList').innerHTML = orders.map(o => `
                 <div class="border border-black p-6 bg-white space-y-4">
                     <div class="flex justify-between font-black text-[10px]">
-                        <span>${o.username || 'GUEST'} | ${o.tgUsername || 'No TG'}</span>
-                        <a href="${o.paymentScreenshot}" target="_blank" class="underline text-blue-600 italic">RECEIPT</a>
+                        <span>${o.username} | ${o.phone}</span>
+                        <a href="${o.paymentScreenshot}" target="_blank" class="underline italic">RECEIPT</a>
                     </div>
-                    <div class="flex gap-4">
-                        <img src="${o.items[0].images[0]}" class="w-20 h-24 object-contain bg-gray-50 border border-black">
-                        <div class="text-[9px] font-bold">
-                            <p>${o.items.map(i => i.name + ' (' + i.size + ')').join(', ')}</p>
-                            <p class="mt-1">${o.phone}</p>
-                            <p class="mt-1 text-emerald-600">${o.totalMMK.toLocaleString()} MMK</p>
-                        </div>
-                    </div>
-                    <select id="status-${o._id}" class="!p-2 font-black">
-                        <option value="Pending" ${o.status=='Pending'?'selected':''}>Pending</option>
-                        <option value="Delivered" ${o.status=='Delivered'?'selected':''}>Delivered</option>
-                    </select>
-                    <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="ARRIVAL UPDATE" class="!p-2">
-                    <button onclick="updateOrder('${o._id}')" class="btn-black !p-2">UPDATE</button>
+                    <select id="status-${o._id}" class="!mb-0"><option value="Pending" ${o.status=='Pending'?'selected':''}>Pending</option><option value="Delivered" ${o.status=='Delivered'?'selected':''}>Delivered</option></select>
+                    <button onclick="updateStatus('${o._id}')" class="btn-black">UPDATE</button>
                 </div>`).join('');
         }
 
-        const widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd', maxFiles: 5 }, (e, r) => { if (r.event === "success") photos.push(r.info.secure_url); });
+        const widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if (r.event === "success") photos.push(r.info.secure_url); });
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
-            const sizes = document.getElementById('itemSizes').value.split(',').map(s => s.trim()).filter(s => s !== "");
-            const data = { name: document.getElementById('itemName').value, costTHB: document.getElementById('itemCost').value, availableSizes: sizes, category: document.getElementById('itemCat').value, images: photos };
+            const data = { 
+                name: document.getElementById('itemName').value, 
+                costTHB: document.getElementById('itemCost').value,
+                stock: document.getElementById('itemStock').value,
+                availableSizes: document.getElementById('itemSizes').value.split(',').map(s => s.trim()),
+                category: document.getElementById('itemCat').value, 
+                images: photos 
+            };
             await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
             location.reload();
         }
 
-        async function updateOrder(id) {
+        async function updateStatus(id) {
             const status = document.getElementById(`status-${id}`).value;
-            const estArrival = document.getElementById(`est-${id}`).value;
-            await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival})});
-            load(); 
+            await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status})});
+            load();
         }
 
-        async function toggleSoldOut(id, current) {
-            await fetch(`/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({isSoldOut: !current}) });
-            load(); 
+        async function toggleSoldOut(id, curr) {
+            await fetch(`/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({isSoldOut: !curr})});
+            load();
         }
         load();
     </script>
