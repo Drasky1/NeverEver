@@ -16,7 +16,12 @@
         .size-chip.active { background: #000; color: #fff; }
         input, textarea { border: 1px solid #000; padding: 15px; font-size: 10px; width: 100%; margin-bottom: 10px; }
         #pGallery { display: flex; flex-direction: column; gap: 1px; background: #000; width: 100%; }
-        #pGallery img { width: 100%; height: auto; display: block; object-fit: contain; background: #f4f4f4; }
+        #pGallery img { 
+    width: 100%; 
+    height: auto; 
+    object-fit: contain; 
+    background: #f4f4f4; 
+}
         .sticky-info { position: sticky; top: 0; height: fit-content; }
     </style>
 </head>
@@ -118,16 +123,19 @@
     }
 
     function openProduct(id) {
-        currentItem = allItems.find(i => i._id === id); selectedSize = null;
-        document.getElementById('pName').innerText = currentItem.name;
-        document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
-        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}">`).join('');
-        const sizes = Array.isArray(currentItem.availableSizes) ? currentItem.availableSizes : [];
-        document.getElementById('sizeGrid').innerHTML = sizes.map(s => `<div class="size-chip" onclick="selSize(this, '${s}')">${s}</div>`).join('');
-        document.getElementById('addBtn').innerText = currentItem.isSoldOut ? "SOLD OUT" : "ADD TO CART";
-        document.getElementById('addBtn').disabled = currentItem.isSoldOut;
-        document.getElementById('productModal').style.display = 'block';
-    }
+    currentItem = allItems.find(i => i._id === id); selectedSize = null;
+    document.getElementById('pName').innerText = currentItem.name;
+    document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
+    document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}">`).join('');
+    
+    // Fix: Show individual size boxes
+    const sizes = Array.isArray(currentItem.availableSizes) ? currentItem.availableSizes : [];
+    document.getElementById('sizeGrid').innerHTML = sizes.map(s => `
+        <div class="size-chip border border-black p-3 text-center cursor-pointer" onclick="selSize(this, '${s}')">${s}</div>
+    `).join('');
+    
+    document.getElementById('productModal').style.display = 'block';
+}
 
     function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
     function addToCart() { if(!selectedSize) return; cart.push({...currentItem, size: selectedSize, qty: 1}); updateCartUI(); closeModal('productModal'); }

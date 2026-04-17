@@ -68,33 +68,34 @@
         }
 
         function renderStats() {
-            let rev = 0, profit = 0, active = 0;
-            const rate = 125;
-            orders.forEach(o => {
-                rev += Number(o.totalMMK) || 0;
-                if(o.status !== 'Delivered') active++;
-                if(o.status === 'Delivered') {
-                    o.items.forEach(oi => {
-                        const inv = items.find(i => oi.name.toLowerCase().includes(i.name.toLowerCase()) || i.name.toLowerCase().includes(oi.name.toLowerCase()));
-                        if(inv && inv.costTHB) {
-                            const cost = Number(inv.costTHB) * rate;
-                            const price = Number(oi.price) || (Number(o.totalMMK) / o.items.length);
-                            profit += (price - cost) * (Number(oi.qty) || 1);
-                        }
-                    });
+    let rev = 0, profit = 0, active = 0;
+    const rate = 125;
+    orders.forEach(o => {
+        rev += Number(o.totalMMK) || 0;
+        if(o.status !== 'Delivered') active++;
+        if(o.status === 'Delivered') {
+            o.items.forEach(oi => {
+                // Fix: Match items correctly to calculate profit
+                const invItem = items.find(i => i.name === oi.name);
+                if(invItem && invItem.costTHB) {
+                    const costMMK = Number(invItem.costTHB) * rate;
+                    const priceMMK = Number(oi.price) || (Number(o.totalMMK) / o.items.length);
+                    profit += (priceMMK - costMMK);
                 }
             });
-            document.getElementById('revTotal').innerText = `${Math.floor(rev).toLocaleString()} MMK`;
-            document.getElementById('profitTotal').innerText = `${Math.floor(profit).toLocaleString()} MMK`;
-            document.getElementById('activeCount').innerText = active;
         }
+    });
+    document.getElementById('revTotal').innerText = `${Math.floor(rev).toLocaleString()} MMK`;
+    document.getElementById('profitTotal').innerText = `${Math.floor(profit).toLocaleString()} MMK`;
+    document.getElementById('activeCount').innerText = active;
+}
 
         function renderInv() {
             const q = document.getElementById('invSearch').value.toLowerCase();
             document.getElementById('invList').innerHTML = items.filter(i => i.name.toLowerCase().includes(q)).map(i => `
                 <div class="flex justify-between items-center border border-black p-4 ${i.isSoldOut ? 'bg-gray-100 opacity-50' : 'bg-white'}">
                     <div class="flex items-center gap-4">
-                        <img src="${i.images[0]}" class="w-12 h-12 object-contain bg-gray-50 border border-black">
+                        <img src="${i.images[0]}" class="w-12 h-12 object-contain bg-gray-100 border border-black">
                         <div class="flex flex-col gap-1">
                             <span class="text-[9px] font-black">${i.name}</span>
                             <div class="flex flex-wrap gap-1">

@@ -27,22 +27,24 @@
             document.getElementById('signupFields').classList.toggle('hidden');
             document.getElementById('toggleTxt').innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login";
         }
-        async function handleAuth() {
-            const body = { username: document.getElementById('user').value, password: document.getElementById('pass').value };
-            if(!isLogin) { body.phone = document.getElementById('phone').value; body.address = document.getElementById('addr').value; }
-            
-            const url = isLogin ? '/auth/login' : '/auth/signup';
-            const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-            const data = await res.json();
-            
-            if(data.token) {
-                localStorage.setItem('neverUser', JSON.stringify(data.user));
-                window.location.href = '/';
-            } else if(data.success) {
-                alert("Account created! Now login.");
-                location.reload();
-            } else { alert(data.error); }
-        }
+        async function handleManualAuth() {
+    const u = document.getElementById('userIn').value;
+    const p = document.getElementById('passIn').value;
+    
+    const res = await fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username: u, password: p })
+    });
+    
+    const data = await res.json();
+    if(data.success) {
+        localStorage.setItem('neverUser', JSON.stringify(data.user));
+        window.location.href = 'shop.html'; // Auto-redirect after login
+    } else {
+        alert("Login Failed");
+    }
+}
     </script>
 </body>
 </html>

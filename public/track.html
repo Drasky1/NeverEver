@@ -23,36 +23,75 @@
     </div>
 
     <script>
-        const user = JSON.parse(localStorage.getItem('neverUser'));
-        if (!user) { window.location.href = '/login'; }
-        const states = ["Pending Verification", "Paid & Verified", "Shipped", "Delivered"];
+    // 1. Get the logged-in user from local storage
+    const user = JSON.parse(localStorage.getItem('neverUser'));
+    const states = ["Pending", "Verified", "Shipped", "Delivered"];
 
-        async function load() {
+    async function load() {
+        // 2. Security Check: If no user, redirect to shop to login
+        if (!user || !user.id) {
+            alert("Please login to track your orders.");
+            window.location.href = 'shop.html';
+            return;
+        }
+
+        try {
+            // 3. Fetch ONLY this user's orders
             const res = await fetch(`/my-orders/${user.id}`);
             const orders = await res.json();
+
+            if (orders.length === 0) {
+                document.getElementById('list').innerHTML = `
+                    <div class="text-center opacity-40 uppercase text-[10px] font-black">
+                        No orders found.
+                    </div>`;
+                return;
+            }
+
+            // 4. Render the orders into the list div
             document.getElementById('list').innerHTML = orders.map(o => {
                 const step = states.indexOf(o.status);
                 const progress = (step / (states.length - 1)) * 100;
+                
                 return `
-                <div>
-                    <div class="flex justify-between text-[9px] font-black uppercase tracking-widest mb-10 text-slate-400">
-                        <span>ID: ${o._id.slice(-6)}</span>
+                <div class="border-b border-black/10 pb-12 mb-12">
+                    <div class="flex justify-between text-[9px] font-black uppercase tracking-widest mb-6 text-slate-400">
+                        <span>ORDER ID: ...${o._id.slice(-6)}</span>
                         <span>${new Date(o.createdAt).toLocaleDateString()}</span>
                     </div>
                     
-                    <div class="relative h-[1px] bg-black/10 mb-10">
-                        <div class="absolute h-[1px] bg-black transition-all duration-1000" style="width: ${progress}%"></div>
-                        <div class="absolute -top-1 right-0 text-[8px] font-bold uppercase tracking-tighter">${o.status}</div>
+                    <div class="relative h-[2px] bg-black/5 mb-10">
+                        <div class="absolute h-[2px] bg-emerald-500 transition-all duration-1000" style="width: ${progress}%"></div>
+                        <div class="absolute -top-4 right-0 text-[8px] font-black uppercase text-emerald-600">${o.status}</div>
                     </div>
 
-                    <div class="text-[10px] font-black uppercase tracking-widest mb-4">
-                        ${o.items.map(i => `<div>${i.name}</div>`).join('')}
+                    <div class="space-y-2 mb-6">
+                        ${o.items.map(i => `
+                            <div class="flex justify-between text-[11px] font-black uppercase">
+                                <span>${i.name}</span>
+                                <span class="opacity-40">${i.size}</span>
+                            </div>
+                        `).join('')}
                     </div>
-                    <p class="text-xl font-black">${o.totalMMK.toLocaleString()} MMK</p>
+
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-[8px] font-bold opacity-40 uppercase">Estimated Arrival</p>
+                            <p class="text-[10px] font-black uppercase">${o.estArrival || 'Processing...'}</p>
+                        </div>
+                        <p class="text-xl font-black italic">${o.totalMMK.toLocaleString()} MMK</p>
+                    </div>
                 </div>`;
             }).join('');
+
+        } catch (err) {
+            console.error("Tracking Error:", err);
+            document.getElementById('list').innerHTML = "Error loading orders.";
         }
-        load();
-    </script>
+    }
+
+    // Run the function when page loads
+    load();
+</script>
 </body>
 </html>
