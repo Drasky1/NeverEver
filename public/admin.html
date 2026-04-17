@@ -183,7 +183,19 @@
             let rev = 0; let profit = 0;
             orders.forEach(o => {
                 rev += o.totalMMK;
-                if (o.status === 'Delivered') profit += (o.profitMMK || 0);
+                if (o.status === 'Delivered') {
+                    if (o.profitMMK !== undefined) {
+                        profit += o.profitMMK;
+                    } else {
+                        // Fallback for older orders without profitMMK native tagging
+                        let historicalCost = 0;
+                        o.items.forEach(i => {
+                            const match = items.find(it => it.name === i.name);
+                            if (match) historicalCost += (match.costTHB * 125) * i.qty;
+                        });
+                        profit += (o.totalMMK - historicalCost);
+                    }
+                }
             });
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
             document.getElementById('profitTotal').innerText = `${profit.toLocaleString()} MMK`;
