@@ -6,7 +6,9 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(__dirname));
+
+// This tells the server where your HTML files are
+app.use(express.static(path.join(__dirname, 'public')));
 
 const mongoURI = "mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority";
 
@@ -14,7 +16,6 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.log("❌ DB ERROR:", err));
 
-// --- SCHEMAS ---
 const Item = mongoose.model('Item', { 
     name: String, price: Number, costTHB: Number, images: Array, 
     category: String, availableSizes: Array, isSoldOut: Boolean,
@@ -28,7 +29,7 @@ const Order = mongoose.model('Order', {
     createdAt: { type: Date, default: Date.now } 
 });
 
-// --- API LOGIC ---
+// --- API ROUTES ---
 app.get('/items', async (req, res) => res.json(await Item.find()));
 
 app.post('/add-item', async (req, res) => {
@@ -65,11 +66,11 @@ app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ us
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body)));
 app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body)));
 
-// --- EXPLICIT ROUTING (Fixes Connection Issues) ---
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'shop.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
-app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'track.html')));
-app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+// --- THE FIX FOR PUBLIC FOLDER ---
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/track', (req, res) => res.sendFile(path.join(__dirname, 'public', 'track.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 SERVER LIVE ON ${PORT}`));
