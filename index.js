@@ -27,7 +27,6 @@ const Order = mongoose.model('Order', {
     createdAt: { type: Date, default: Date.now } 
 });
 
-// --- API ROUTES ---
 app.get('/items', async (req, res) => res.json(await Item.find()));
 
 app.post('/add-item', async (req, res) => {
@@ -62,12 +61,11 @@ app.post('/login', (req, res) => {
 app.get('/orders', async (req, res) => res.json(await Order.find().sort({createdAt: -1})));
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body)));
+app.put('/update-item/:id', async (req, res) => res.json(await Item.findByIdAndUpdate(req.params.id, req.body)));
 
-// --- PAGE ROUTING ---
-// This is the specific fix for the PathError
-app.get('/:path*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'shop.html'));
-});
+// FINAL ROUTING FIX: This serves shop.html for the root or any unknown page
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'shop.html')));
+app.use((req, res) => res.sendFile(path.join(__dirname, 'shop.html')));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 SERVER LIVE ON ${PORT}`));

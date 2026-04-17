@@ -1,97 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track | NeverEver</title>
+    <meta charset="UTF-8"><title>Track | NeverEver</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background: #f2f2f2; color: #000; font-family: 'Helvetica', sans-serif; }</style>
+    <style>body { background: #f2f2f2; font-family: Helvetica; }</style>
 </head>
 <body class="p-8">
-    <div class="max-w-xl mx-auto py-20">
-        <header class="flex justify-between items-center mb-24">
-            <h1 class="text-[10px] font-black uppercase tracking-[0.4em]">Order Tracking</h1>
-            <a href="/" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest underline underline-offset-4">Back</a>
-        </header>
-
-        <div id="list" class="space-y-24"></div>
-
-        <div class="mt-32 text-center">
-            <a href="https://t.me/tfuwnthuh" target="_blank" class="text-[10px] font-black uppercase tracking-[0.2em] border-b-2 border-black pb-2">
-                Contact Support
-            </a>
-        </div>
+    <div class="max-w-xl mx-auto py-10">
+        <h1 class="text-[10px] font-black uppercase tracking-widest mb-10">Order Tracking</h1>
+        <div id="list" class="space-y-10"></div>
     </div>
-
     <script>
-    // 1. Get the logged-in user from local storage
-    const user = JSON.parse(localStorage.getItem('neverUser'));
-    const states = ["Pending", "Verified", "Shipped", "Delivered"];
-
-    async function load() {
-        // 2. Security Check: If no user, redirect to shop to login
-        if (!user || !user.id) {
-            alert("Please login to track your orders.");
-            window.location.href = 'shop.html';
-            return;
-        }
-
-        try {
-            // 3. Fetch ONLY this user's orders
+        async function load() {
+            const user = JSON.parse(localStorage.getItem('neverUser'));
+            if(!user) return document.getElementById('list').innerHTML = "Login to track orders.";
             const res = await fetch(`/my-orders/${user.id}`);
             const orders = await res.json();
-
-            if (orders.length === 0) {
-                document.getElementById('list').innerHTML = `
-                    <div class="text-center opacity-40 uppercase text-[10px] font-black">
-                        No orders found.
-                    </div>`;
-                return;
-            }
-
-            // 4. Render the orders into the list div
-            document.getElementById('list').innerHTML = orders.map(o => {
-                const step = states.indexOf(o.status);
-                const progress = (step / (states.length - 1)) * 100;
-                
-                return `
-                <div class="border-b border-black/10 pb-12 mb-12">
-                    <div class="flex justify-between text-[9px] font-black uppercase tracking-widest mb-6 text-slate-400">
-                        <span>ORDER ID: ...${o._id.slice(-6)}</span>
-                        <span>${new Date(o.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    
-                    <div class="relative h-[2px] bg-black/5 mb-10">
-                        <div class="absolute h-[2px] bg-emerald-500 transition-all duration-1000" style="width: ${progress}%"></div>
-                        <div class="absolute -top-4 right-0 text-[8px] font-black uppercase text-emerald-600">${o.status}</div>
-                    </div>
-
-                    <div class="space-y-2 mb-6">
-                        ${o.items.map(i => `
-                            <div class="flex justify-between text-[11px] font-black uppercase">
-                                <span>${i.name}</span>
-                                <span class="opacity-40">${i.size}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <p class="text-[8px] font-bold opacity-40 uppercase">Estimated Arrival</p>
-                            <p class="text-[10px] font-black uppercase">${o.estArrival || 'Processing...'}</p>
-                        </div>
-                        <p class="text-xl font-black italic">${o.totalMMK.toLocaleString()} MMK</p>
-                    </div>
-                </div>`;
-            }).join('');
-
-        } catch (err) {
-            console.error("Tracking Error:", err);
-            document.getElementById('list').innerHTML = "Error loading orders.";
+            document.getElementById('list').innerHTML = orders.map(o => `
+                <div class="bg-white p-6 border border-black">
+                    <p class="text-[10px] font-black uppercase">${o.status}</p>
+                    <p class="text-xl font-black italic mt-2">${o.totalMMK.toLocaleString()} MMK</p>
+                    <p class="text-[8px] opacity-40 mt-4">Arrival: ${o.estArrival || 'Pending'}</p>
+                </div>`).join('');
         }
-    }
-
-    // Run the function when page loads
-    load();
-</script>
+        load();
+    </script>
 </body>
 </html>
