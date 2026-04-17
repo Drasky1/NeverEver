@@ -107,17 +107,22 @@
         const widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => { if (r.event === "success") photos.push(r.info.secure_url); });
         document.getElementById('uploadBtn').onclick = () => widget.open();
         
-        async function saveItem() {
-        const data = { 
-            name: document.getElementById('itemName').value, 
-            costTHB: document.getElementById('itemCost').value,
-            stock: document.getElementById('itemStock').value, // SAVES STOCK
-            availableSizes: document.getElementById('itemSizes').value.split(',').map(s => s.trim()),
-            category: document.getElementById('itemCat').value, 
-            images: photos 
-        };
-        await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-        location.reload();
+       async function saveItem() {
+    const data = { 
+        name: document.getElementById('itemName').value, 
+        costTHB: document.getElementById('itemCost').value,
+        stock: document.getElementById('itemStock').value, 
+        availableSizes: document.getElementById('itemSizes').value.split(',').map(s => s.trim()),
+        category: document.getElementById('itemCat').value, 
+        images: photos 
+    };
+    await fetch('/add-item', { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body:JSON.stringify(data)
+    });
+    location.reload();
+
     }
         async function updateStatus(id) {
             const status = document.getElementById(`status-${id}`).value;

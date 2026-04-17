@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><title>NeverEver | Account</title><script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #000; color: white; }</style>
+    <style>body { background-color: #000; color: white; font-family: Helvetica; }</style>
 </head>
 <body class="flex items-center justify-center h-screen p-6">
     <div class="w-full max-w-sm bg-slate-900 p-10 rounded-[40px] border border-white/5">
@@ -10,41 +10,28 @@
         <div class="space-y-4">
             <input type="text" id="user" placeholder="Username" class="w-full bg-black p-4 rounded-2xl outline-none">
             <input type="password" id="pass" placeholder="Password" class="w-full bg-black p-4 rounded-2xl outline-none">
-            <div id="signupFields" class="hidden space-y-4">
-                <input type="text" id="phone" placeholder="Phone Number" class="w-full bg-black p-4 rounded-2xl outline-none">
-                <input type="text" id="addr" placeholder="City/Address" class="w-full bg-black p-4 rounded-2xl outline-none">
-            </div>
             <button onclick="handleAuth()" id="btn" class="w-full bg-white text-black font-black py-4 rounded-2xl uppercase text-[10px]">Login</button>
-            <p onclick="toggle()" id="toggleTxt" class="text-center text-[10px] text-slate-500 uppercase font-bold mt-6 cursor-pointer">Don't have an account? Sign Up</p>
         </div>
     </div>
     <script>
-        let isLogin = true;
-        function toggle() {
-            isLogin = !isLogin;
-            document.getElementById('title').innerText = isLogin ? 'Login' : 'Sign Up';
-            document.getElementById('btn').innerText = isLogin ? 'Login' : 'Create Account';
-            document.getElementById('signupFields').classList.toggle('hidden');
-            document.getElementById('toggleTxt').innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login";
-        }
        async function handleAuth() {
-    const u = document.getElementById('user').value;
-    const p = document.getElementById('pass').value;
-    
-    const res = await fetch('/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ username: u, password: p })
-    });
-    
-    if(res.ok) {
-        const data = await res.json();
-        localStorage.setItem('neverUser', JSON.stringify(data.user));
-        window.location.href = 'shop.html'; 
-    } else {
-        alert("Login failed!");
-    }
-}
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: u, password: p })
+            });
+            
+            if(res.ok) {
+                const data = await res.json();
+                localStorage.setItem('neverUser', JSON.stringify(data.user));
+                window.location.href = '/'; 
+            } else {
+                alert("Login failed! Check your username/password.");
+            }
+        }
     </script>
 </body>
 </html>
