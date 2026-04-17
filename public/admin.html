@@ -46,10 +46,6 @@
                     <h2 id="revTotal" class="text-2xl">0 MMK</h2>
                 </div>
                 <div>
-                    <p class="text-[10px] text-gray-400 mb-1">TOTAL PROFIT</p>
-                    <h2 id="profitTotal" class="text-2xl">0 MMK</h2>
-                </div>
-                <div>
                     <p class="text-[10px] text-gray-400 mb-1">ACTIVE ORDERS</p>
                     <h2 id="orderCount" class="text-2xl">0</h2>
                 </div>
@@ -70,7 +66,6 @@
                         <select id="itemCat" class="w-1/4">
                             <option value="Instock">INSTOCK</option>
                             <option value="Preorder">PREORDER</option>
-                            <option value="Sold Out">SOLD OUT</option>
                         </select>
                     </div>
                     <textarea id="itemDesc" placeholder="PRODUCT DESCRIPTION (LOWERCASE ENCOURAGED)" rows="3"></textarea>
@@ -110,8 +105,16 @@
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
         // Simple security layer
+        document.addEventListener("DOMContentLoaded", () => {
+            if(sessionStorage.getItem('adminAuthed')) {
+                document.getElementById('authOverlay').remove();
+                load();
+            }
+        });
+
         function checkPass() { 
             if(document.getElementById('adminPass').value === 'never2026') {
+                sessionStorage.setItem('adminAuthed', 'true');
                 document.getElementById('authOverlay').remove(); 
                 load(); // Load data only after login
             } else {
@@ -188,25 +191,9 @@
             const orders = await (await fetch('/api/orders')).json();
             
             // Calculate Stats
-            let rev = 0; let profit = 0;
-            orders.forEach(o => {
-                rev += o.totalMMK;
-                if (o.status && o.status.toLowerCase() === 'delivered') {
-                    if (o.profitMMK !== undefined) {
-                        profit += o.profitMMK;
-                    } else {
-                        // Fallback for older orders without profitMMK native tagging
-                        let historicalCost = 0;
-                        o.items.forEach(i => {
-                            const match = items.find(it => it.name === i.name);
-                            if (match) historicalCost += (match.costTHB * 125) * i.qty;
-                        });
-                        profit += (o.totalMMK - historicalCost);
-                    }
-                }
-            });
+            let rev = 0;
+            orders.forEach(o => { rev += o.totalMMK; });
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
-            document.getElementById('profitTotal').innerText = `${profit.toLocaleString()} MMK`;
             document.getElementById('orderCount').innerText = orders.length;
 
             // Render Orders

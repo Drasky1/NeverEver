@@ -6,7 +6,7 @@
     <title>NEVEREVER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #fff; color: #000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: uppercase; -webkit-font-smoothing: antialiased; }
+        body { background: #f4f4f4; color: #000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: uppercase; -webkit-font-smoothing: antialiased; }
         .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
         @media (min-width: 768px) { .yeezy-grid { grid-template-columns: repeat(4, 1fr); } }
         
@@ -129,14 +129,14 @@
     function filter(cat) {
         const filtered = allItems.filter(i => cat === 'All' ? true : i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="cursor-pointer group flex flex-col p-4 border-r border-b border-gray-100 hover:bg-gray-50 transition-colors" onclick="openProduct('${i._id}')">
-                <div class="bg-white flex items-center justify-center w-full aspect-square relative mb-4 border border-gray-100">
-                    <img src="${i.images[0]}" class="w-full h-full object-contain group-hover:opacity-90 transition-opacity">
+            <div class="cursor-pointer group flex flex-col p-4 relative" onclick="openProduct('${i._id}')">
+                ${i.category === 'Sold Out' ? `<div class="absolute top-8 left-8 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
+                <div class="flex items-center justify-center w-full aspect-[4/3] p-10 mb-6">
+                    <img src="${i.images[0]}" class="w-full h-full object-contain group-hover:opacity-80 transition-opacity">
                 </div>
-                <div class="text-left pb-2">
-                    <p class="text-[11px] font-bold mb-1">${i.name}</p>
-                    <p class="text-[11px] text-gray-500 mb-2">${i.price.toLocaleString()} MMK</p>
-                    <p class="text-[10px] text-gray-400 lowercase line-clamp-2 leading-relaxed">${i.description || 'no description'}</p>
+                <div class="text-center pb-2 px-4 space-y-2">
+                    <p class="text-[10px] font-mono tracking-widest">${i.name}</p>
+                    <p class="text-[10px] font-mono tracking-widest text-[#555]">K${i.price.toLocaleString()}</p>
                 </div>
             </div>`).join('') || '<p class="text-[11px] text-gray-400 p-8">NO PRODUCTS FOUND.</p>';
     }
