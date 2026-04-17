@@ -60,24 +60,41 @@
         let photos = [], items = [], orders = [];
 
         async function load() {
-            items = await (await fetch('/items')).json();
-            orders = await (await fetch('/orders')).json();
-            renderStats(); renderInv(); renderOrders();
+            try {
+                const itemsRes = await fetch('/items');
+                items = await itemsRes.json();
+                const ordersRes = await fetch('/orders');
+                orders = await ordersRes.json();
+                renderStats(); 
+                renderInv(); 
+                renderOrders();
+            } catch (err) {
+                console.error("Failed to load dashboard data:", err);
+            }
         }
 
         function renderStats() {
             let rev = 0, profit = 0, active = 0;
+            
             orders.forEach(o => {
                 rev += o.totalMMK;
                 if(o.status !== 'Delivered') active++;
-                // Fixed Profit Logic: Calculate for ALL delivered items, regardless of current instock status
+                
+                // FIXED PROFIT LOGIC
                 if(o.status === 'Delivered') {
                     o.items.forEach(oi => {
+                        // Find original product to get the cost (THB)
                         const original = items.find(i => i.name === oi.name);
-                        if(original) profit += (oi.price - (original.costTHB * 125)) * oi.qty;
+                        if(original) {
+                            // Calculate cost in MMK (using your 125 rate)
+                            const costInMMK = Number(original.costTHB) * 125;
+                            // Profit = (Selling Price - Cost Price) * Quantity
+                            profit += (oi.price - costInMMK) * (oi.qty || 1);
+                        }
                     });
                 }
             });
+
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
             document.getElementById('profitTotal').innerText = `${profit.toLocaleString()} MMK`;
             document.getElementById('activeCount').innerText = active;
@@ -87,11 +104,14 @@
             const query = document.getElementById('invSearch').value.toLowerCase();
             document.getElementById('invList').innerHTML = items.filter(i => i.name.toLowerCase().includes(query)).map(i => `
                 <div class="flex justify-between items-center border border-black p-4 ${i.isSoldOut ? 'bg-gray-100 opacity-50' : 'bg-white'}">
-                    <div class="flex items-center gap-4"><img src="${i.images[0]}" class="w-10 h-10 object-cover border border-black">
-                    <span class="text-[9px] font-black">${i.name}</span></div>
+                    <div class="flex items-center gap-4">
+                        <img src="${i.images[0] || ''}" class="w-10 h-10 object-cover border border-black">
+                        <span class="text-[9px] font-black">${i.name}</span>
+                    </div>
                     <button onclick="toggleSoldOut('${i._id}', ${i.isSoldOut})" class="text-[8px] underline font-black">
                         ${i.isSoldOut ? 'RESTOCK' : 'MARK SOLD OUT'}
-                    </button></div>`).join('');
+                    </button>
+                </div>`).join('');
         }
 
         function renderOrders() {
@@ -101,27 +121,41 @@
                         <span>${o.username || 'GUEST'} | ${o.tgUsername || 'No TG'}</span>
                         <a href="${o.paymentScreenshot}" target="_blank" class="underline text-blue-600 italic">RECEIPT</a>
                     </div>
-                    <div class="flex gap-4"><img src="${o.items[0].images[0]}" class="w-16 h-20 object-cover border border-black">
-                    <div class="text-[9px] font-bold"><p>${o.items.map(i => i.name + ' (' + i.size + ')').join(', ')}</p>
-                    <p class="mt-1">${o.phone}</p><p class="mt-1 text-emerald-600">${o.totalMMK.toLocaleString()} MMK</p></div></div>
-                    <select id="status-${o._id}" class="!p-2 font-black"><option value="Pending" ${o.status=='Pending'?'selected':''}>Pending</option>
-                    <option value="Delivered" ${o.status=='Delivered'?'selected':''}>Delivered</option></select>
+                    <div class="flex gap-4">
+                        <img src="${o.items[0].images[0]}" class="w-16 h-20 object-cover border border-black">
+                        <div class="text-[9px] font-bold">
+                            <p>${o.items.map(i => i.name + ' (' + i.size + ')').join(', ')}</p>
+                            <p class="mt-1">${o.phone}</p>
+                            <p class="mt-1 text-emerald-600">${o.totalMMK.toLocaleString()} MMK</p>
+                        </div>
+                    </div>
+                    <select id="status-${o._id}" class="!p-2 font-black">
+                        <option value="Pending" ${o.status=='Pending'?'selected':''}>Pending</option>
+                        <option value="Delivered" ${o.status=='Delivered'?'selected':''}>Delivered</option>
+                    </select>
                     <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="ARRIVAL UPDATE" class="!p-2">
-                    <button onclick="updateOrder('${o._id}')" class="btn-black !p-2">UPDATE</button></div>`).join('');
+                    <button onclick="updateOrder('${o._id}')" class="btn-black !p-2">UPDATE</button>
+                </div>`).join('');
         }
 
         const widget = cloudinary.createUploadWidget({ 
-    cloudName: 'dawhhgjsd', 
-    uploadPreset: 'dawhhgjsd',
-    maxFiles: 5 // This physically stops the upload after 5 photos
-}, (e, r) => { 
-    if (r.event === "success") photos.push(r.info.secure_url); 
-});
+            cloudName: 'dawhhgjsd', 
+            uploadPreset: 'dawhhgjsd',
+            maxFiles: 5
+        }, (e, r) => { 
+            if (r.event === "success") photos.push(r.info.secure_url); 
+        });
+        
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
-            const data = { name: document.getElementById('itemName').value, costTHB: document.getElementById('itemCost').value, 
-                availableSizes: [document.getElementById('itemSizes').value], category: document.getElementById('itemCat').value, images: photos };
+            const data = { 
+                name: document.getElementById('itemName').value, 
+                costTHB: document.getElementById('itemCost').value, 
+                availableSizes: [document.getElementById('itemSizes').value], 
+                category: document.getElementById('itemCat').value, 
+                images: photos 
+            };
             await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
             location.reload();
         }
@@ -130,13 +164,18 @@
             const status = document.getElementById(`status-${id}`).value;
             const estArrival = document.getElementById(`est-${id}`).value;
             await fetch(`/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival})});
-            load();
+            load(); 
         }
 
         async function toggleSoldOut(id, current) {
-            await fetch(`/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({isSoldOut: !current})});
-            load();
+            await fetch(`/update-item/${id}`, { 
+                method:'PUT', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({isSoldOut: !current})
+            });
+            load(); 
         }
+
         load();
     </script>
 </body>
