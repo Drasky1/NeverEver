@@ -95,27 +95,48 @@
 <script>
     let allItems = [], cart = [], user = JSON.parse(localStorage.getItem('neverUser')), currentItem = null, selectedSize = null, payImg = "";
 
-    async function init() {
-        const res = await fetch('/items'); allItems = await res.json();
-        filter('Instock');
-        if(user) {
-            document.getElementById('authBtn').innerText = "LOGOUT";
-            document.getElementById('authBtn').onclick = () => { localStorage.removeItem('neverUser'); location.reload(); };
-        }
+   async function init() {
+    const res = await fetch('/items'); 
+    allItems = await res.json();
+    filter('Instock');
+    
+    if(user) {
+        // Change button to Logout
+        document.getElementById('authBtn').innerText = "LOGOUT";
+        document.getElementById('authBtn').onclick = () => { 
+            localStorage.removeItem('neverUser'); 
+            location.reload(); 
+        };
+        // Explicitly hide the modal if user exists
+        document.getElementById('authModal').style.display = 'none';
+    } else {
+        // Show login modal if no user is found
+        document.getElementById('authModal').style.display = 'flex';
     }
+}
 
     function filter(cat) {
-        const filtered = allItems.filter(i => i.category === cat);
-        document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="product-card pb-10" onclick="openProduct('${i._id}')">
-                ${i.isSoldOut ? '<div class="absolute inset-0 bg-white/80 flex items-center justify-center font-black text-red-600 text-[10px] z-10">SOLD OUT</div>' : ''}
-                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover">
-                <div class="p-4 text-center">
-                    <p class="text-[10px] font-black">${i.name}</p>
-                    <p class="text-[9px] opacity-40 mt-1">${i.price.toLocaleString()} MMK</p>
-                </div>
-            </div>`).join('');
-    }
+    // UI Update: Toggle opacity for the nav buttons
+    document.querySelectorAll('nav button').forEach(b => {
+        if (b.innerText === cat) {
+            b.classList.remove('opacity-40');
+        } else {
+            b.classList.add('opacity-40');
+        }
+    });
+
+    // Logic: Filter and render
+    const filtered = allItems.filter(i => i.category === cat);
+    document.getElementById('main-grid').innerHTML = filtered.map(i => `
+        <div class="product-card pb-10" onclick="openProduct('${i._id}')">
+            ${i.isSoldOut ? '<div class="absolute inset-0 bg-white/80 flex items-center justify-center font-black text-red-600 text-[10px] z-10">SOLD OUT</div>' : ''}
+            <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover">
+            <div class="p-4 text-center">
+                <p class="text-[10px] font-black">${i.name}</p>
+                <p class="text-[9px] opacity-40 mt-1">${i.price.toLocaleString()} MMK</p>
+            </div>
+        </div>`).join('');
+}
 
     function openProduct(id) {
         currentItem = allItems.find(i => i._id === id); selectedSize = null;
