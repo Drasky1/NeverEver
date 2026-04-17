@@ -6,7 +6,9 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(__dirname)); 
+
+// Serving files from the root directory
+app.use(express.static(__dirname));
 
 const mongoURI = "mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority";
 
@@ -27,6 +29,7 @@ const Order = mongoose.model('Order', {
     createdAt: { type: Date, default: Date.now } 
 });
 
+// --- API ROUTES ---
 app.get('/items', async (req, res) => res.json(await Item.find()));
 
 app.post('/add-item', async (req, res) => {
@@ -62,9 +65,14 @@ app.get('/orders', async (req, res) => res.json(await Order.find().sort({created
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body)));
 
-// This route serves your shop as the homepage
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'shop.html'));
+// --- PAGE ROUTING ---
+// This catch-all ensures that even if a file isn't found, it defaults to shop.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'shop.html'), (err) => {
+        if (err) {
+            res.status(500).send("Critical Error: shop.html is missing from the server root.");
+        }
+    });
 });
 
 const PORT = process.env.PORT || 10000;
