@@ -20,6 +20,7 @@ mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
+// --- MODELS ---
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, 
     grade: { type: String, default: 'Instock' }, 
@@ -44,8 +45,9 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// API
+// --- API ROUTES ---
 app.get('/items', async (req, res) => res.json(await Item.find()));
+
 app.post('/add-item', async (req, res) => {
     const { name, costTHB, images, grade, description, sizes } = req.body;
     const newItem = new Item({
@@ -56,9 +58,13 @@ app.post('/add-item', async (req, res) => {
     await newItem.save();
     res.json({ success: true });
 });
-app.delete('/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
-// AUTH
+app.delete('/delete-item/:id', async (req, res) => { 
+    await Item.findByIdAndDelete(req.params.id); 
+    res.json({ success: true }); 
+});
+
+// --- AUTH ROUTES ---
 app.post('/auth/signup', async (req, res) => {
     try {
         const hashed = await bcrypt.hash(req.body.password, 10);
@@ -76,14 +82,17 @@ app.post('/auth/login', async (req, res) => {
     } else { res.status(401).json({ error: "Invalid" }); }
 });
 
-// ROUTING
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+// --- FINAL ROUTING (ORDER IS CRITICAL) ---
 
-app.get('*', (req, res) => {
-    // If asking for a file that doesn't exist or a route, send shop
-    if (!req.path.startsWith('/items') && !req.path.startsWith('/auth')) {
-        res.sendFile(path.join(__dirname, 'public', 'shop.html'));
-    }
+// 1. Explicitly serve Admin first
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// 2. Use Regex for everything else to avoid Express 5 PathError
+// This sends shop.html for any route that isn't /admin or /items
+app.get('(.*)', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'shop.html'));
 });
 
 app.listen(10000, () => console.log(`🚀 NEVEREVER LIVE`));
