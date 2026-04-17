@@ -26,10 +26,10 @@
         .side-panel.show { transform: translateX(0); }
         .overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 1500; }
         .overlay.show { display: block; }
-
         /* Product Detail Full Screen */
         #productView { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; padding-top: 60px;}
     </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -89,6 +89,17 @@
     <input type="password" id="authPass" placeholder="PASSWORD">
     <button onclick="handleAuth()" class="btn-fill mt-4">CONTINUE</button>
     <button onclick="toggleMode()" id="modeText" class="w-full text-center text-[10px] text-gray-400 mt-6 hover:text-black">NEED AN ACCOUNT? SIGN UP</button>
+    
+    <div class="mt-8 flex justify-center w-full">
+        <div id="g_id_onload"
+             data-client_id="866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleGoogleAuth"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="center"></div>
+    </div>
 </div>
 
 <div id="ordersPanel" class="side-panel">
@@ -113,10 +124,10 @@
     function filter(cat) {
         const filtered = allItems.filter(i => i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="cursor-pointer group relative" onclick="openProduct('${i._id}')">
-                <img src="${i.images[0]}" class="w-full aspect-[3/4] object-cover group-hover:opacity-90 transition-opacity">
+            <div class="cursor-pointer group relative bg-gray-50 flex items-center justify-center p-4 border-r border-b border-gray-100" onclick="openProduct('${i._id}')">
+                <img src="${i.images[0]}" class="w-full aspect-square object-contain group-hover:opacity-90 transition-opacity">
                 <div class="absolute bottom-4 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p class="text-[11px] bg-white inline-block px-3 py-1 shadow-sm">${i.name} — ${i.price.toLocaleString()}</p>
+                    <p class="text-[11px] bg-white inline-block px-4 py-2 shadow-sm font-bold">${i.name} — ${i.price.toLocaleString()}</p>
                 </div>
             </div>`).join('');
     }
@@ -162,6 +173,15 @@
             localStorage.setItem('neverUser', JSON.stringify(d.user)); 
             location.reload(); 
         } else alert(d.error || "Authentication Failed");
+    }
+
+    async function handleGoogleAuth(response) {
+        const res = await fetch('/auth/google', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token: response.credential})});
+        const d = await res.json();
+        if(res.ok) { 
+            localStorage.setItem('neverUser', JSON.stringify(d.user)); 
+            location.reload(); 
+        } else alert(d.error || "Google Sign-In Failed");
     }
 
     function addToCart() {

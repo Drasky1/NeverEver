@@ -46,6 +46,10 @@
                     <h2 id="revTotal" class="text-2xl">0 MMK</h2>
                 </div>
                 <div>
+                    <p class="text-[10px] text-gray-400 mb-1">TOTAL PROFIT</p>
+                    <h2 id="profitTotal" class="text-2xl">0 MMK</h2>
+                </div>
+                <div>
                     <p class="text-[10px] text-gray-400 mb-1">ACTIVE ORDERS</p>
                     <h2 id="orderCount" class="text-2xl">0</h2>
                 </div>
@@ -67,7 +71,13 @@
                         </select>
                     </div>
                     <textarea id="itemDesc" placeholder="PRODUCT DESCRIPTION (LOWERCASE ENCOURAGED)" rows="3"></textarea>
-                    <input type="text" id="itemSizes" placeholder="SIZES (COMMA SEPARATED: S, M, L, XL)">
+                    
+                    <div class="mb-6">
+                        <div id="sizeInputs">
+                            <input type="text" class="size-input" placeholder="SIZE OPTION (e.g. S, M, L, or 40, 42)">
+                        </div>
+                        <button onclick="addSizeInput()" type="button" class="text-[10px] text-gray-500 hover:text-black">+ ADD ANOTHER SIZE OPTION</button>
+                    </div>
                     
                     <button id="uploadBtn" class="w-full border border-gray-200 p-6 text-[10px] mb-6 hover:border-black transition-colors text-gray-500 hover:text-black">
                         + ATTACH PRODUCT IMAGERY
@@ -111,10 +121,20 @@
             document.getElementById('timeDisplay').innerText = new Date().toLocaleString();
         }, 1000);
 
+        // Size Input Logic
+        function addSizeInput() {
+            const el = document.createElement('input');
+            el.type = 'text';
+            el.className = 'size-input';
+            el.placeholder = 'SIZE OPTION';
+            document.getElementById('sizeInputs').appendChild(el);
+        }
+
         // Image Upload Logic
         let photos = [];
-        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { 
+        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd', maxFiles: 5 }, (e,r) => { 
             if(r.event==="success") { 
+                if (photos.length >= 5) return alert("MAXIMUM 5 IMAGES ALLOWED");
                 photos.push(r.info.secure_url); 
                 document.getElementById('uploadBtn').innerText = `${photos.length} IMAGES ATTACHED ✓`;
                 document.getElementById('uploadBtn').style.borderColor = "#000";
@@ -123,14 +143,14 @@
         });
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
-        // Add Product API
         async function saveItem() {
+            const sizes = Array.from(document.querySelectorAll('.size-input')).map(s => s.value.trim()).filter(Boolean);
             const data = { 
                 name: document.getElementById('itemName').value, 
                 costTHB: document.getElementById('itemCost').value, 
                 category: document.getElementById('itemCat').value, 
                 description: document.getElementById('itemDesc').value, 
-                availableSizes: document.getElementById('itemSizes').value.split(',').map(s=>s.trim()), 
+                availableSizes: sizes, 
                 images: photos 
             };
             if(!data.name || !data.costTHB || photos.length === 0) return alert("MISSING DATA OR IMAGES");
@@ -158,9 +178,13 @@
             const orders = await (await fetch('/api/orders')).json();
             
             // Calculate Stats
-            let rev = 0; 
-            orders.forEach(o => rev += o.totalMMK);
+            let rev = 0; let profit = 0;
+            orders.forEach(o => {
+                rev += o.totalMMK;
+                if (o.status === 'Delivered') profit += (o.profitMMK || 0);
+            });
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+            document.getElementById('profitTotal').innerText = `${profit.toLocaleString()} MMK`;
             document.getElementById('orderCount').innerText = orders.length;
 
             // Render Orders

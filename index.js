@@ -4,8 +4,10 @@ const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
+const { OAuth2Client } = require('google-auth-library');
 
 const app = express();
+const client = new OAuth2Client('866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com');
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 app.use(express.static('public')); // ALL HTML/JS/CSS GOES IN 'public' FOLDER
@@ -30,6 +32,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 const Order = mongoose.model('Order', new mongoose.Schema({
     userId: String, username: String, items: Array, totalMMK: Number,
+    totalCostMMK: Number, profitMMK: Number,
     address: String, phone: String, paymentScreenshot: String, 
     status: { type: String, default: 'Pending' }, 
     estArrival: { type: String, default: '' }, 
@@ -47,6 +50,16 @@ app.post('/api/add-item', async (req, res) => {
 });
 
 app.post('/api/submit-order', async (req, res) => {
+    let totalCostMMK = 0;
+    try {
+        for (const item of req.body.items) {
+            const dbItem = await Item.findOne({ name: item.name });
+            if (dbItem) { totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty; }
+        }
+    } catch(e) { console.error(e); }
+    req.body.totalCostMMK = totalCostMMK;
+    req.body.profitMMK = req.body.totalMMK - totalCostMMK;
+
     const order = new Order(req.body);
     await order.save();
 
@@ -66,6 +79,22 @@ app.put('/api/update-order/:id', async (req, res) => {
 });
 app.delete('/api/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 app.delete('/api/delete-order/:id', async (req, res) => { await Order.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+
+app.post('/auth/google', async (req, res) => {
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: req.body.token,
+            audience: '866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com'
+        });
+        const payload = ticket.getPayload();
+        let user = await User.findOne({ username: payload.email });
+        if (!user) {
+            user = new User({ username: payload.email, password: '' });
+            await user.save();
+        }
+        res.json({ success: true, user: { id: user._id, username: user.username } });
+    } catch (e) { res.status(401).json({ error: "Google verification failed" }); }
+});
 
 app.post('/auth/signup', async (req, res) => {
     try {
