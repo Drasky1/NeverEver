@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Serving files from the root directory
+// This tells the server to serve ALL files in your project folder
 app.use(express.static(__dirname));
 
 const mongoURI = "mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority";
@@ -29,9 +29,8 @@ const Order = mongoose.model('Order', {
     createdAt: { type: Date, default: Date.now } 
 });
 
-// --- API ROUTES ---
+// API ROUTES
 app.get('/items', async (req, res) => res.json(await Item.find()));
-
 app.post('/add-item', async (req, res) => {
     const data = req.body;
     data.price = Math.floor(Number(data.costTHB) * 1.5 * 125);
@@ -65,14 +64,14 @@ app.get('/orders', async (req, res) => res.json(await Order.find().sort({created
 app.get('/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId })));
 app.put('/update-order/:id', async (req, res) => res.json(await Order.findByIdAndUpdate(req.params.id, req.body)));
 
-// --- PAGE ROUTING ---
-// This catch-all ensures that even if a file isn't found, it defaults to shop.html
+// PAGE ROUTING - This fixes the ENOENT error
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'shop.html'));
+});
+
+// Catch-all: if user goes to any other link, show shop.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'shop.html'), (err) => {
-        if (err) {
-            res.status(500).send("Critical Error: shop.html is missing from the server root.");
-        }
-    });
+    res.sendFile(path.join(__dirname, 'shop.html'));
 });
 
 const PORT = process.env.PORT || 10000;

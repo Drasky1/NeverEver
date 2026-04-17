@@ -10,89 +10,42 @@
         .product-card { background: #fff; cursor: pointer; position: relative; }
         .product-card img { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: #f4f4f4; }
         .modal { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; }
-        .size-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
-        .size-box { border: 2px solid #000; padding: 15px 0; text-align: center; font-size: 11px; font-weight: 900; cursor: pointer; }
+        .size-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
+        .size-box { border: 2px solid #000; padding: 12px 0; text-align: center; font-size: 11px; font-weight: 900; cursor: pointer; }
         .size-box.active { background: #000; color: #fff; }
-        .size-box.out { opacity: 0.2; pointer-events: none; text-decoration: line-through; }
-        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 11px; font-weight: 900; width: 100%; margin-top: 30px; }
+        .size-box.out { opacity: 0.1; pointer-events: none; text-decoration: line-through; }
+        .btn-black { background: #000; color: #fff; padding: 20px; font-size: 11px; font-weight: 900; width: 100%; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <nav class="p-6 flex justify-between items-center sticky top-0 bg-white z-50 border-b border-black">
-        <div class="flex gap-6">
-            <button onclick="render('Instock')" class="text-[10px] font-black tracking-widest">INSTOCK</button>
-            <button onclick="render('Preorder')" class="text-[10px] font-black tracking-widest opacity-40">PREORDER</button>
+    <nav class="p-5 flex justify-between items-center border-b border-black sticky top-0 bg-white z-50 text-[10px] font-black">
+        <div class="flex gap-4">
+            <button onclick="render('Instock')">INSTOCK</button>
+            <button onclick="render('Preorder')" class="opacity-30">PREORDER</button>
         </div>
-        <div class="flex gap-6">
-            <button onclick="location.href='track.html'" class="text-[10px] font-black underline">TRACK</button>
-            <button class="text-[10px] font-black">BAG</button>
-        </div>
+        <button onclick="location.href='login.html'" class="underline">ACCOUNT</button>
     </nav>
 
     <div id="main-grid" class="yeezy-grid"></div>
 
-    <div id="productModal" class="modal">
-        <div class="p-6 border-b border-black flex justify-between sticky top-0 bg-white">
-            <button onclick="closeModal()" class="font-black text-[10px]">← CLOSE</button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2">
-            <div id="pGallery"></div>
-            <div class="p-10 space-y-8">
-                <h1 id="pName" class="text-4xl font-black italic"></h1>
-                <p id="pPrice" class="text-xl font-bold"></p>
-                <div id="sizeGrid" class="size-grid"></div>
-                <button id="addBtn" class="btn-black">ADD TO BAG</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        let allItems = [], selectedSize = null, currentItem = null;
-
+        let allItems = [];
         async function init() {
-            try {
-                const res = await fetch('/items');
-                allItems = await res.json();
-                render('Instock');
-            } catch (e) { console.error("Load failed"); }
+            const res = await fetch('/items');
+            allItems = await res.json();
+            render('Instock');
         }
-
         function render(cat) {
             const filtered = allItems.filter(i => i.category === cat);
             document.getElementById('main-grid').innerHTML = filtered.map(i => `
-                <div class="product-card" onclick="openP('${i._id}')">
+                <div class="product-card">
                     <img src="${i.images[0]}">
-                    ${i.stock <= 0 ? '<div class="absolute inset-0 bg-white/60 flex items-center justify-center font-black">SOLD OUT</div>' : ''}
                     <div class="p-4 text-[10px] font-black">
                         <p>${i.name}</p>
                         <p class="opacity-40">${i.price.toLocaleString()} MMK</p>
                     </div>
                 </div>`).join('');
         }
-
-        function openP(id) {
-            currentItem = allItems.find(i => i._id === id);
-            document.getElementById('pName').innerText = currentItem.name;
-            document.getElementById('pPrice').innerText = currentItem.price.toLocaleString() + ' MMK';
-            document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full">`).join('');
-            
-            const sizes = currentItem.availableSizes || [];
-            document.getElementById('sizeGrid').innerHTML = sizes.map(s => `
-                <div class="size-box ${currentItem.stock <= 0 ? 'out' : ''}" onclick="setS(this, '${s}')">${s}</div>
-            `).join('');
-
-            document.getElementById('addBtn').innerText = currentItem.stock <= 0 ? 'SOLD OUT' : 'ADD TO BAG';
-            document.getElementById('addBtn').disabled = currentItem.stock <= 0;
-            document.getElementById('productModal').style.display = 'block';
-        }
-
-        function setS(el, s) {
-            document.querySelectorAll('.size-box').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            selectedSize = s;
-        }
-
-        function closeModal() { document.getElementById('productModal').style.display = 'none'; }
         init();
     </script>
 </body>
