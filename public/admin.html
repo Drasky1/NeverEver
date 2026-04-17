@@ -74,50 +74,72 @@
         }
 
         function renderStats() {
-            let rev = 0, profit = 0, active = 0;
-            const exchangeRate = 125;
-            
-            orders.forEach(o => {
-                rev += o.totalMMK;
-                if(o.status !== 'Delivered') active++;
-                
-                if(o.status === 'Delivered') {
-                    o.items.forEach(oi => {
-                        // Find original product by name (case-insensitive and trimmed)
-                        const original = items.find(invItem => 
-                            invItem.name.trim().toLowerCase() === oi.name.trim().toLowerCase()
-                        );
+    let rev = 0, profit = 0, active = 0;
+    const exchangeRate = 125;
+    
+    orders.forEach(o => {
+        rev += o.totalMMK;
+        if(o.status !== 'Delivered') active++;
+        
+        if(o.status === 'Delivered') {
+            o.items.forEach(oi => {
+                // IMPROVED MATCHING: Check if the order name contains the inventory name
+                const original = items.find(invItem => 
+                    oi.name.toLowerCase().includes(invItem.name.toLowerCase()) ||
+                    invItem.name.toLowerCase().includes(oi.name.toLowerCase())
+                );
 
-                        if(original && original.costTHB) {
-                            const costInMMK = Number(original.costTHB) * exchangeRate;
-                            const profitPerUnit = oi.price - costInMMK;
-                            profit += profitPerUnit * (oi.qty || 1);
-                        }
-                    });
+                if(original && original.costTHB) {
+                    const costInMMK = Number(original.costTHB) * exchangeRate;
+                    const itemQty = Number(oi.qty) || 1; // Fallback to 1 if qty is missing
+                    const profitPerUnit = oi.price - costInMMK;
+                    
+                    profit += profitPerUnit * itemQty;
+                } else {
+                    console.log("Match not found for:", oi.name); // Check your console to see if this triggers
                 }
             });
-
-            document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
-            document.getElementById('profitTotal').innerText = `${profit.toLocaleString()} MMK`;
-            document.getElementById('activeCount').innerText = active;
         }
+    });
 
-        function renderInv() {
-            const query = document.getElementById('invSearch').value.toLowerCase();
-            document.getElementById('invList').innerHTML = items.filter(i => i.name.toLowerCase().includes(query)).map(i => `
-                <div class="flex justify-between items-center border border-black p-4 ${i.isSoldOut ? 'bg-gray-100 opacity-50' : 'bg-white'}">
-                    <div class="flex items-center gap-4">
-                        <img src="${i.images[0] || ''}" class="w-10 h-10 object-cover border border-black">
-                        <div class="flex flex-col">
-                            <span class="text-[9px] font-black">${i.name}</span>
-                            <span class="text-[8px] opacity-50">COST: ${i.costTHB} THB</span>
+    document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+    document.getElementById('profitTotal').innerText = `${profit.toLocaleString()} MMK`;
+    document.getElementById('activeCount').innerText = active;
+}
+
+           
+
+      function renderInv() {
+    const query = document.getElementById('invSearch').value.toLowerCase();
+    
+    document.getElementById('invList').innerHTML = items
+        .filter(i => i.name.toLowerCase().includes(query))
+        .map(i => `
+            <div class="flex justify-between items-center border border-black p-4 ${i.isSoldOut ? 'bg-gray-100 opacity-50' : 'bg-white'}">
+                <div class="flex items-center gap-4">
+                    <img src="${i.images[0] || ''}" class="w-12 h-12 object-contain bg-gray-50 border border-black">
+                    
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[9px] font-black">${i.name}</span>
+                        
+                        <div class="flex flex-wrap gap-1">
+                            ${(i.availableSizes || []).map(size => `
+                                <span class="border border-black px-1.5 py-0.5 text-[7px] font-bold bg-white">
+                                    ${size}
+                                </span>
+                            `).join('')}
                         </div>
+                        
+                        <span class="text-[8px] opacity-50 text-emerald-600 font-bold">COST: ${i.costTHB} THB</span>
                     </div>
-                    <button onclick="toggleSoldOut('${i._id}', ${i.isSoldOut})" class="text-[8px] underline font-black">
-                        ${i.isSoldOut ? 'RESTOCK' : 'MARK SOLD OUT'}
-                    </button>
-                </div>`).join('');
-        }
+                </div>
+                
+                <button onclick="toggleSoldOut('${i._id}', ${i.isSoldOut})" class="text-[8px] underline font-black">
+                    ${i.isSoldOut ? 'RESTOCK' : 'MARK SOLD OUT'}
+                </button>
+            </div>
+        `).join('');
+}
 
         function renderOrders() {
             document.getElementById('orderList').innerHTML = orders.map(o => `
@@ -127,7 +149,7 @@
                         <a href="${o.paymentScreenshot}" target="_blank" class="underline text-blue-600 italic">RECEIPT</a>
                     </div>
                     <div class="flex gap-4">
-                        <img src="${o.items[0].images[0]}" class="w-16 h-20 object-cover border border-black">
+                        <img src="${o.items[0].images[0]}" class="w-20 h-24 object-contain bg-gray-50 border border-black">
                         <div class="text-[9px] font-bold">
                             <p>${o.items.map(i => i.name + ' (' + i.size + ')').join(', ')}</p>
                             <p class="mt-1">${o.phone}</p>
@@ -153,17 +175,21 @@
         
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
-        async function saveItem() {
-            const data = { 
-                name: document.getElementById('itemName').value, 
-                costTHB: document.getElementById('itemCost').value, 
-                availableSizes: [document.getElementById('itemSizes').value], 
-                category: document.getElementById('itemCat').value, 
-                images: photos 
-            };
-            await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-            location.reload();
-        }
+       async function saveItem() {
+    // This splits "S, M, L" into ["S", "M", "L"]
+    const sizeInput = document.getElementById('itemSizes').value;
+    const sizeArray = sizeInput.split(',').map(s => s.trim()).filter(s => s !== "");
+
+    const data = { 
+        name: document.getElementById('itemName').value, 
+        costTHB: document.getElementById('itemCost').value, 
+        availableSizes: sizeArray, // Now saves as individual boxes
+        category: document.getElementById('itemCat').value, 
+        images: photos 
+    };
+    await fetch('/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    location.reload();
+}
 
         async function updateOrder(id) {
             const status = document.getElementById(`status-${id}`).value;
