@@ -59,8 +59,8 @@
     <button onclick="document.getElementById('productView').style.display='none'" class="fixed top-6 left-6 z-50 text-[11px] font-bold hover:underline">BACK</button>
     <div class="max-w-4xl mx-auto flex flex-col items-center pb-20">
         <div class="w-full max-w-md mx-auto mb-10 overflow-hidden relative group">
-            <button onclick="document.getElementById('pGallery').scrollBy({left: -300, behavior: 'smooth'})" class="slide-btn hidden md:flex left-2">&lt;</button>
-            <button onclick="document.getElementById('pGallery').scrollBy({left: 300, behavior: 'smooth'})" class="slide-btn hidden md:flex right-2">&gt;</button>
+            <button onclick="document.getElementById('pGallery').scrollBy({left: -300, behavior: 'smooth'})" class="slide-btn flex left-2">&lt;</button>
+            <button onclick="document.getElementById('pGallery').scrollBy({left: 300, behavior: 'smooth'})" class="slide-btn flex right-2">&gt;</button>
             <div id="pGallery" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar"></div>
         </div>
         <div class="w-full max-w-md px-6 text-center space-y-6">
@@ -84,7 +84,7 @@
         <div class="flex justify-between text-[11px] font-bold border-t border-black pt-4 mb-8"><span>TOTAL</span><span id="cartTotal"></span></div>
         <div class="text-[10px] text-gray-500 space-y-1 mb-8">
             <p>TRANSFER EXACT AMOUNT TO:</p>
-            <p class="text-black">K-PAY / WAVE: 09450151480 (NEVEREVER)</p>
+            <p class="text-black">K-PAY / WAVE: 09450151480 (Pyay Moe)</p>
         </div>
         <input type="text" id="orderName" placeholder="YOUR FULL NAME">
         <input type="text" id="orderTg" placeholder="TELEGRAM USERNAME">
@@ -140,7 +140,7 @@
             <div class="cursor-pointer group flex flex-col h-full relative" onclick="openProduct('${i._id}')">
                 ${i.category === 'Sold Out' ? `<div class="absolute top-4 left-4 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
                 <div class="p-3 sm:p-8 w-full flex-grow flex flex-col justify-end">
-                    <div class="w-full overflow-hidden bg-[#f4f4f4] relative" style="padding-bottom: 125%;">
+                    <div class="w-full overflow-hidden bg-[#f4f4f4] relative" style="padding-bottom: 100%;">
                         <img src="${i.images[0]}" class="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500">
                     </div>
                 </div>
