@@ -129,14 +129,16 @@
     function filter(cat) {
         const filtered = allItems.filter(i => cat === 'All' ? true : i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="cursor-pointer group flex flex-col p-4 relative" onclick="openProduct('${i._id}')">
-                ${i.category === 'Sold Out' ? `<div class="absolute top-8 left-8 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
-                <div class="flex items-center justify-center w-full aspect-[4/3] p-10 mb-6">
+            <div class="cursor-pointer group flex flex-col h-full p-4 sm:p-6 relative" onclick="openProduct('${i._id}')">
+                ${i.category === 'Sold Out' ? `<div class="absolute top-6 left-6 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
+                <div class="flex items-center justify-center w-full aspect-square p-2 sm:p-6 mb-4">
                     <img src="${i.images[0]}" class="w-full h-full object-contain group-hover:opacity-80 transition-opacity">
                 </div>
-                <div class="text-center pb-2 px-4 space-y-2">
-                    <p class="text-[10px] font-mono tracking-widest">${i.name}</p>
-                    <p class="text-[10px] font-mono tracking-widest text-[#555]">K${i.price.toLocaleString()}</p>
+                <div class="flex flex-col flex-grow justify-between text-center pb-2 px-2">
+                    <div class="flex flex-col justify-start flex-grow">
+                        <p class="text-[10px] font-mono tracking-widest leading-loose uppercase">${i.name}</p>
+                    </div>
+                    <p class="text-[10px] font-mono tracking-widest text-[#555] mt-4">K${i.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                 </div>
             </div>`).join('') || '<p class="text-[11px] text-gray-400 p-8">NO PRODUCTS FOUND.</p>';
     }
