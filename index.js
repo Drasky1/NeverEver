@@ -55,6 +55,17 @@ app.put('/api/update-item-cat/:id', async (req, res) => {
     res.json({ success: true });
 });
 
+app.put('/api/update-item/:id', async (req, res) => {
+    let updateData = { ...req.body };
+    if (req.body.priceMMK) {
+        updateData.price = Number(req.body.priceMMK);
+    } else if (req.body.costTHB) {
+        updateData.price = Number(req.body.costTHB) * RATE;
+    }
+    await Item.findByIdAndUpdate(req.params.id, updateData);
+    res.json({ success: true });
+});
+
 app.post('/api/submit-order', async (req, res) => {
     let totalCostMMK = 0;
     try {
