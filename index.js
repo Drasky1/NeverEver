@@ -71,7 +71,18 @@ app.post('/api/submit-order', async (req, res) => {
     try {
         for (const item of req.body.items) {
             const dbItem = await Item.findOne({ name: item.name });
-            if (dbItem) { totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty; }
+            if (dbItem) { 
+                totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty; 
+                
+                dbItem.quantity = (dbItem.quantity || 0) - item.qty;
+                if (dbItem.quantity <= 0) {
+                    dbItem.quantity = 0;
+                    if (dbItem.category === 'Instock') {
+                        dbItem.category = 'Sold Out';
+                    }
+                }
+                await dbItem.save();
+            }
         }
     } catch (e) { console.error(e); }
     req.body.totalCostMMK = totalCostMMK;
