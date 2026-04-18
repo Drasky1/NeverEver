@@ -33,18 +33,18 @@
 </head>
 <body>
 
-<nav class="fixed top-0 left-0 w-full p-4 flex justify-between items-center bg-white/90 backdrop-blur-sm z-50 text-[11px] font-bold tracking-widest">
-    <div class="flex gap-6">
+<nav class="fixed top-0 left-0 w-full px-4 py-4 flex justify-between items-center bg-white/90 backdrop-blur-sm z-50 text-[9px] md:text-[11px] font-bold tracking-widest">
+    <div class="flex gap-3 md:gap-6 z-10">
         <button onclick="filter('Instock')" class="hover:underline">INSTOCK</button>
         <button onclick="filter('Preorder')" class="hover:underline text-gray-400">PREORDER</button>
-        <button onclick="filter('Sold Out')" class="hover:underline text-gray-400">SOLD OUT</button>
+        <button onclick="filter('Sold Out')" class="hover:underline text-gray-400 hidden sm:inline-block">SOLD OUT</button>
     </div>
-    <div class="h-10 flex items-center justify-center">
+    <div class="h-8 md:h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
         <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg" class="h-full object-contain" alt="NEVEREVER">
     </div>
-    <div class="flex gap-6">
-        <button id="authBtn" onclick="openPanel('authPanel')" class="hover:underline">LOGIN</button>
-        <button onclick="openOrders()" class="hover:underline hidden" id="trackBtn">ORDERS</button>
+    <div class="flex gap-3 md:gap-6 z-10">
+        <button id="authBtn" onclick="openPanel('authPanel')" class="hover:underline uppercase">LOGIN</button>
+        <button onclick="openOrders()" class="hover:underline hidden shadow-sm" id="trackBtn">ORDERS</button>
         <button onclick="openPanel('cartPanel')" class="hover:underline">CART (<span id="cartCount">0</span>)</button>
     </div>
 </nav>
@@ -54,7 +54,10 @@
 <div id="productView">
     <button onclick="document.getElementById('productView').style.display='none'" class="fixed top-6 left-6 z-50 text-[11px] font-bold hover:underline">BACK</button>
     <div class="max-w-4xl mx-auto flex flex-col items-center pb-20">
-        <div id="pGallery" class="w-full flex flex-col gap-4 mb-10"></div>
+        <div class="w-full max-w-md mx-auto mb-10 overflow-hidden relative">
+            <div id="pGallery" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scrollbar-width: none; -ms-overflow-style: none;"></div>
+            <style> #pGallery::-webkit-scrollbar { display: none; } </style>
+        </div>
         <div class="w-full max-w-md px-6 text-center space-y-6">
             <h1 id="pName" class="text-xl"></h1>
             <p id="pPrice" class="text-[12px] text-gray-500"></p>
@@ -121,7 +124,7 @@
         allItems = await res.json();
         filter('Instock');
         if(user) {
-            document.getElementById('authBtn').innerText = user.username;
+            document.getElementById('authBtn').innerHTML = 'PROFILE';
             document.getElementById('trackBtn').classList.remove('hidden');
         }
     }
@@ -129,12 +132,14 @@
     function filter(cat) {
         const filtered = allItems.filter(i => cat === 'All' ? true : i.category === cat);
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="cursor-pointer group flex flex-col h-full p-4 sm:p-6 relative" onclick="openProduct('${i._id}')">
-                ${i.category === 'Sold Out' ? `<div class="absolute top-6 left-6 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
-                <div class="w-full aspect-[4/5] mb-4 overflow-hidden">
-                    <img src="${i.images[0]}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            <div class="cursor-pointer group flex flex-col h-full relative" onclick="openProduct('${i._id}')">
+                ${i.category === 'Sold Out' ? `<div class="absolute top-4 left-4 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
+                <div class="p-3 sm:p-8 w-full flex flex-col justify-end">
+                    <div class="w-full aspect-[4/5] overflow-hidden bg-[#f4f4f4]">
+                        <img src="${i.images[0]}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
                 </div>
-                <div class="flex flex-col text-center px-1">
+                <div class="flex flex-col text-center px-2 pb-6 mt-2">
                     <p class="text-[10px] font-mono tracking-widest uppercase truncate mb-2">${i.name}</p>
                     <p class="text-[10px] font-mono tracking-widest text-[#555]">${i.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MMK</p>
                 </div>
@@ -147,7 +152,7 @@
         document.getElementById('pName').innerText = currentItem.name;
         document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
         document.getElementById('pDesc').innerText = currentItem.description || "NO DESCRIPTION AVAILABLE.";
-        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full max-w-2xl">`).join('');
+        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full flex-none snap-center object-cover aspect-[4/5] bg-gray-50">`).join('');
         document.getElementById('sizeGrid').innerHTML = currentItem.availableSizes.map(s => `<div class="size-chip" onclick="selSize(this, '${s}')">${s}</div>`).join('');
         
         document.getElementById('productView').style.display = 'block';
