@@ -28,6 +28,10 @@
         .overlay.show { display: block; }
         /* Product Detail Full Screen */
         #productView { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; padding-top: 60px;}
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .slide-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 10; opacity: 0.7; border: 1px solid #ccc; font-weight: bold; font-family: monospace; }
+        .slide-btn:hover { opacity: 1; }
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -54,9 +58,10 @@
 <div id="productView">
     <button onclick="document.getElementById('productView').style.display='none'" class="fixed top-6 left-6 z-50 text-[11px] font-bold hover:underline">BACK</button>
     <div class="max-w-4xl mx-auto flex flex-col items-center pb-20">
-        <div class="w-full max-w-md mx-auto mb-10 overflow-hidden relative">
-            <div id="pGallery" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scrollbar-width: none; -ms-overflow-style: none;"></div>
-            <style> #pGallery::-webkit-scrollbar { display: none; } </style>
+        <div class="w-full max-w-md mx-auto mb-10 overflow-hidden relative group">
+            <button onclick="document.getElementById('pGallery').scrollBy({left: -300, behavior: 'smooth'})" class="slide-btn hidden md:flex left-2">&lt;</button>
+            <button onclick="document.getElementById('pGallery').scrollBy({left: 300, behavior: 'smooth'})" class="slide-btn hidden md:flex right-2">&gt;</button>
+            <div id="pGallery" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar"></div>
         </div>
         <div class="w-full max-w-md px-6 text-center space-y-6">
             <h1 id="pName" class="text-xl"></h1>
@@ -134,14 +139,16 @@
         document.getElementById('main-grid').innerHTML = filtered.map(i => `
             <div class="cursor-pointer group flex flex-col h-full relative" onclick="openProduct('${i._id}')">
                 ${i.category === 'Sold Out' ? `<div class="absolute top-4 left-4 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
-                <div class="p-3 sm:p-8 w-full flex flex-col justify-end">
-                    <div class="w-full aspect-[4/5] overflow-hidden bg-[#f4f4f4]">
-                        <img src="${i.images[0]}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <div class="p-3 sm:p-8 w-full flex-grow flex flex-col justify-end">
+                    <div class="w-full overflow-hidden bg-[#f4f4f4] relative" style="padding-bottom: 125%;">
+                        <img src="${i.images[0]}" class="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500">
                     </div>
                 </div>
-                <div class="flex flex-col text-center px-2 pb-6 mt-2">
-                    <p class="text-[10px] font-mono tracking-widest uppercase truncate mb-2">${i.name}</p>
-                    <p class="text-[10px] font-mono tracking-widest text-[#555]">${i.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MMK</p>
+                <div class="flex flex-col flex-grow justify-between text-center px-2 pb-6 mt-4">
+                    <div class="flex flex-col justify-start">
+                        <p class="text-[10px] font-mono tracking-widest uppercase mb-2 leading-relaxed">${i.name}</p>
+                    </div>
+                    <p class="text-[10px] font-mono tracking-widest text-[#555] mt-auto">${i.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MMK</p>
                 </div>
             </div>`).join('') || '<p class="text-[11px] text-gray-400 p-8">NO PRODUCTS FOUND.</p>';
     }
@@ -152,7 +159,11 @@
         document.getElementById('pName').innerText = currentItem.name;
         document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
         document.getElementById('pDesc').innerText = currentItem.description || "NO DESCRIPTION AVAILABLE.";
-        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `<img src="${img}" class="w-full flex-none snap-center object-cover aspect-[4/5] bg-gray-50">`).join('');
+        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `
+            <div class="w-full flex-none snap-center relative" style="padding-bottom: 125%;">
+                <img src="${img}" class="absolute inset-0 w-full h-full object-contain p-2 bg-[#f4f4f4]">
+            </div>
+        `).join('');
         document.getElementById('sizeGrid').innerHTML = currentItem.availableSizes.map(s => `<div class="size-chip" onclick="selSize(this, '${s}')">${s}</div>`).join('');
         
         document.getElementById('productView').style.display = 'block';
