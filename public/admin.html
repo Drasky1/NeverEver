@@ -76,6 +76,12 @@
                         </div>
                         <button onclick="addSizeInput()" type="button" class="text-[10px] text-gray-500 hover:text-black">+ ADD ANOTHER SIZE OPTION</button>
                     </div>
+                    <div class="mb-6">
+                        <div id="colorInputs">
+                            <input type="text" class="color-input" placeholder="COLOR OPTION (e.g. BLACK, RED, OAT)">
+                        </div>
+                        <button onclick="addColorInput()" type="button" class="text-[10px] text-gray-500 hover:text-black">+ ADD ANOTHER COLOR OPTION</button>
+                    </div>
                     
                     <button id="uploadBtn" class="w-full border border-gray-200 p-6 text-[10px] mb-6 hover:border-black transition-colors text-gray-500 hover:text-black">
                         + ATTACH PRODUCT IMAGERY
@@ -125,6 +131,10 @@
                 <div id="editSizeInputs"></div>
                 <button onclick="addEditSizeInput()" type="button" class="text-[10px] text-gray-500 hover:text-black mt-4">+ ADD ANOTHER SIZE OPTION</button>
             </div>
+            <div class="mb-6">
+                <div id="editColorInputs"></div>
+                <button onclick="addEditColorInput()" type="button" class="text-[10px] text-gray-500 hover:text-black">+ ADD ANOTHER COLOR OPTION</button>
+            </div>
             
             <button id="editUploadBtn" class="w-full border border-gray-200 p-6 text-[10px] mb-6 hover:border-black transition-colors text-gray-500 hover:text-black">
                 + ATTACH NEW PRODUCT IMAGERY (REPLACES OLD)
@@ -167,12 +177,19 @@
             el.placeholder = 'SIZE OPTION';
             document.getElementById('sizeInputs').appendChild(el);
         }
+        function addColorInput() {
+            const el = document.createElement('input');
+            el.type = 'text';
+            el.className = 'color-input';
+            el.placeholder = 'COLOR OPTION';
+            document.getElementById('colorInputs').appendChild(el);
+        }
 
         // Image Upload Logic
         let photos = [];
-        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd', maxFiles: 5 }, (e,r) => { 
+        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd', maxFiles: 20 }, (e,r) => { 
             if(r.event==="success") { 
-                if (photos.length >= 5) return alert("MAXIMUM 5 IMAGES ALLOWED");
+                if (photos.length >= 20) return alert("MAXIMUM 20 IMAGES ALLOWED");
                 photos.push(r.info.secure_url); 
                 document.getElementById('uploadBtn').innerText = `${photos.length} IMAGES ATTACHED ✓`;
                 document.getElementById('uploadBtn').style.borderColor = "#000";
@@ -183,6 +200,7 @@
 
         async function saveItem() {
             const sizes = Array.from(document.querySelectorAll('.size-input')).map(s => s.value.trim()).filter(Boolean);
+            const colors = Array.from(document.querySelectorAll('.color-input')).map(c => c.value.trim()).filter(Boolean);
             const data = { 
                 name: document.getElementById('itemName').value, 
                 costTHB: document.getElementById('itemCost').value, 
@@ -191,6 +209,7 @@
                 category: document.getElementById('itemCat').value, 
                 description: document.getElementById('itemDesc').value, 
                 availableSizes: sizes, 
+                availableColors: colors,
                 images: photos 
             };
             if(!data.name || !data.costTHB || photos.length === 0) return alert("MISSING DATA OR IMAGES");
@@ -220,9 +239,9 @@
         let itemsCache = [];
         let editPhotos = [];
 
-        var editWidget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd', maxFiles: 5 }, (e,r) => { 
+        var editWidget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd', maxFiles: 20 }, (e,r) => { 
             if(r.event==="success") { 
-                if (editPhotos.length >= 5) return alert("MAXIMUM 5 IMAGES ALLOWED");
+                if (editPhotos.length >= 20) return alert("MAXIMUM 20 IMAGES ALLOWED");
                 editPhotos.push(r.info.secure_url); 
                 document.getElementById('editUploadBtn').innerText = `${editPhotos.length} NEW IMAGES ATTACHED ✓`;
                 document.getElementById('editUploadBtn').style.borderColor = "#000";
@@ -238,6 +257,14 @@
             el.placeholder = 'SIZE OPTION';
             el.value = val;
             document.getElementById('editSizeInputs').appendChild(el);
+        }
+        function addEditColorInput(val = '') {
+            const el = document.createElement('input');
+            el.type = 'text';
+            el.className = 'color-input edit-color-input w-full border-b border-gray-200 pb-2 mb-2 outline-none text-[11px]';
+            el.placeholder = 'COLOR OPTION';
+            el.value = val;
+            document.getElementById('editColorInputs').appendChild(el);
         }
 
         function openEditModal(id) {
@@ -255,6 +282,10 @@
             (item.availableSizes || []).forEach(s => addEditSizeInput(s));
             if((item.availableSizes || []).length === 0) addEditSizeInput();
 
+            document.getElementById('editColorInputs').innerHTML = '';
+            (item.availableColors || []).forEach(c => addEditColorInput(c));
+            if((item.availableColors || []).length === 0) addEditColorInput();
+
             editPhotos = [];
             document.getElementById('editUploadBtn').innerText = '+ ATTACH NEW PRODUCT IMAGERY (REPLACES OLD)';
             document.getElementById('editUploadBtn').style.borderColor = "#e5e5e5";
@@ -266,6 +297,7 @@
         async function saveEditItem() {
             const id = document.getElementById('editItemId').value;
             const sizes = Array.from(document.querySelectorAll('.edit-size-input')).map(s => s.value.trim()).filter(Boolean);
+            const colors = Array.from(document.querySelectorAll('.edit-color-input')).map(c => c.value.trim()).filter(Boolean);
             const data = { 
                 name: document.getElementById('editItemName').value, 
                 costTHB: document.getElementById('editItemCost').value, 
@@ -273,7 +305,8 @@
                 quantity: document.getElementById('editItemQty').value,
                 category: document.getElementById('editItemCat').value, 
                 description: document.getElementById('editItemDesc').value, 
-                availableSizes: sizes
+                availableSizes: sizes,
+                availableColors: colors
             };
             if(editPhotos.length > 0) {
                 data.images = editPhotos;
@@ -301,11 +334,14 @@
             document.getElementById('order-list').innerHTML = orders.map(o => `
                 <div class="border-b border-gray-200 pb-6 text-[11px]">
                     <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <p class="font-bold text-sm mb-1 uppercase">${o.customerName || o.username}</p>
-                            <p class="text-gray-500">${o.phone || 'NO PHONE'} • ${o.address || 'NO ADDRESS'}</p>
-                            ${o.telegram ? `<p class="text-blue-500 text-[10px] uppercase">TG: @${o.telegram.replace('@','')}</p>` : ''}
-                            <p class="mt-2 text-gray-500">${o.items.map(i => `${i.qty}x ${i.name} (${i.size})`).join('<br>')}</p>
+                        <div class="flex items-start gap-4">
+                            ${o.items[0]?.image ? `<img src="${o.items[0].image}" class="w-16 h-16 object-cover border border-gray-200">` : ''}
+                            <div>
+                                <p class="font-bold text-sm mb-1 uppercase">${o.customerName || o.username}</p>
+                                <p class="text-gray-500">${o.phone || 'NO PHONE'} • ${o.address || 'NO ADDRESS'}</p>
+                                ${o.telegram ? `<p class="text-blue-500 text-[10px] uppercase">TG: @${o.telegram.replace('@','')}</p>` : ''}
+                                <p class="mt-2 text-gray-500">${o.items.map(i => `${i.qty}x ${i.name} (${i.size || 'N/A'} / ${i.color || 'N/A'})`).join('<br>')}</p>
+                            </div>
                         </div>
                         <div class="text-right">
                             <p class="text-lg mb-2">${o.totalMMK.toLocaleString()} MMK</p>
