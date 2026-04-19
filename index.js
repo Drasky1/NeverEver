@@ -39,9 +39,8 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
-const corsOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:10000', 'https://yourdomain.com'];
 app.use(cors({
-  origin: corsOrigins,
+  origin: true, // Allow all origins for now
   credentials: true
 }));
 app.use(express.static('public')); // ALL HTML/JS/CSS GOES IN 'public' FOLDER
@@ -265,6 +264,7 @@ app.post('/auth/admin', [
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+  console.log('Admin login attempt:', req.body.password, 'expected:', process.env.ADMIN_PASSWORD);
   if (req.body.password === process.env.ADMIN_PASSWORD) {
     const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ success: true, token });

@@ -337,9 +337,18 @@
     }
     
     async function showDebug() {
-        const res = await fetch('/debug');
-        const data = await res.json();
-        alert(JSON.stringify(data, null, 2));
+        alert('Debug button clicked');
+        console.log('Debug button clicked');
+        try {
+            const res = await fetch('/debug');
+            console.log('Fetch response:', res);
+            const data = await res.json();
+            console.log('Debug data:', data);
+            alert(JSON.stringify(data, null, 2));
+        } catch (err) {
+            console.error('Debug error:', err);
+            alert('Debug error: ' + err.message);
+        }
     }
     
     init();
