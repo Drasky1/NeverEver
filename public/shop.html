@@ -48,9 +48,8 @@
     </div>
     <div class="flex gap-3 md:gap-6 z-10">
         <button id="authBtn" onclick="openPanel('authPanel')" class="hover:underline uppercase">LOGIN</button>
-        <button onclick="openOrders()" class="hover:underline hidden shadow-sm" id="trackBtn">ORDERS</button>
+        <button onclick="openOrders()" class="hover:underline uppercase" id="trackBtn">ORDERS</button>
         <button onclick="openPanel('cartPanel')" class="hover:underline">CART (<span id="cartCount">0</span>)</button>
-        <button onclick="showDebug()" class="hover:underline text-xs">DEBUG</button>
     </div>
 </nav>
 
@@ -124,7 +123,7 @@
 
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
-    let allItems = [], cart = {}, user = null, currentItem = null, selectedSize = null, selectedColor = null, isLoginMode = true;
+    let allItems = [], cart = {}, user = null, currentItem = null, selectedSize = null, selectedColor = null, isLoginMode = true, pendingAction = null;
     const storedUser = localStorage.getItem('neverUser');
     try {
         user = storedUser ? JSON.parse(storedUser) : null;
@@ -217,7 +216,15 @@
         if(res.ok) { 
             localStorage.setItem('neverToken', d.token);
             localStorage.setItem('neverUser', JSON.stringify(d.user)); 
-            location.reload(); 
+            user = d.user;
+            document.getElementById('authBtn').innerHTML = 'PROFILE';
+            document.getElementById('trackBtn').classList.remove('hidden');
+            if (pendingAction === 'orders') {
+                pendingAction = null;
+                openOrders();
+                return;
+            }
+            closeAllPanels();
         } else alert(d.error || "Authentication Failed");
     }
 
@@ -308,11 +315,20 @@
     }
 
     async function openOrders() {
-        if(!user) return;
+        if (!user) {
+            pendingAction = 'orders';
+            openPanel('authPanel');
+            return;
+        }
         const token = localStorage.getItem('neverToken');
-        const orders = await (await fetch(`/api/my-orders/${user.id}`, {
+        const res = await fetch(`/api/my-orders/${user.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
-        })).json();
+        });
+        if (!res.ok) {
+            alert('Unable to load your orders. Please login again.');
+            return;
+        }
+        const orders = await res.json();
         openPanel('ordersPanel');
         document.getElementById('my-orders-list').innerHTML = orders.map(o => `
             <div class="text-[11px] pb-6 border-b border-gray-200">
@@ -334,21 +350,6 @@
                 <p>TOTAL: ${o.totalMMK.toLocaleString()} MMK</p>
                 ${o.estArrival ? `<p class="mt-2 text-gray-500">EST: ${o.estArrival}</p>` : ''}
             </div>`).join('') || '<p class="text-[11px] text-gray-400">NO ORDERS FOUND.</p>';
-    }
-    
-    async function showDebug() {
-        alert('Debug button clicked');
-        console.log('Debug button clicked');
-        try {
-            const res = await fetch('/debug');
-            console.log('Fetch response:', res);
-            const data = await res.json();
-            console.log('Debug data:', data);
-            alert(JSON.stringify(data, null, 2));
-        } catch (err) {
-            console.error('Debug error:', err);
-            alert('Debug error: ' + err.message);
-        }
     }
     
     init();
