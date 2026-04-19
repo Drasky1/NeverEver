@@ -123,7 +123,15 @@
 
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
-    let allItems = [], cart = {}, user = JSON.parse(localStorage.getItem('neverUser')), currentItem = null, selectedSize = null, selectedColor = null, isLoginMode = true;
+    let allItems = [], cart = {}, user = null, currentItem = null, selectedSize = null, selectedColor = null, isLoginMode = true;
+    const storedUser = localStorage.getItem('neverUser');
+    try {
+        user = storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) {
+        localStorage.removeItem('neverUser');
+        localStorage.removeItem('neverToken');
+        user = null;
+    }
 
     async function init() {
         const res = await fetch('/api/items');

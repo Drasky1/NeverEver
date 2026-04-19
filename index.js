@@ -270,6 +270,7 @@ app.get('/debug', async (req, res) => {
     },
     dbState: mongoose.connection.readyState,
     dbHost: process.env.MONGODB_URI ? process.env.MONGODB_URI.split('@')[1]?.split('/')[0] : null,
+    dbName: process.env.MONGODB_URI ? process.env.MONGODB_URI.split('/').pop().split('?')[0] : null,
   };
 
   if (admin) {
