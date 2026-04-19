@@ -46,6 +46,7 @@ This application includes:
    - `TELEGRAM_CHAT_ID`: Your Telegram chat ID
    - `ADMIN_PASSWORD`: A secure password for admin access
    - `JWT_SECRET`: A random string for JWT signing (e.g., generate with `openssl rand -base64 32`)
+   - `CORS_ORIGINS`: Your app origin(s), comma-separated (e.g. `https://your-render-service.onrender.com`)
 4. Set Build Command: `npm install`
 5. Set Start Command: `node index.js`
 6. Deploy!

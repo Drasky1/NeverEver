@@ -39,8 +39,9 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
+const corsOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:10000', 'https://yourdomain.com'];
 app.use(cors({
-  origin: ['http://localhost:10000', 'https://yourdomain.com'], // Replace with your actual domains
+  origin: corsOrigins,
   credentials: true
 }));
 app.use(express.static('public')); // ALL HTML/JS/CSS GOES IN 'public' FOLDER

@@ -148,7 +148,7 @@
     <script>
         // Simple security layer
         document.addEventListener("DOMContentLoaded", () => {
-            if(localStorage.getItem('adminToken)) {
+            if(localStorage.getItem('adminToken')) {
                 document.getElementById('authOverlay').remove();
                 load();
             }
