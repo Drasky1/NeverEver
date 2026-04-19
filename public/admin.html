@@ -26,10 +26,11 @@
 <body class="p-6 md:p-12">
 
     <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-10">
-        <div class="max-w-xs w-full text-center space-y-8">
+        <div class="max-w-xs w-full text-center space-y-6">
             <h1 class="text-lg tracking-widest">SYSTEM ACCESS</h1>
             <input type="password" id="adminPass" placeholder="ENTER TERMINAL KEY" class="text-center text-xl tracking-widest border-b-2 border-black pb-2">
             <button onclick="checkPass()" class="btn-fill">LOGIN</button>
+            <div id="authError" class="text-[10px] text-red-500 uppercase tracking-widest"></div>
         </div>
     </div>
 
@@ -155,6 +156,8 @@
         });
 
         function checkPass() { 
+            const authError = document.getElementById('authError');
+            authError.innerText = '';
             fetch('/auth/admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -165,8 +168,11 @@
                     document.getElementById('authOverlay').style.display = 'none';
                     load();
                 } else {
-                    alert(data.error || "ACCESS DENIED");
+                    localStorage.removeItem('adminToken');
+                    authError.innerText = data.error || "ACCESS DENIED";
                 }
+            }).catch(err => {
+                authError.innerText = 'LOGIN FAILED: ' + err.message;
             });
         }
 
@@ -350,7 +356,10 @@
             const token = localStorage.getItem('adminToken');
             try {
                 const itemsRes = await fetch('/api/items');
-                if (!itemsRes.ok) throw new Error('Unable to load items');
+                if (!itemsRes.ok) {
+                    const errText = await itemsRes.text().catch(() => 'unknown error');
+                    throw new Error(`Unable to load items (${itemsRes.status}): ${errText}`);
+                }
                 const items = await itemsRes.json();
                 itemsCache = items;
 
@@ -358,13 +367,14 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!ordersRes.ok) {
+                    const errText = await ordersRes.text().catch(() => 'unknown error');
                     if (ordersRes.status === 401 || ordersRes.status === 403) {
                         localStorage.removeItem('adminToken');
                         const overlay = document.getElementById('authOverlay');
                         if (overlay) overlay.style.display = 'flex';
-                        throw new Error('Admin session expired');
+                        throw new Error(`Admin session expired (${ordersRes.status}): ${errText}`);
                     }
-                    throw new Error('Unable to load orders');
+                    throw new Error(`Unable to load orders (${ordersRes.status}): ${errText}`);
                 }
                 const orders = await ordersRes.json();
 
@@ -429,8 +439,15 @@
                 </div>`).join('');
             } catch (err) {
                 console.error('Admin load failed', err);
-                document.getElementById('inv-list').innerHTML = '<div class="p-8 text-[11px] text-gray-500">Unable to load inventory. Please refresh or login again.</div>';
-                document.getElementById('order-list').innerHTML = '<div class="p-8 text-[11px] text-gray-500">Unable to load orders. Please refresh or login again.</div>';
+                const detail = err.message ? ` ${err.message}` : '';
+                document.getElementById('inv-list').innerHTML = `<div class="p-8 text-[11px] text-gray-500">Unable to load inventory.${detail}</div>`;
+                document.getElementById('order-list').innerHTML = `<div class="p-8 text-[11px] text-gray-500">Unable to load orders.${detail}</div>`;
+                if (err.message && (err.message.includes('Admin session expired') || err.message.includes('Invalid token') || err.message.includes('Access denied'))) {
+                    localStorage.removeItem('adminToken');
+                    const overlay = document.getElementById('authOverlay');
+                    if (overlay) overlay.style.display = 'flex';
+                    document.getElementById('authError').innerText = 'Session invalid or expired. Please login again.';
+                }
             }
         }
     </script>
