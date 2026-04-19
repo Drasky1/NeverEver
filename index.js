@@ -112,7 +112,9 @@ const verifyAdmin = (req, res, next) => {
   }
 };
 
+app.get('/api/items', async (req, res) => res.json(await Item.find()));
 app.get('/api/orders', verifyAdmin, async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
+app.get('/api/my-orders/:userId', verifyToken, async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
 app.post('/api/add-item', verifyAdmin, [
   body('name').isLength({ min: 1 }).trim().escape(),
   body('costTHB').isNumeric(),
