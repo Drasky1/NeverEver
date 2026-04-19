@@ -79,16 +79,15 @@ const Item = mongoose.model('Item', new mongoose.Schema({
 
 const User = mongoose.model('User', new mongoose.Schema({
     username: { type: String, unique: true }, password: { type: String }
-}));
+}, { timestamps: true }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
     userId: String, username: String, customerName: String, telegram: String, items: Array, totalMMK: Number,
     totalCostMMK: Number, profitMMK: Number,
     address: String, phone: String, paymentScreenshot: String,
     status: { type: String, default: 'Pending' },
-    estArrival: { type: String, default: '' },
-    createdAt: { type: Date, default: Date.now }
-}));
+    estArrival: { type: String, default: '' }
+}, { timestamps: true }));
 
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
@@ -98,7 +97,7 @@ const verifyToken = (req, res, next) => {
     req.user = verified;
     next();
   } catch (err) {
-    res.status(400).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
@@ -111,7 +110,7 @@ const verifyAdmin = (req, res, next) => {
     req.admin = verified;
     next();
   } catch (err) {
-    res.status(400).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
@@ -307,7 +306,7 @@ app.post('/auth/admin', [
   }
   console.log('Admin login attempt:', req.body.password, 'expected:', process.env.ADMIN_PASSWORD);
   if (req.body.password === process.env.ADMIN_PASSWORD) {
-    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ role: 'admin', id: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ success: true, token });
   } else {
     res.status(401).json({ error: 'Invalid admin password' });

@@ -425,7 +425,7 @@
                 document.getElementById('user-list').innerHTML = users.map(u => `
                     <div class="flex justify-between items-center border-b border-gray-100 pb-2">
                         <span>${u.username}</span>
-                        <span class="text-gray-400 text-[10px]">${new Date(u.createdAt).toLocaleDateString()}</span>
+                        <span class="text-gray-400 text-[10px]">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'DATE N/A'}</span>
                     </div>`).join('') || '<div class="text-gray-400 text-[11px]">NO CUSTOMER ACCOUNTS FOUND.</div>';
                 document.getElementById('resetUsername').value = '';
                 document.getElementById('resetPassword').value = '';
