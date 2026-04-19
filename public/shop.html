@@ -307,7 +307,16 @@
             return alert(result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Unable to place order'));
         }
         alert(`ORDER PLACED. ORDER ID: ${result.orderId}`);
-        location.reload();
+        cart = {};
+        updateCart();
+        document.getElementById('orderName').value = '';
+        document.getElementById('orderTg').value = '';
+        document.getElementById('orderPhone').value = '';
+        document.getElementById('orderAddr').value = '';
+        document.getElementById('paymentImg').value = '';
+        document.getElementById('uploadSS').innerText = 'UPLOAD PAYMENT RECEIPT';
+        document.getElementById('uploadSS').style.borderColor = '#d1d5db';
+        closeAllPanels();
     }
 
     async function openOrders() {
