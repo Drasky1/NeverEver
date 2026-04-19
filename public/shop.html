@@ -130,6 +130,9 @@
         .product-card .badge.preorder {
             background: var(--gray-700);
         }
+        .product-card .badge.instock {
+            background: var(--black);
+        }
 
         /* Lazy image fade-in */
         .lazy-img {
@@ -1072,6 +1075,7 @@
             let badge = '';
             if (i.category === 'Sold Out') badge = '<div class="badge">SOLD OUT</div>';
             else if (i.category === 'Preorder') badge = '<div class="badge preorder">PREORDER</div>';
+            else if (i.category === 'Instock') badge = '<div class="badge instock">INSTOCK</div>';
             return `<div class="product-card" onclick="openProduct('${i._id}')">
                 ${badge}
                 <div class="card-img-wrap">
