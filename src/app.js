@@ -71,6 +71,7 @@ app.use(cors({
 // ── Static Files ──────────────────────────────────────────
 app.use(express.static(publicDir, {
   maxAge: '1d',
+  extensions: ['html'],
   setHeaders: (res, filePath) => {
     // HTML files should not be cached aggressively
     if (filePath.endsWith('.html')) {
@@ -164,8 +165,8 @@ app.get('/debug-user-orders', require('./middleware/auth').verifyToken, (req, re
 });
 
 // ── SPA Fallback ──────────────────────────────────────────
-app.get('/admin', (req, res) => res.redirect('/admin.html'));
-app.get(/.*/, (req, res) => res.redirect('/shop.html'));
+app.get('/admin', (req, res) => res.sendFile(path.join(publicDir, 'admin.html')));
+app.get(/.*/, (req, res) => res.sendFile(path.join(publicDir, 'shop.html')));
 
 // ── Error Handler (must be last) ──────────────────────────
 app.use(errorHandler);
