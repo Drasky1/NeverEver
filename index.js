@@ -310,6 +310,31 @@ app.post('/auth/admin', [
   }
 });
 
+app.get('/auth/me', verifyToken, async (req, res) => {
+  res.json({ success: true, user: { id: req.user.id, username: req.user.username } });
+});
+
+app.post('/auth/change-password', verifyToken, [
+  body('oldPassword').isLength({ min: 1 }),
+  body('newPassword').isLength({ min: 6 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  const valid = await bcrypt.compare(req.body.oldPassword, user.password);
+  if (!valid) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+  user.password = await bcrypt.hash(req.body.newPassword, 10);
+  await user.save();
+  res.json({ success: true, message: 'Password updated successfully' });
+});
+
 app.get('/debug', async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
   let admin = false;

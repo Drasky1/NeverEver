@@ -98,14 +98,25 @@
 
 <div id="authPanel" class="side-panel">
     <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 id="authTitle" class="text-lg">LOGIN</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
-    <input type="text" id="authUser" placeholder="USERNAME">
-    <input type="password" id="authPass" placeholder="PASSWORD">
-    <button onclick="handleAuth()" class="btn-fill mt-4">CONTINUE</button>
-    <button onclick="toggleMode()" id="modeText" class="w-full text-center text-[10px] text-gray-400 mt-6 hover:text-black">NEED AN ACCOUNT? SIGN UP</button>
-    
+    <div id="authLoggedOutState">
+        <input type="text" id="authUser" placeholder="USERNAME">
+        <input type="password" id="authPass" placeholder="PASSWORD">
+        <button onclick="handleAuth()" class="btn-fill mt-4">CONTINUE</button>
+        <button onclick="toggleMode()" id="modeText" class="w-full text-center text-[10px] text-gray-400 mt-6 hover:text-black">NEED AN ACCOUNT? SIGN UP</button>
+    </div>
+
+    <div id="authLoggedInState" class="hidden space-y-4">
+        <p class="text-[10px] text-gray-500">Signed in as <span id="authUsername"></span></p>
+        <input type="password" id="oldPass" placeholder="CURRENT PASSWORD">
+        <input type="password" id="newPass" placeholder="NEW PASSWORD">
+        <button onclick="changePassword()" class="btn-fill mt-2">UPDATE PASSWORD</button>
+        <button onclick="signOut()" class="btn-fill mt-2 bg-gray-900">SIGN OUT</button>
+        <p class="text-[10px] text-gray-500">If you forgot your password, contact support @tfuwnthuh</p>
+    </div>
+
     <div class="mt-8 flex justify-center w-full">
-            <p class="text-[10px] text-gray-500">Login with username and password above.</p>
-</div>
+        <p class="text-[10px] text-gray-500">Login with username and password above.</p>
+    </div>
 
 <div id="ordersPanel" class="side-panel">
     <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 class="text-lg">ORDERS</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
@@ -135,12 +146,33 @@
             document.getElementById('main-grid').innerHTML = '<p class="text-red-500 p-8">Unable to load products. Please refresh or contact support.</p>';
             return;
         }
+
+        const token = localStorage.getItem('neverToken');
+        if (token) {
+            try {
+                const profileRes = await fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (profileRes.ok) {
+                    const profile = await profileRes.json();
+                    user = profile.user;
+                    localStorage.setItem('neverUser', JSON.stringify(user));
+                } else {
+                    localStorage.removeItem('neverToken');
+                    localStorage.removeItem('neverUser');
+                    user = null;
+                }
+            } catch (e) {
+                console.warn('Auth restore failed', e);
+            }
+        }
+
         if(user && localStorage.getItem('neverToken')) {
             document.getElementById('authBtn').innerHTML = 'PROFILE';
             document.getElementById('trackBtn').classList.remove('hidden');
         } else {
+            document.getElementById('authBtn').innerHTML = 'LOGIN';
             document.getElementById('trackBtn').classList.add('hidden');
         }
+        renderAuthPanel();
     }
 
     function filter(cat) {
@@ -185,6 +217,7 @@
     function selColor(el, c) { document.querySelectorAll('.color-chip').forEach(e => e.classList.remove('active')); el.classList.add('active'); selectedColor = c; }
     
     function openPanel(id) { 
+        if (id === 'authPanel') renderAuthPanel();
         document.getElementById('overlay').classList.add('show');
         document.getElementById(id).classList.add('show');
         if(id === 'cartPanel') updateCart();
@@ -201,6 +234,25 @@
         document.getElementById('modeText').innerText = isLoginMode ? "NEED AN ACCOUNT? SIGN UP" : "HAVE AN ACCOUNT? LOGIN"; 
     }
 
+    function renderAuthPanel() {
+        const loggedOut = document.getElementById('authLoggedOutState');
+        const loggedIn = document.getElementById('authLoggedInState');
+        if (user) {
+            loggedOut.classList.add('hidden');
+            loggedIn.classList.remove('hidden');
+            document.getElementById('authTitle').innerText = 'PROFILE';
+            document.getElementById('authUsername').innerText = user.username;
+            document.getElementById('modeText').classList.add('hidden');
+            document.getElementById('authUser').closest('div')?.classList?.add('hidden');
+        } else {
+            loggedOut.classList.remove('hidden');
+            loggedIn.classList.add('hidden');
+            document.getElementById('authTitle').innerText = isLoginMode ? 'LOGIN' : 'REGISTER';
+            document.getElementById('modeText').classList.remove('hidden');
+            document.getElementById('authUser').closest('div')?.classList?.remove('hidden');
+        }
+    }
+
     async function handleAuth() {
         const u = document.getElementById('authUser').value, p = document.getElementById('authPass').value;
         const endpoint = isLoginMode ? '/auth/login' : '/auth/signup';
@@ -212,6 +264,7 @@
             user = d.user;
             document.getElementById('authBtn').innerHTML = 'PROFILE';
             document.getElementById('trackBtn').classList.remove('hidden');
+            renderAuthPanel();
             if (pendingAction === 'orders') {
                 pendingAction = null;
                 closeAllPanels();
@@ -219,7 +272,35 @@
                 return;
             }
             closeAllPanels();
-        } else alert(d.error || "Authentication Failed");
+        } else {
+            alert(d.error || "Authentication Failed");
+        }
+    }
+
+    async function signOut() {
+        localStorage.removeItem('neverToken');
+        localStorage.removeItem('neverUser');
+        user = null;
+        document.getElementById('authBtn').innerHTML = 'LOGIN';
+        document.getElementById('trackBtn').classList.add('hidden');
+        renderAuthPanel();
+        closeAllPanels();
+    }
+
+    async function changePassword() {
+        const oldPass = document.getElementById('oldPass').value;
+        const newPass = document.getElementById('newPass').value;
+        if (!oldPass || !newPass) return alert('Fill both current and new password');
+        const token = localStorage.getItem('neverToken');
+        const res = await fetch('/auth/change-password', { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify({ oldPassword: oldPass, newPassword: newPass })});
+        const d = await res.json();
+        if (res.ok) {
+            alert('Password updated successfully');
+            document.getElementById('oldPass').value = '';
+            document.getElementById('newPass').value = '';
+        } else {
+            alert(d.error || (d.errors ? d.errors.map(e => e.msg).join(', ') : 'Unable to update password'));
+        }
     }
 
     function addToCart() {
@@ -342,11 +423,11 @@
                     user = null;
                     document.getElementById('authBtn').innerHTML = 'LOGIN';
                     document.getElementById('trackBtn').classList.add('hidden');
-                    alert('Session expired. Please login again.');
+                    document.getElementById('my-orders-list').innerHTML = `<div class="p-8 text-center text-[12px] text-red-500">Session expired or unauthorized. Please login again.</div>`;
                     openPanel('authPanel');
                     return;
                 }
-                alert('Unable to load your orders. Please try again later.');
+                document.getElementById('my-orders-list').innerHTML = `<div class="p-8 text-center text-[12px] text-red-500">Unable to load your orders (${res.status}). ${text}</div>`;
                 return;
             }
 
