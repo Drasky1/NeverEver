@@ -50,6 +50,7 @@
         <button id="authBtn" onclick="openPanel('authPanel')" class="hover:underline uppercase">LOGIN</button>
         <button onclick="openOrders()" class="hover:underline hidden shadow-sm" id="trackBtn">ORDERS</button>
         <button onclick="openPanel('cartPanel')" class="hover:underline">CART (<span id="cartCount">0</span>)</button>
+        <button onclick="showDebug()" class="hover:underline text-xs">DEBUG</button>
     </div>
 </nav>
 
@@ -333,6 +334,12 @@
                 <p>TOTAL: ${o.totalMMK.toLocaleString()} MMK</p>
                 ${o.estArrival ? `<p class="mt-2 text-gray-500">EST: ${o.estArrival}</p>` : ''}
             </div>`).join('') || '<p class="text-[11px] text-gray-400">NO ORDERS FOUND.</p>';
+    }
+    
+    async function showDebug() {
+        const res = await fetch('/debug');
+        const data = await res.json();
+        alert(JSON.stringify(data, null, 2));
     }
     
     init();
