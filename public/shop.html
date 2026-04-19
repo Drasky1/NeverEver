@@ -47,7 +47,7 @@
     </div>
     <div class="flex gap-3 md:gap-6 z-10">
         <button id="authBtn" onclick="openPanel('authPanel')" class="hover:underline uppercase">LOGIN</button>
-        <button onclick="openOrders()" class="hover:underline uppercase" id="trackBtn">ORDERS</button>
+        <button onclick="openOrders()" class="hover:underline uppercase hidden" id="trackBtn">ORDERS</button>
         <button onclick="openPanel('cartPanel')" class="hover:underline">CART (<span id="cartCount">0</span>)</button>
     </div>
 </nav>
@@ -212,6 +212,7 @@
             document.getElementById('trackBtn').classList.remove('hidden');
             if (pendingAction === 'orders') {
                 pendingAction = null;
+                closeAllPanels();
                 openOrders();
                 return;
             }
@@ -310,6 +311,7 @@
             return;
         }
         const orders = await res.json();
+        closeAllPanels();
         openPanel('ordersPanel');
         document.getElementById('my-orders-list').innerHTML = orders.map(o => `
             <div class="text-[11px] pb-6 border-b border-gray-200">
