@@ -117,7 +117,13 @@ const verifyAdmin = (req, res, next) => {
 
 app.get('/api/items', async (req, res) => res.json(await Item.find()));
 app.get('/api/orders', verifyAdmin, async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
-app.get('/api/my-orders/:userId', verifyToken, async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
+app.get('/api/my-orders', verifyToken, async (req, res) => {
+    const userId = req.user.id;
+    const username = req.user.username;
+    const query = [{ userId }];
+    if (username) query.push({ username });
+    res.json(await Order.find({ $or: query }).sort({ createdAt: -1 }));
+});
 app.post('/api/add-item', verifyAdmin, [
   body('name').isLength({ min: 1 }).trim().escape(),
   body('costTHB').isNumeric(),
@@ -199,8 +205,27 @@ app.post('/api/submit-order', verifyToken, [
     await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
       chat_id: process.env.TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
     });
-  } catch (err) { console.error("Telegram error:", err.message); }
+  } catch (err) {
+    console.error("Telegram error:", err.message);
+    if (err.response) {
+      console.error("Telegram response status:", err.response.status);
+      console.error("Telegram response data:", err.response.data);
+    }
+  }
   res.json({ success: true });
+});
+
+app.get('/debug-telegram', async (req, res) => {
+  try {
+    const result = await axios.get(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getMe`);
+    const chatTest = await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      chat_id: process.env.TELEGRAM_CHAT_ID,
+      text: 'DEBUG: Telegram notifications are configured correctly.'
+    });
+    res.json({ success: true, bot: result.data, chat: chatTest.data });
+  } catch (err) {
+    res.status(500).json({ error: 'Telegram debug failed', message: err.message, response: err.response?.data || null });
+  }
 });
 
 app.put('/api/update-order/:id', verifyAdmin, async (req, res) => {
