@@ -63,7 +63,6 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 1px;
             background: var(--gray-200);
-            padding-top: 64px;
         }
         @media (min-width: 768px) {
             .product-grid { grid-template-columns: repeat(3, 1fr); }
@@ -182,19 +181,42 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 64px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            background: rgba(255,255,255,0.92);
+            flex-direction: column;
+            background: rgba(255,255,255,0.96);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             z-index: 100;
-            border-bottom: 1px solid rgba(0,0,0,0.04);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
         }
+        .nav-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 52px;
+            padding: 0 16px;
+        }
+        .nav-logo {
+            height: 28px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .nav-filters {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 16px;
+            height: 36px;
+            border-top: 1px solid rgba(0,0,0,0.04);
+            overflow-x: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .nav-filters::-webkit-scrollbar { display: none; }
+
         .nav-link {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
@@ -202,9 +224,11 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 8px 4px;
+            padding: 6px 2px;
             position: relative;
             transition: color 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .nav-link:hover { color: var(--gray-500); }
         .nav-link.muted { color: var(--gray-400); }
@@ -212,32 +236,43 @@
         .nav-link.active::after {
             content: '';
             position: absolute;
-            bottom: 2px;
+            bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             width: 16px;
             height: 1.5px;
             background: var(--black);
         }
-        .nav-logo {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            height: 32px;
+
+        .nav-group { display: flex; gap: 10px; z-index: 10; align-items: center; }
+
+        /* Desktop: single row */
+        @media (min-width: 768px) {
+            .nav { flex-direction: row; align-items: center; height: 64px; padding: 0 40px; }
+            .nav-top { height: auto; padding: 0; flex: 1; }
+            .nav-logo { height: 36px; }
+            .nav-filters {
+                position: absolute;
+                left: 0;
+                padding: 0 40px;
+                border-top: none;
+                height: 64px;
+                gap: 24px;
+            }
+            .nav-link { font-size: 11px; padding: 8px 4px; }
+            .nav-group { gap: 20px; }
+        }
+
+        /* Spacer to push content below fixed nav */
+        .nav-spacer {
+            height: 88px; /* 52px top + 36px filters */
         }
         @media (min-width: 768px) {
-            .nav { padding: 0 40px; }
-            .nav-logo { height: 38px; }
-            .nav-link { font-size: 11px; padding: 8px 6px; }
+            .nav-spacer { height: 64px; }
         }
-        .nav-group { display: flex; gap: 12px; z-index: 10; }
-        @media (min-width: 768px) { .nav-group { gap: 24px; } }
 
         /* ── Search Bar ─────────────────────────────────── */
         .search-bar {
-            position: sticky;
-            top: 64px;
-            z-index: 90;
             background: var(--white);
             border-bottom: 1px solid var(--gray-200);
             padding: 0 20px;
@@ -249,7 +284,7 @@
             font-family: var(--font-mono);
             font-size: 11px;
             letter-spacing: 0.08em;
-            padding: 14px 0;
+            padding: 12px 0;
             background: transparent;
             text-transform: uppercase;
         }
@@ -754,28 +789,33 @@
 <!-- ═══════════════════ TOAST CONTAINER ═══════════════════ -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ═══════════════════ NAVIGATION ════════════════════════ -->
+<!-- NAV -->
 <nav class="nav">
-    <div class="nav-group">
+    <div class="nav-top">
+        <div class="nav-group">
+            <button id="authBtn" onclick="openPanel('authPanel')" class="nav-link">LOGIN</button>
+        </div>
+        <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg" class="nav-logo" alt="NeverEver">
+        <div class="nav-group">
+            <button onclick="openOrders()" class="nav-link hidden" id="trackBtn">ORDERS</button>
+            <button onclick="openPanel('cartPanel')" class="nav-link">CART (<span id="cartCount">0</span>)</button>
+        </div>
+    </div>
+    <div class="nav-filters">
         <button onclick="filter('Instock')" class="nav-link active" id="navInstock">INSTOCK</button>
         <button onclick="filter('Preorder')" class="nav-link muted" id="navPreorder">PREORDER</button>
         <button onclick="filter('Sold Out')" class="nav-link muted" id="navSoldout">SOLD OUT</button>
     </div>
-    <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg" class="nav-logo" alt="NeverEver">
-    <div class="nav-group">
-        <button id="authBtn" onclick="openPanel('authPanel')" class="nav-link">LOGIN</button>
-        <button onclick="openOrders()" class="nav-link hidden" id="trackBtn">ORDERS</button>
-        <button onclick="openPanel('cartPanel')" class="nav-link">CART (<span id="cartCount">0</span>)</button>
-    </div>
 </nav>
+<div class="nav-spacer"></div>
 
-<!-- ═══════════════════ SEARCH BAR ═══════════════════════ -->
-<div class="search-bar" style="padding-top:64px;">
+<!-- SEARCH -->
+<div class="search-bar">
     <input type="text" class="search-input" id="searchInput" placeholder="SEARCH PRODUCTS..." oninput="applyFilters()">
 </div>
 
-<!-- ═══════════════════ PRODUCT GRID ═════════════════════ -->
-<main class="product-grid" id="main-grid" style="padding-top:0;"></main>
+<!-- PRODUCT GRID -->
+<main class="product-grid" id="main-grid"></main>
 
 <!-- ═══════════════════ FOOTER ════════════════════════════ -->
 <footer class="footer">
