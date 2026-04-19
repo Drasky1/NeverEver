@@ -120,6 +120,7 @@
 
 <div id="ordersPanel" class="side-panel">
     <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 class="text-lg">ORDERS</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
+    <div id="orders-user-info" class="text-[10px] text-gray-500 mb-4"></div>
     <div id="my-orders-list" class="space-y-8"></div>
 </div>
 
@@ -437,8 +438,9 @@
             const panel = document.getElementById('ordersPanel');
             panel.classList.add('show');
             document.getElementById('overlay').classList.add('show');
+            document.getElementById('orders-user-info').innerText = `Logged in as: ${user?.username || 'Unknown'}`;
             if (!Array.isArray(orders) || orders.length === 0) {
-                document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-gray-500">No orders found yet. Place an order first and then check here.</div>';
+                document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-gray-500">No orders found for this account yet.</div>';
                 return;
             }
             document.getElementById('my-orders-list').innerHTML = orders.map(o => `

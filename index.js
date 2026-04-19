@@ -124,6 +124,10 @@ app.get('/api/my-orders', verifyToken, async (req, res) => {
     if (username) query.push({ username });
     res.json(await Order.find({ $or: query }).sort({ createdAt: -1 }));
 });
+app.get('/api/users', verifyAdmin, async (req, res) => {
+    const users = await User.find().sort({ createdAt: -1 }).select('username createdAt');
+    res.json(users);
+});
 app.post('/api/add-item', verifyAdmin, [
   body('name').isLength({ min: 1 }).trim().escape(),
   body('costTHB').isNumeric(),

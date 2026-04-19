@@ -96,7 +96,18 @@
                         <h2 class="text-[11px] font-bold tracking-widest text-gray-400">DATABASE</h2>
                         <input type="text" id="invSearch" placeholder="SEARCH..." oninput="load()" class="w-1/2 !mb-0 !pb-1 text-right">
                     </div>
-                    <div id="inv-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-4"></div>
+                    <div id="inv-list" class="space-y-4 max-h-[240px] overflow-y-auto pr-4"></div>
+                </section>
+
+                <section>
+                    <div class="flex justify-between items-end mb-8">
+                        <div>
+                            <h2 class="text-[11px] font-bold tracking-widest text-gray-400">CUSTOMER ACCOUNTS</h2>
+                            <p class="text-[10px] text-gray-400">Passwords are securely hashed and cannot be viewed.</p>
+                        </div>
+                        <button onclick="load()" class="text-[10px] text-gray-500 hover:text-black">REFRESH</button>
+                    </div>
+                    <div id="user-list" class="space-y-3 max-h-[220px] overflow-y-auto pr-4 text-[11px]"></div>
                 </section>
 
             </div>
@@ -377,6 +388,20 @@
                     throw new Error(`Unable to load orders (${ordersRes.status}): ${errText}`);
                 }
                 const orders = await ordersRes.json();
+
+                const usersRes = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!usersRes.ok) {
+                    throw new Error('Unable to load users');
+                }
+                const users = await usersRes.json();
+
+                document.getElementById('user-list').innerHTML = users.map(u => `
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                        <span>${u.username}</span>
+                        <span class="text-gray-400 text-[10px]">${new Date(u.createdAt).toLocaleDateString()}</span>
+                    </div>`).join('') || '<div class="text-gray-400 text-[11px]">NO CUSTOMER ACCOUNTS FOUND.</div>';
 
                 // Calculate Stats
                 let rev = 0;
