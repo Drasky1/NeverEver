@@ -41,6 +41,7 @@ This application includes:
 2. Create a new Web Service on Render, connect your GitHub repo.
 3. Set the following Environment Variables in Render's dashboard:
    - `MONGODB_URI`: Your MongoDB Atlas connection string
+   - `MONGODB_DB_NAME` (optional): Your MongoDB database name if your URI does not include one, e.g. `NeverEver`
    - `GOOGLE_CLIENT_ID`: Your Google OAuth client ID
    - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token
    - `TELEGRAM_CHAT_ID`: Your Telegram chat ID

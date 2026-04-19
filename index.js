@@ -53,7 +53,15 @@ if (!process.env.MONGODB_URI) {
     process.exit(1);
 }
 
-mongoose.connect(process.env.MONGODB_URI)
+const uriMatch = process.env.MONGODB_URI.match(/^[^:]+:\/\/[^/]+\/(.*)$/);
+const uriDbName = uriMatch ? uriMatch[1].split('?')[0] : null;
+const hasDbName = uriDbName && uriDbName.length > 0;
+const dbOptions = {};
+if (!hasDbName) {
+    dbOptions.dbName = process.env.MONGODB_DB_NAME || 'NeverEver';
+}
+
+mongoose.connect(process.env.MONGODB_URI, dbOptions)
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => {
         console.error("❌ DB ERROR:", err);

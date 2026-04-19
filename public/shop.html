@@ -134,9 +134,16 @@
     }
 
     async function init() {
-        const res = await fetch('/api/items');
-        allItems = await res.json();
-        filter('Instock');
+        try {
+            const res = await fetch('/api/items');
+            if (!res.ok) throw new Error('Unable to load items');
+            allItems = await res.json();
+            filter('Instock');
+        } catch (err) {
+            console.error(err);
+            document.getElementById('main-grid').innerHTML = '<p class="text-red-500 p-8">Unable to load products. Please refresh or contact support.</p>';
+            return;
+        }
         if(user && localStorage.getItem('neverToken')) {
             document.getElementById('authBtn').innerHTML = 'PROFILE';
             document.getElementById('trackBtn').classList.remove('hidden');
