@@ -311,8 +311,19 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) {
-                console.error('Orders fetch failed', res.status, await res.text());
-                alert('Unable to load your orders. Please login again.');
+                const text = await res.text();
+                console.error('Orders fetch failed', res.status, text);
+                if (res.status === 401 || res.status === 403) {
+                    localStorage.removeItem('neverToken');
+                    localStorage.removeItem('neverUser');
+                    user = null;
+                    document.getElementById('authBtn').innerHTML = 'LOGIN';
+                    document.getElementById('trackBtn').classList.add('hidden');
+                    alert('Session expired. Please login again.');
+                    openPanel('authPanel');
+                    return;
+                }
+                alert('Unable to load your orders. Please try again later.');
                 return;
             }
 
