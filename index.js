@@ -173,13 +173,17 @@ app.post('/api/submit-order', verifyToken, [
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+
+  req.body.userId = req.user.id;
+  req.body.username = req.user.username;
+
   let totalCostMMK = 0;
   try {
     for (const item of req.body.items) {
       const dbItem = await Item.findOne({ name: item.name });
-      if (dbItem) { 
-        totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty; 
-        
+      if (dbItem) {
+        totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty;
+
         dbItem.quantity = (dbItem.quantity || 0) - item.qty;
         if (dbItem.quantity <= 0) {
           dbItem.quantity = 0;
@@ -190,12 +194,16 @@ app.post('/api/submit-order', verifyToken, [
         await dbItem.save();
       }
     }
-  } catch (e) { console.error(e); }
+  } catch (e) {
+    console.error('Order item update error:', e);
+  }
   req.body.totalCostMMK = totalCostMMK;
   req.body.profitMMK = req.body.totalMMK - totalCostMMK;
 
+  console.log('Saving order for user', req.body.userId, req.body.username);
   const order = new Order(req.body);
   await order.save();
+  console.log('Order saved', order._id.toString());
 
   try {
     const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
@@ -212,7 +220,7 @@ app.post('/api/submit-order', verifyToken, [
       console.error("Telegram response data:", err.response.data);
     }
   }
-  res.json({ success: true });
+  res.json({ success: true, orderId: order._id.toString() });
 });
 
 app.get('/debug-telegram', async (req, res) => {

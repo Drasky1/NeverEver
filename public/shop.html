@@ -306,7 +306,7 @@
             }
             return alert(result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Unable to place order'));
         }
-        alert("ORDER PLACED"); 
+        alert(`ORDER PLACED. ORDER ID: ${result.orderId}`);
         location.reload();
     }
 
