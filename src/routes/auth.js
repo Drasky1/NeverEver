@@ -36,7 +36,7 @@ router.post('/google', async (req, res) => {
 
 // POST /auth/login — Email/password login
 router.post('/login', [
-  body('username').trim().escape(),
+  body('username').trim().notEmpty(),
   body('password').isLength({ min: 1 }),
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -53,20 +53,22 @@ router.post('/login', [
 
 // POST /auth/signup — New user registration
 router.post('/signup', [
-  body('username').isLength({ min: 3 }).trim().escape(),
-  body('password').isLength({ min: 6 }),
+  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters').trim().notEmpty(),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ], async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
 
   try {
+    const existing = await User.findOne({ username: req.body.username });
+    if (existing) return res.status(400).json({ error: 'Username already taken' });
     const hashed = await bcrypt.hash(req.body.password, 10);
     const user = new User({ username: req.body.username, password: hashed });
     await user.save();
     const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ success: true, token, user: { id: user._id, username: user.username } });
   } catch (err) {
-    res.status(400).json({ error: 'Username taken' });
+    res.status(500).json({ error: 'Registration failed. Try again.' });
   }
 });
 
