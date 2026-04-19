@@ -33,7 +33,7 @@ app.use(helmet({
       frameSrc: ["'self'", "https://upload-widget.cloudinary.com", "https://accounts.google.com", "https://apis.google.com"],
       frameAncestors: ["'self'"],
       scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrcElem: ["'unsafe-inline'"],
+      styleSrcElem: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://accounts.google.com"],
     },
   },
 }));
