@@ -149,7 +149,7 @@
         // Simple security layer
         document.addEventListener("DOMContentLoaded", () => {
             if(localStorage.getItem('adminToken')) {
-                document.getElementById('authOverlay').remove();
+                document.getElementById('authOverlay').style.display = 'none';
                 load();
             }
         });
@@ -162,7 +162,7 @@
             }).then(res => res.json()).then(data => {
                 if (data.success) {
                     localStorage.setItem('adminToken', data.token);
-                    document.getElementById('authOverlay').remove(); 
+                    document.getElementById('authOverlay').style.display = 'none';
                     load();
                 } else {
                     alert(data.error || "ACCESS DENIED");
@@ -348,21 +348,35 @@
         // Data Fetching and Rendering
         async function load() {
             const token = localStorage.getItem('adminToken');
-            const items = await (await fetch('/api/items')).json();
-            itemsCache = items;
-            const orders = await (await fetch('/api/orders', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })).json();
-            
-            // Calculate Stats
-            let rev = 0;
-            orders.forEach(o => { rev += o.totalMMK; });
-            document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
-            document.getElementById('orderCount').innerText = orders.length;
+            try {
+                const itemsRes = await fetch('/api/items');
+                if (!itemsRes.ok) throw new Error('Unable to load items');
+                const items = await itemsRes.json();
+                itemsCache = items;
 
-            // Render Orders
-            document.getElementById('order-list').innerHTML = orders.map(o => `
-                <div class="border-b border-gray-200 pb-6 text-[11px]">
+                const ordersRes = await fetch('/api/orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!ordersRes.ok) {
+                    if (ordersRes.status === 401 || ordersRes.status === 403) {
+                        localStorage.removeItem('adminToken');
+                        const overlay = document.getElementById('authOverlay');
+                        if (overlay) overlay.style.display = 'flex';
+                        throw new Error('Admin session expired');
+                    }
+                    throw new Error('Unable to load orders');
+                }
+                const orders = await ordersRes.json();
+
+                // Calculate Stats
+                let rev = 0;
+                orders.forEach(o => { rev += o.totalMMK; });
+                document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+                document.getElementById('orderCount').innerText = orders.length;
+
+                // Render Orders
+                document.getElementById('order-list').innerHTML = orders.map(o => `
+                    <div class="border-b border-gray-200 pb-6 text-[11px]">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex items-start gap-4">
                             ${o.items[0]?.image ? `<img src="${o.items[0].image}" class="w-16 h-16 object-cover border border-gray-200">` : ''}
@@ -413,6 +427,11 @@
                         <button onclick="delItem('${i._id}')" class="text-gray-300 hover:text-red-500">REMOVE</button>
                     </div>
                 </div>`).join('');
+            } catch (err) {
+                console.error('Admin load failed', err);
+                document.getElementById('inv-list').innerHTML = '<div class="p-8 text-[11px] text-gray-500">Unable to load inventory. Please refresh or login again.</div>';
+                document.getElementById('order-list').innerHTML = '<div class="p-8 text-[11px] text-gray-500">Unable to load orders. Please refresh or login again.</div>';
+            }
         }
     </script>
 </body>
