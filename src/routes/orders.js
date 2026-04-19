@@ -82,7 +82,7 @@ router.put('/:id', verifyAdmin, [validateObjectId('id')], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  await Order.findByIdAndUpdate(req.params.id, req.body);
+  await Order.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
   res.json({ success: true });
 });
 

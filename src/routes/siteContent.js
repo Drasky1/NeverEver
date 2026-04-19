@@ -28,7 +28,7 @@ router.put('/', verifyAdmin, [
       $set: { faqs: req.body.faqs || '', policy: req.body.policy || '' },
       $setOnInsert: { key: 'footer' },
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
   ).lean();
 
   res.json({

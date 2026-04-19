@@ -20,7 +20,7 @@ async function getFooterContent() {
   const content = await SiteContent.findOneAndUpdate(
     { key: 'footer' },
     { $setOnInsert: { key: 'footer', ...DEFAULT_CONTENT } },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
   ).lean();
 
   return {

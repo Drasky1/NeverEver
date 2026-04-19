@@ -46,7 +46,7 @@ router.put('/:id', verifyAdmin, [validateObjectId('id')], async (req, res) => {
   } else if (req.body.costTHB) {
     updateData.price = Number(req.body.costTHB) * RATE;
   }
-  await Item.findByIdAndUpdate(req.params.id, updateData);
+  await Item.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after' });
   res.json({ success: true });
 });
 
@@ -55,7 +55,7 @@ router.put('/:id/category', verifyAdmin, [validateObjectId('id')], async (req, r
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  await Item.findByIdAndUpdate(req.params.id, { category: req.body.category });
+  await Item.findByIdAndUpdate(req.params.id, { category: req.body.category }, { returnDocument: 'after' });
   res.json({ success: true });
 });
 
