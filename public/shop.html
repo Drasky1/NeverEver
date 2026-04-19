@@ -297,42 +297,53 @@
     }
 
     async function openOrders() {
+        console.log('openOrders called', { user });
         if (!user) {
             pendingAction = 'orders';
             openPanel('authPanel');
             return;
         }
         const token = localStorage.getItem('neverToken');
-        const res = await fetch(`/api/my-orders/${user.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) {
-            alert('Unable to load your orders. Please login again.');
-            return;
+        try {
+            const res = await fetch(`/api/my-orders/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                console.error('Orders fetch failed', res.status, await res.text());
+                alert('Unable to load your orders. Please login again.');
+                return;
+            }
+
+            const orders = await res.json();
+            console.log('Orders loaded', orders);
+            closeAllPanels();
+            const panel = document.getElementById('ordersPanel');
+            panel.classList.add('show');
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('my-orders-list').innerHTML = (Array.isArray(orders) ? orders : []).map(o => `
+                <div class="text-[11px] pb-6 border-b border-gray-200">
+                    <div class="flex justify-between mb-4"><span class="font-bold">#${o._id ? o._id.slice(-6) : 'UNKNOWN'}</span><span class="${o.status === 'Pending' ? 'text-gray-400' : 'text-black'}">${o.status || 'Pending'}</span></div>
+                    <div class="space-y-4 mb-4">
+                        ${Array.isArray(o.items) ? o.items.map(i => {
+                            const dbMatch = allItems.find(it => it.name === i.name);
+                            const imgSrc = i.image || (dbMatch ? dbMatch.images[0] : '');
+                            return `
+                            <div class="flex items-center gap-4">
+                                ${imgSrc ? `<img src="${imgSrc}" class="w-12 h-12 object-cover bg-gray-50 border border-gray-100">` : ''}
+                                <div>
+                                    <p>${i.name}</p>
+                                    <p class="text-gray-500">${i.qty}x SIZE ${i.size || 'N/A'} | COLOR ${i.color || 'N/A'}</p>
+                                </div>
+                            </div>`;
+                        }).join('') : '<p class="text-[11px] text-gray-400">No items found.</p>'}
+                    </div>
+                    <p>TOTAL: ${o.totalMMK ? o.totalMMK.toLocaleString() : '0'} MMK</p>
+                    ${o.estArrival ? `<p class="mt-2 text-gray-500">EST: ${o.estArrival}</p>` : ''}
+                </div>`).join('') || '<p class="text-[11px] text-gray-400">NO ORDERS FOUND.</p>';
+        } catch (err) {
+            console.error('Orders fetch error', err);
+            alert('Unable to load your orders. Please try again later.');
         }
-        const orders = await res.json();
-        closeAllPanels();
-        openPanel('ordersPanel');
-        document.getElementById('my-orders-list').innerHTML = orders.map(o => `
-            <div class="text-[11px] pb-6 border-b border-gray-200">
-                <div class="flex justify-between mb-4"><span class="font-bold">#${o._id.slice(-6)}</span><span class="${o.status === 'Pending' ? 'text-gray-400' : 'text-black'}">${o.status}</span></div>
-                <div class="space-y-4 mb-4">
-                    ${o.items.map(i => {
-                        const dbMatch = allItems.find(it => it.name === i.name);
-                        const imgSrc = i.image || (dbMatch ? dbMatch.images[0] : '');
-                        return `
-                        <div class="flex items-center gap-4">
-                            ${imgSrc ? `<img src="${imgSrc}" class="w-12 h-12 object-cover bg-gray-50 border border-gray-100">` : ''}
-                            <div>
-                                <p>${i.name}</p>
-                                <p class="text-gray-500">${i.qty}x SIZE ${i.size || 'N/A'} | COLOR ${i.color || 'N/A'}</p>
-                            </div>
-                        </div>`;
-                    }).join('')}
-                </div>
-                <p>TOTAL: ${o.totalMMK.toLocaleString()} MMK</p>
-                ${o.estArrival ? `<p class="mt-2 text-gray-500">EST: ${o.estArrival}</p>` : ''}
-            </div>`).join('') || '<p class="text-[11px] text-gray-400">NO ORDERS FOUND.</p>';
     }
     
     init();
