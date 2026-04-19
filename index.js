@@ -245,6 +245,42 @@ app.post('/auth/admin', [
   }
 });
 
+app.get('/debug', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  let admin = false;
+  if (token) {
+    try {
+      const verified = jwt.verify(token, process.env.JWT_SECRET);
+      admin = verified.role === 'admin';
+    } catch (err) {
+      admin = false;
+    }
+  }
+
+  const debugData = {
+    status: 'ok',
+    env: {
+      MONGODB_URI: !!process.env.MONGODB_URI,
+      GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
+      TELEGRAM_BOT_TOKEN: !!process.env.TELEGRAM_BOT_TOKEN,
+      TELEGRAM_CHAT_ID: !!process.env.TELEGRAM_CHAT_ID,
+      ADMIN_PASSWORD: !!process.env.ADMIN_PASSWORD,
+      JWT_SECRET: !!process.env.JWT_SECRET,
+    },
+    dbState: mongoose.connection.readyState,
+    dbHost: process.env.MONGODB_URI ? process.env.MONGODB_URI.split('@')[1]?.split('/')[0] : null,
+  };
+
+  if (admin) {
+    debugData.counts = {
+      items: await Item.countDocuments(),
+      orders: await Order.countDocuments(),
+    };
+  }
+
+  res.json(debugData);
+});
+
 // Route everything else to the main app (SPA behavior)
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get(/.*/, (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
