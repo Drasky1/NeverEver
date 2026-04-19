@@ -115,6 +115,20 @@
                     <button onclick="resetCustomerPassword()" class="btn-fill mt-4">RESET CUSTOMER PASSWORD</button>
                 </section>
 
+                <section>
+                    <div class="flex justify-between items-end mb-8">
+                        <div>
+                            <h2 class="text-[11px] font-bold tracking-widest text-gray-400">FOOTER INFO</h2>
+                            <p class="text-[10px] text-gray-400">FAQS AND POLICY SHOWN IN THE SHOP FOOTER.</p>
+                        </div>
+                        <button onclick="loadSiteContent()" class="text-[10px] text-gray-500 hover:text-black">REFRESH</button>
+                    </div>
+                    <textarea id="siteFaqs" placeholder="FAQS" rows="7"></textarea>
+                    <textarea id="sitePolicy" placeholder="POLICY" rows="7"></textarea>
+                    <button onclick="saveSiteContent()" class="btn-fill">SAVE FOOTER INFO</button>
+                    <div id="siteContentStatus" class="text-[10px] text-gray-400 uppercase tracking-widest mt-4"></div>
+                </section>
+
             </div>
 
             <div class="lg:col-span-7">
@@ -168,6 +182,7 @@
             if(localStorage.getItem('adminToken')) {
                 document.getElementById('authOverlay').style.display = 'none';
                 load();
+                loadSiteContent();
             }
         });
 
@@ -183,6 +198,7 @@
                     localStorage.setItem('adminToken', data.token);
                     document.getElementById('authOverlay').style.display = 'none';
                     load();
+                    loadSiteContent();
                 } else {
                     localStorage.removeItem('adminToken');
                     authError.innerText = data.error || "ACCESS DENIED";
@@ -384,6 +400,53 @@
                 document.getElementById('resetPassword').value = '';
             } else {
                 alert(data.error || 'Unable to reset password');
+            }
+        }
+
+        async function loadSiteContent() {
+            const status = document.getElementById('siteContentStatus');
+            try {
+                if (status) status.innerText = 'LOADING...';
+                const res = await fetch('/api/site-content');
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || 'Unable to load footer info');
+                }
+                document.getElementById('siteFaqs').value = data.faqs || '';
+                document.getElementById('sitePolicy').value = data.policy || '';
+                if (status) status.innerText = 'LOADED';
+            } catch (err) {
+                console.error('Site content load failed', err);
+                if (status) status.innerText = err.message || 'LOAD FAILED';
+            }
+        }
+
+        async function saveSiteContent() {
+            const token = localStorage.getItem('adminToken');
+            const status = document.getElementById('siteContentStatus');
+            const data = {
+                faqs: document.getElementById('siteFaqs').value,
+                policy: document.getElementById('sitePolicy').value
+            };
+
+            try {
+                if (status) status.innerText = 'SAVING...';
+                const res = await fetch('/api/site-content', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (!res.ok) {
+                    const message = result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Unable to save footer info');
+                    throw new Error(message);
+                }
+                if (status) status.innerText = 'SAVED';
+                alert('FOOTER INFO UPDATED');
+            } catch (err) {
+                console.error('Site content save failed', err);
+                if (status) status.innerText = err.message || 'SAVE FAILED';
+                alert(err.message || 'Unable to save footer info');
             }
         }
 
