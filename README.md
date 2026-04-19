@@ -35,11 +35,22 @@ This application includes:
    ```
 3. Run the server: `npm start`
 
-## Deployment
+## Deployment on Render
 
-For production, deploy to a platform that provides HTTPS (e.g., Heroku, Vercel, AWS). Ensure the server is configured for HTTPS.
+1. Push your code to GitHub.
+2. Create a new Web Service on Render, connect your GitHub repo.
+3. Set the following Environment Variables in Render's dashboard:
+   - `MONGODB_URI`: Your MongoDB Atlas connection string
+   - `GOOGLE_CLIENT_ID`: Your Google OAuth client ID
+   - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token
+   - `TELEGRAM_CHAT_ID`: Your Telegram chat ID
+   - `ADMIN_PASSWORD`: A secure password for admin access
+   - `JWT_SECRET`: A random string for JWT signing (e.g., generate with `openssl rand -base64 32`)
+4. Set Build Command: `npm install`
+5. Set Start Command: `node index.js`
+6. Deploy!
 
-Update CORS origins in `index.js` to your domain.
+Render provides automatic HTTPS, so no additional SSL setup needed.
 
 ## Usage
 

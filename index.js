@@ -11,6 +11,15 @@ const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
 
+// Check required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'GOOGLE_CLIENT_ID', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', 'ADMIN_PASSWORD', 'JWT_SECRET'];
+for (const varName of requiredEnvVars) {
+    if (!process.env[varName]) {
+        console.error(`❌ ${varName} environment variable is required`);
+        process.exit(1);
+    }
+}
+
 const app = express();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 app.use(helmet({
@@ -38,9 +47,17 @@ app.use(express.static('public')); // ALL HTML/JS/CSS GOES IN 'public' FOLDER
 
 const RATE = 125;
 
+if (!process.env.MONGODB_URI) {
+    console.error("❌ MONGODB_URI environment variable is required");
+    process.exit(1);
+}
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("✅ DB CONNECTED"))
-    .catch(err => console.error("❌ DB ERROR:", err));
+    .catch(err => {
+        console.error("❌ DB ERROR:", err);
+        process.exit(1);
+    });
 
 const Item = mongoose.model('Item', new mongoose.Schema({
     name: String, costTHB: Number, price: Number, quantity: { type: Number, default: 1 },
