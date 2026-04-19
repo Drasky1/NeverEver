@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "neverever",
   "version": "1.0.0",
   "description": "NeverEver Online Shop — Myanmar e-commerce",
@@ -20,5 +21,9 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.4.1"
+=======
+  "dependencies": {
+    "express": "^5.2.1"
+>>>>>>> 15fb314 (Initial commit for LedgerEdu)
   }
 }
