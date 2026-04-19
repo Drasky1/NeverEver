@@ -129,7 +129,7 @@
             const res = await fetch('/api/items');
             if (!res.ok) throw new Error('Unable to load items');
             allItems = await res.json();
-            filter('Instock');
+            filter('All');
         } catch (err) {
             console.error(err);
             document.getElementById('main-grid').innerHTML = '<p class="text-red-500 p-8">Unable to load products. Please refresh or contact support.</p>';
@@ -138,6 +138,8 @@
         if(user && localStorage.getItem('neverToken')) {
             document.getElementById('authBtn').innerHTML = 'PROFILE';
             document.getElementById('trackBtn').classList.remove('hidden');
+        } else {
+            document.getElementById('trackBtn').classList.add('hidden');
         }
     }
 
@@ -305,7 +307,7 @@
         }
         const token = localStorage.getItem('neverToken');
         try {
-            const res = await fetch(`/api/my-orders/${user.id}`, {
+            const res = await fetch('/api/my-orders', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) {
@@ -320,7 +322,11 @@
             const panel = document.getElementById('ordersPanel');
             panel.classList.add('show');
             document.getElementById('overlay').classList.add('show');
-            document.getElementById('my-orders-list').innerHTML = (Array.isArray(orders) ? orders : []).map(o => `
+            if (!Array.isArray(orders) || orders.length === 0) {
+                document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-gray-500">No orders found yet. Place an order first and then check here.</div>';
+                return;
+            }
+            document.getElementById('my-orders-list').innerHTML = orders.map(o => `
                 <div class="text-[11px] pb-6 border-b border-gray-200">
                     <div class="flex justify-between mb-4"><span class="font-bold">#${o._id ? o._id.slice(-6) : 'UNKNOWN'}</span><span class="${o.status === 'Pending' ? 'text-gray-400' : 'text-black'}">${o.status || 'Pending'}</span></div>
                     <div class="space-y-4 mb-4">
