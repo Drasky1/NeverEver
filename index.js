@@ -22,6 +22,7 @@ for (const varName of requiredEnvVars) {
 
 const app = express();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const publicDir = path.join(__dirname, 'public');
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -47,7 +48,7 @@ app.use(cors({
   origin: true, // Allow all origins for now
   credentials: true
 }));
-app.use(express.static('public')); // ALL HTML/JS/CSS GOES IN 'public' FOLDER
+app.use(express.static(publicDir)); // ALL HTML/JS/CSS GOES IN 'public' FOLDER
 
 const RATE = 125;
 
@@ -89,6 +90,30 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     estArrival: { type: String, default: '' }
 }, { timestamps: true }));
 
+const defaultSiteContent = {
+    faqs: 'FAQS WILL BE UPDATED SOON.\n\nFOR ORDER QUESTIONS, CONTACT SUPPORT @tfuwnthuh.',
+    policy: 'STORE POLICY WILL BE UPDATED SOON.\n\nPLEASE CONFIRM SIZE, COLOR, AND DELIVERY DETAILS BEFORE PLACING AN ORDER.'
+};
+
+const SiteContent = mongoose.model('SiteContent', new mongoose.Schema({
+    key: { type: String, unique: true, default: 'footer' },
+    faqs: { type: String, default: defaultSiteContent.faqs },
+    policy: { type: String, default: defaultSiteContent.policy }
+}, { timestamps: true }));
+
+async function getFooterContent() {
+    const content = await SiteContent.findOneAndUpdate(
+        { key: 'footer' },
+        { $setOnInsert: { key: 'footer', ...defaultSiteContent } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).lean();
+
+    return {
+        faqs: content.faqs || defaultSiteContent.faqs,
+        policy: content.policy || defaultSiteContent.policy
+    };
+}
+
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Access denied' });
@@ -126,6 +151,38 @@ app.get('/api/my-orders', verifyToken, async (req, res) => {
 app.get('/api/users', verifyAdmin, async (req, res) => {
     const users = await User.find().sort({ createdAt: -1 }).select('username createdAt');
     res.json(users);
+});
+app.get('/api/site-content', async (req, res) => {
+    res.json(await getFooterContent());
+});
+app.put('/api/site-content', verifyAdmin, [
+  body('faqs').optional().isString().trim().isLength({ max: 5000 }),
+  body('policy').optional().isString().trim().isLength({ max: 5000 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const updated = await SiteContent.findOneAndUpdate(
+    { key: 'footer' },
+    {
+      $set: {
+        faqs: req.body.faqs || '',
+        policy: req.body.policy || ''
+      },
+      $setOnInsert: { key: 'footer' }
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  ).lean();
+
+  res.json({
+    success: true,
+    content: {
+      faqs: updated.faqs || '',
+      policy: updated.policy || ''
+    }
+  });
 });
 app.post('/api/add-item', verifyAdmin, [
   body('name').isLength({ min: 1 }).trim().escape(),
@@ -417,7 +474,7 @@ app.get('/debug-user-orders', verifyToken, async (req, res) => {
 });
 
 // Route everything else to the main app (SPA behavior)
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.get(/.*/, (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
+app.get('/admin', (req, res) => res.redirect('/admin.html'));
+app.get(/.*/, (req, res) => res.redirect('/shop.html'));
 
 app.listen(10000, () => console.log("✅ SERVER RUNNING ON PORT 10000"));

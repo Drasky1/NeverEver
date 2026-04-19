@@ -32,6 +32,7 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .slide-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 10; opacity: 0.7; border: 1px solid #ccc; font-weight: bold; font-family: monospace; }
         .slide-btn:hover { opacity: 1; }
+        .content-copy { text-transform: none; white-space: pre-line; }
     </style>
 </head>
 <body>
@@ -53,6 +54,20 @@
 </nav>
 
 <main class="yeezy-grid pt-[60px]" id="main-grid"></main>
+
+<footer class="border-t border-gray-200 px-6 py-10 md:py-14 text-[10px] tracking-widest">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between gap-8">
+        <div>
+            <p class="font-bold mb-3">NEVEREVER</p>
+            <p class="text-gray-400 leading-relaxed">ONLINE SHOP / MYANMAR</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-5 sm:gap-10">
+            <button onclick="openInfoPanel('faqs')" class="text-left hover:underline">FAQS</button>
+            <button onclick="openInfoPanel('policy')" class="text-left hover:underline">POLICY</button>
+            <a href="https://t.me/tfuwnthuh" target="_blank" rel="noopener" class="hover:underline">CONTACT</a>
+        </div>
+    </div>
+</footer>
 
 <div id="productView">
     <button onclick="document.getElementById('productView').style.display='none'" class="fixed top-6 left-6 z-50 text-[11px] font-bold hover:underline">BACK</button>
@@ -125,9 +140,19 @@
     <div id="my-orders-list" class="space-y-8"></div>
 </div>
 
+<div id="infoPanel" class="side-panel">
+    <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 id="infoTitle" class="text-lg">INFO</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
+    <div id="infoContent" class="content-copy text-[12px] leading-7 text-gray-600"></div>
+</div>
+
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
     let allItems = [], cart = {}, user = null, currentItem = null, selectedSize = null, selectedColor = null, isLoginMode = true, pendingAction = null;
+    const defaultSiteContent = {
+        faqs: 'FAQS WILL BE UPDATED SOON.\n\nFOR ORDER QUESTIONS, CONTACT SUPPORT @tfuwnthuh.',
+        policy: 'STORE POLICY WILL BE UPDATED SOON.\n\nPLEASE CONFIRM SIZE, COLOR, AND DELIVERY DETAILS BEFORE PLACING AN ORDER.'
+    };
+    let siteContent = { ...defaultSiteContent };
     const storedUser = localStorage.getItem('neverUser');
     try {
         user = storedUser ? JSON.parse(storedUser) : null;
@@ -138,6 +163,7 @@
     }
 
     async function init() {
+        loadSiteContent();
         try {
             const res = await fetch('/api/items');
             if (!res.ok) throw new Error('Unable to load items');
@@ -175,6 +201,24 @@
             document.getElementById('trackBtn').classList.add('hidden');
         }
         renderAuthPanel();
+    }
+
+    async function loadSiteContent() {
+        try {
+            const res = await fetch('/api/site-content');
+            if (!res.ok) throw new Error('Unable to load site content');
+            siteContent = { ...defaultSiteContent, ...(await res.json()) };
+        } catch (err) {
+            console.warn('Site content load failed', err);
+        }
+    }
+
+    function openInfoPanel(type) {
+        const title = type === 'policy' ? 'POLICY' : 'FAQS';
+        const content = (siteContent[type] || defaultSiteContent[type] || '').trim();
+        document.getElementById('infoTitle').innerText = title;
+        document.getElementById('infoContent').textContent = content || defaultSiteContent[type];
+        openPanel('infoPanel');
     }
 
     function filter(cat) {
