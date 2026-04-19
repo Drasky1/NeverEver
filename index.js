@@ -25,11 +25,15 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://cdn.tailwindcss.com", "https://upload-widget.cloudinary.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      connectSrc: ["'self'", "https://api.telegram.org"],
+      defaultSrc: ["'self'", "data:", "https://accounts.google.com", "https://cdn.tailwindcss.com", "https://upload-widget.cloudinary.com", "https://accounts.google.com", "https://apis.google.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://cdn.tailwindcss.com", "https://upload-widget.cloudinary.com", "https://apis.google.com", "https://accounts.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://accounts.google.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.gstatic.com"],
+      connectSrc: ["'self'", "https://api.telegram.org", "https://accounts.google.com", "https://oauth2.googleapis.com"],
+      frameSrc: ["'self'", "https://upload-widget.cloudinary.com", "https://accounts.google.com", "https://apis.google.com"],
+      frameAncestors: ["'self'"],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrcElem: ["'unsafe-inline'"],
     },
   },
 }));
