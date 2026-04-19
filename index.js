@@ -224,6 +224,23 @@ app.post('/auth/google', async (req, res) => {
     } catch (e) { res.status(401).json({ error: "Google verification failed" }); }
 });
 
+app.post('/auth/login', [
+  body('username').trim().escape(),
+  body('password').isLength({ min: 1 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const user = await User.findOne({ username: req.body.username });
+  if (user && await bcrypt.compare(req.body.password, user.password)) {
+    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, token, user: { id: user._id, username: user.username } });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
 app.post('/auth/signup', [
   body('username').isLength({ min: 3 }).trim().escape(),
   body('password').isLength({ min: 6 }),
@@ -283,11 +300,13 @@ app.get('/debug', async (req, res) => {
     dbName: process.env.MONGODB_URI ? process.env.MONGODB_URI.split('/').pop().split('?')[0] : null,
   };
 
+  debugData.counts = {
+    items: await Item.countDocuments(),
+    orders: await Order.countDocuments(),
+  };
+
   if (admin) {
-    debugData.counts = {
-      items: await Item.countDocuments(),
-      orders: await Order.countDocuments(),
-    };
+    debugData.admin = true;
   }
 
   res.json(debugData);
