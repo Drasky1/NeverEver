@@ -3,568 +3,993 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEVEREVER | SYSTEM</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>NeverEver — Admin System</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #fff; color: #000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: uppercase; -webkit-font-smoothing: antialiased; }
-        
-        /* Ultra minimal inputs */
-        input, select, textarea { border: none; border-bottom: 1px solid #e5e5e5; border-radius: 0; padding: 12px 0; width: 100%; outline: none; background: transparent; font-size: 11px; margin-bottom: 20px; transition: border-color 0.2s;}
-        input:focus, select:focus, textarea:focus { border-bottom: 1px solid #000; }
-        
-        button { background: transparent; color: #000; text-transform: uppercase; border: none; outline: none; cursor: pointer; font-size: 11px; font-weight: bold; }
-        
-        .btn-fill { background: #000; color: #fff; padding: 15px; width: 100%; letter-spacing: 1px; }
-        .btn-fill:hover { background: #333; }
-        
-        /* Minimal Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #e5e5e5; }
-        ::-webkit-scrollbar-thumb:hover { background: #000; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --black: #000;
+            --white: #fff;
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --gray-800: #262626;
+            --gray-900: #171717;
+            --red: #c41e1e;
+            --blue: #2563eb;
+            --green: #22c55e;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'Space Mono', 'SF Mono', 'Courier New', monospace;
+            --transition: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: var(--white);
+            color: var(--black);
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-transform: uppercase;
+        }
+
+        /* ── Toast ──────────────────────────────────────── */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--black);
+            color: var(--white);
+            padding: 14px 20px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            pointer-events: auto;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 0.4s var(--transition), opacity 0.4s;
+            max-width: 340px;
+            line-height: 1.5;
+        }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.toast-error { border-left: 3px solid var(--red); }
+        .toast.toast-success { border-left: 3px solid var(--green); }
+
+        /* ── Inputs ─────────────────────────────────────── */
+        input, select, textarea {
+            border: none;
+            border-bottom: 1px solid var(--gray-200);
+            border-radius: 0;
+            padding: 12px 0;
+            width: 100%;
+            outline: none;
+            background: transparent;
+            font-family: var(--font-sans);
+            font-size: 11px;
+            letter-spacing: 0.04em;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+            text-transform: uppercase;
+        }
+        input:focus, select:focus, textarea:focus { border-bottom-color: var(--black); }
+        input::placeholder, textarea::placeholder { color: var(--gray-400); }
+
+        button {
+            background: transparent;
+            color: var(--black);
+            text-transform: uppercase;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+        }
+
+        .btn-primary {
+            background: var(--black);
+            color: var(--white);
+            padding: 15px;
+            width: 100%;
+            letter-spacing: 0.12em;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-primary:hover { background: var(--gray-800); }
+        .btn-primary:active { transform: scale(0.985); }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--gray-200);
+            padding: 14px;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--black); }
+
+        /* ── Skeleton ───────────────────────────────────── */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 2px;
+        }
+
+        /* ── Section ────────────────────────────────────── */
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--gray-400);
+            margin-bottom: 24px;
+        }
+
+        /* ── Scrollbar ──────────────────────────────────── */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--gray-300); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
+
+        /* ── Auth Overlay ───────────────────────────────── */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--white);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .auth-box {
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+        }
+        .auth-box h1 {
+            font-size: 14px;
+            letter-spacing: 0.2em;
+            margin-bottom: 32px;
+            font-weight: 700;
+        }
+        .auth-box input {
+            text-align: center;
+            font-size: 16px;
+            letter-spacing: 0.2em;
+            border-bottom: 2px solid var(--black);
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        .auth-error {
+            font-size: 10px;
+            color: var(--red);
+            letter-spacing: 0.1em;
+            margin-top: 16px;
+        }
+
+        /* ── Edit Modal ─────────────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-box {
+            max-width: 640px;
+            width: 100%;
+            background: var(--white);
+            padding: 40px;
+            border: 1px solid var(--gray-200);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 10px;
+            color: var(--gray-500);
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--black); }
+
+        /* ── Layout ─────────────────────────────────────── */
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        @media (min-width: 768px) { .admin-container { padding: 48px; } }
+
+        .admin-header {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding-bottom: 32px;
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        @media (min-width: 768px) {
+            .admin-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-end;
+            }
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 64px;
+        }
+        @media (min-width: 1024px) {
+            .admin-grid { grid-template-columns: 5fr 7fr; }
+        }
+
+        .stat-box {
+            text-align: right;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: var(--gray-400);
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        /* ── Inventory Item ─────────────────────────────── */
+        .inv-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .inv-item:hover .inv-actions { opacity: 1; }
+        .inv-actions {
+            display: flex;
+            gap: 16px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .inv-actions button {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            transition: color 0.2s;
+        }
+        .inv-action-edit { color: var(--blue); }
+        .inv-action-edit:hover { color: #1d4ed8; }
+        .inv-action-sold { color: var(--gray-400); }
+        .inv-action-sold:hover { color: var(--black); }
+        .inv-action-del { color: var(--gray-300); }
+        .inv-action-del:hover { color: var(--red); }
+
+        /* ── Order Card ─────────────────────────────────── */
+        .admin-order {
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+        }
+        .admin-order-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            gap: 16px;
+        }
+        .admin-order-info { display: flex; align-items: flex-start; gap: 16px; }
+        .admin-order-img {
+            width: 56px; height: 56px;
+            object-fit: cover;
+            border: 1px solid var(--gray-200);
+            flex-shrink: 0;
+        }
+        .admin-order-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .admin-order-meta {
+            font-size: 10px;
+            color: var(--gray-500);
+            line-height: 1.7;
+        }
+        .admin-order-tg {
+            font-size: 10px;
+            color: var(--blue);
+        }
+        .admin-order-items {
+            font-size: 10px;
+            color: var(--gray-500);
+            margin-top: 8px;
+            line-height: 1.7;
+        }
+        .admin-order-price {
+            font-size: 18px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .admin-order-receipt {
+            font-size: 10px;
+            color: var(--gray-400);
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .admin-order-receipt:hover { color: var(--black); }
+
+        .admin-order-controls {
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            background: var(--gray-50);
+            padding: 16px;
+            margin-top: 12px;
+        }
+        .admin-order-controls > div { flex: 1; }
+        .admin-order-controls label {
+            display: block;
+            font-size: 9px;
+            color: var(--gray-400);
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+        .admin-order-controls select,
+        .admin-order-controls input {
+            margin-bottom: 0;
+            padding: 6px 0;
+            font-size: 11px;
+            background: transparent;
+            border-bottom: 1px solid var(--gray-300);
+        }
+        .admin-order-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+        .admin-order-actions button { font-size: 10px; transition: color 0.2s; }
+        .admin-order-update { color: var(--blue); }
+        .admin-order-update:hover { color: #1d4ed8; }
+        .admin-order-delete { color: var(--red); }
+        .admin-order-delete:hover { opacity: 0.7; }
+
+        /* ── User List ──────────────────────────────────── */
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .user-date {
+            font-size: 10px;
+            color: var(--gray-400);
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="p-6 md:p-12">
+<body>
 
-    <div id="authOverlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-10">
-        <div class="max-w-xs w-full text-center space-y-6">
-            <h1 class="text-lg tracking-widest">SYSTEM ACCESS</h1>
-            <input type="password" id="adminPass" placeholder="ENTER TERMINAL KEY" class="text-center text-xl tracking-widest border-b-2 border-black pb-2">
-            <button onclick="checkPass()" class="btn-fill">LOGIN</button>
-            <div id="authError" class="text-[10px] text-red-500 uppercase tracking-widest"></div>
-        </div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════ AUTH OVERLAY ══════════════════════ -->
+<div id="authOverlay" class="auth-overlay">
+    <div class="auth-box">
+        <h1>SYSTEM ACCESS</h1>
+        <input type="password" id="adminPass" placeholder="ENTER KEY">
+        <button onclick="checkPass()" class="btn-primary">LOGIN</button>
+        <div id="authError" class="auth-error"></div>
     </div>
+</div>
 
-    <div class="max-w-6xl mx-auto">
-        
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-8 border-b border-gray-200">
-            <div>
-                <h1 class="text-xl tracking-widest mb-2">NEVEREVER ADMIN</h1>
-                <p class="text-[10px] text-gray-400 tracking-widest" id="timeDisplay">SYSTEM ACTIVE</p>
+<!-- ═══════════════════ ADMIN CONTENT ════════════════════ -->
+<div class="admin-container">
+
+    <header class="admin-header">
+        <div>
+            <h1 style="font-size:16px;letter-spacing:0.2em;margin-bottom:6px;">NEVEREVER ADMIN</h1>
+            <p id="timeDisplay" style="font-size:10px;color:var(--gray-400);letter-spacing:0.1em;">SYSTEM ACTIVE</p>
+        </div>
+        <div style="display:flex;gap:40px;">
+            <div class="stat-box">
+                <p class="stat-label">REVENUE</p>
+                <h2 id="revTotal" class="stat-value">0 MMK</h2>
             </div>
-            <div class="flex gap-12 mt-8 md:mt-0 text-right">
-                <div>
-                    <p class="text-[10px] text-gray-400 mb-1">REVENUE</p>
-                    <h2 id="revTotal" class="text-2xl">0 MMK</h2>
+            <div class="stat-box">
+                <p class="stat-label">ACTIVE ORDERS</p>
+                <h2 id="orderCount" class="stat-value">0</h2>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-grid">
+
+        <!-- ═══ LEFT COLUMN ═══ -->
+        <div>
+
+            <!-- Deploy Product -->
+            <section style="margin-bottom:48px;">
+                <h2 class="section-title">DEPLOY NEW PRODUCT</h2>
+                <input type="text" id="itemName" placeholder="PRODUCT NAME">
+                <div style="display:flex;gap:12px;">
+                    <input type="number" id="itemCost" placeholder="COST (THB)" style="width:25%;">
+                    <input type="number" id="itemPrice" placeholder="PRICE (MMK)" style="width:25%;">
+                    <input type="number" id="itemQty" placeholder="QTY" value="1" style="width:25%;">
+                    <select id="itemCat" style="width:25%;">
+                        <option value="Instock">INSTOCK</option>
+                        <option value="Preorder">PREORDER</option>
+                    </select>
                 </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 mb-1">ACTIVE ORDERS</p>
-                    <h2 id="orderCount" class="text-2xl">0</h2>
+                <textarea id="itemDesc" placeholder="PRODUCT DESCRIPTION" rows="3"></textarea>
+
+                <div style="margin-bottom:16px;">
+                    <div id="sizeInputs">
+                        <input type="text" class="size-input" placeholder="SIZE OPTION (e.g. S, M, L)">
+                    </div>
+                    <button onclick="addSizeInput()" type="button" style="font-size:10px;color:var(--gray-500);margin-top:4px;">+ ADD ANOTHER SIZE</button>
                 </div>
-            </div>
-        </header>
+                <div style="margin-bottom:16px;">
+                    <div id="colorInputs">
+                        <input type="text" class="color-input" placeholder="COLOR OPTION (e.g. BLACK, RED)">
+                    </div>
+                    <button onclick="addColorInput()" type="button" style="font-size:10px;color:var(--gray-500);margin-top:4px;">+ ADD ANOTHER COLOR</button>
+                </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            
-            <div class="lg:col-span-5 space-y-16">
-                
-                <section>
-                    <h2 class="text-[11px] font-bold tracking-widest mb-8 text-gray-400">DEPLOY NEW PRODUCT</h2>
-                    <input type="text" id="itemName" placeholder="PRODUCT NAME">
-                    <div class="flex gap-4">
-                        <input type="number" id="itemCost" placeholder="COST (THB)" class="w-1/4">
-                        <input type="number" id="itemPrice" placeholder="SELLING PRICE (MMK)" class="w-1/4">
-                        <input type="number" id="itemQty" placeholder="QTY" value="1" class="w-1/4">
-                        <select id="itemCat" class="w-1/4">
-                            <option value="Instock">INSTOCK</option>
-                            <option value="Preorder">PREORDER</option>
-                        </select>
-                    </div>
-                    <textarea id="itemDesc" placeholder="PRODUCT DESCRIPTION (LOWERCASE ENCOURAGED)" rows="3"></textarea>
-                    
-                    <div class="mb-6">
-                        <div id="sizeInputs">
-                            <input type="text" class="size-input" placeholder="SIZE OPTION (e.g. S, M, L, or 40, 42)">
-                        </div>
-                        <button onclick="addSizeInput()" type="button" class="text-[10px] text-gray-500 hover:text-black">+ ADD ANOTHER SIZE OPTION</button>
-                    </div>
-                    <div class="mb-6">
-                        <div id="colorInputs">
-                            <input type="text" class="color-input" placeholder="COLOR OPTION (e.g. BLACK, RED, OAT)">
-                        </div>
-                        <button onclick="addColorInput()" type="button" class="text-[10px] text-gray-500 hover:text-black">+ ADD ANOTHER COLOR OPTION</button>
-                    </div>
-                    
-                    <button id="uploadBtn" class="w-full border border-gray-200 p-6 text-[10px] mb-6 hover:border-black transition-colors text-gray-500 hover:text-black">
-                        + ATTACH PRODUCT IMAGERY
-                    </button>
-                    
-                    <button onclick="saveItem()" class="btn-fill">PUBLISH TO STORE</button>
-                </section>
+                <button id="uploadBtn" class="btn-outline" style="margin-bottom:16px;">+ ATTACH PRODUCT IMAGERY</button>
+                <button onclick="saveItem()" class="btn-primary">PUBLISH TO STORE</button>
+            </section>
 
-                <section>
-                    <div class="flex justify-between items-end mb-8">
-                        <h2 class="text-[11px] font-bold tracking-widest text-gray-400">DATABASE</h2>
-                        <input type="text" id="invSearch" placeholder="SEARCH..." oninput="load()" class="w-1/2 !mb-0 !pb-1 text-right">
-                    </div>
-                    <div id="inv-list" class="space-y-4 max-h-[240px] overflow-y-auto pr-4"></div>
-                </section>
+            <!-- Database -->
+            <section style="margin-bottom:48px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;">
+                    <h2 class="section-title" style="margin-bottom:0;">DATABASE</h2>
+                    <input type="text" id="invSearch" placeholder="SEARCH..." oninput="load()" style="width:50%;margin-bottom:0;padding-bottom:4px;text-align:right;">
+                </div>
+                <div id="inv-list" style="max-height:240px;overflow-y:auto;"></div>
+            </section>
 
-                <section>
-                    <div class="flex justify-between items-end mb-8">
-                        <div>
-                            <h2 class="text-[11px] font-bold tracking-widest text-gray-400">CUSTOMER ACCOUNTS</h2>
-                            <p class="text-[10px] text-gray-400">Passwords are securely hashed and cannot be viewed.</p>
-                        </div>
-                        <button onclick="load()" class="text-[10px] text-gray-500 hover:text-black">REFRESH</button>
+            <!-- Customer Accounts -->
+            <section style="margin-bottom:48px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom:4px;">CUSTOMER ACCOUNTS</h2>
+                        <p style="font-size:10px;color:var(--gray-400);letter-spacing:0.05em;">PASSWORDS ARE SECURELY HASHED.</p>
                     </div>
-                    <div id="user-list" class="space-y-3 max-h-[180px] overflow-y-auto pr-4 text-[11px]"></div>
-                    <div class="mt-4 flex gap-2">
-                        <input id="resetUsername" type="text" placeholder="Customer username" class="flex-1 border-b border-gray-200 bg-transparent text-[11px] py-2">
-                        <input id="resetPassword" type="password" placeholder="New password" class="flex-1 border-b border-gray-200 bg-transparent text-[11px] py-2">
+                    <button onclick="load()" style="font-size:10px;color:var(--gray-500);">REFRESH</button>
+                </div>
+                <div id="user-list" style="max-height:180px;overflow-y:auto;margin-top:16px;"></div>
+                <div style="margin-top:16px;display:flex;gap:8px;">
+                    <input id="resetUsername" type="text" placeholder="CUSTOMER USERNAME" style="flex:1;margin-bottom:0;padding:8px 0;">
+                    <input id="resetPassword" type="password" placeholder="NEW PASSWORD" style="flex:1;margin-bottom:0;padding:8px 0;">
+                </div>
+                <button onclick="resetCustomerPassword()" class="btn-primary" style="margin-top:16px;">RESET CUSTOMER PASSWORD</button>
+            </section>
+
+            <!-- Footer Info -->
+            <section>
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom:4px;">FOOTER INFO</h2>
+                        <p style="font-size:10px;color:var(--gray-400);letter-spacing:0.05em;">FAQS AND POLICY IN SHOP FOOTER.</p>
                     </div>
-                    <button onclick="resetCustomerPassword()" class="btn-fill mt-4">RESET CUSTOMER PASSWORD</button>
-                </section>
-
-                <section>
-                    <div class="flex justify-between items-end mb-8">
-                        <div>
-                            <h2 class="text-[11px] font-bold tracking-widest text-gray-400">FOOTER INFO</h2>
-                            <p class="text-[10px] text-gray-400">FAQS AND POLICY SHOWN IN THE SHOP FOOTER.</p>
-                        </div>
-                        <button onclick="loadSiteContent()" class="text-[10px] text-gray-500 hover:text-black">REFRESH</button>
-                    </div>
-                    <textarea id="siteFaqs" placeholder="FAQS" rows="7"></textarea>
-                    <textarea id="sitePolicy" placeholder="POLICY" rows="7"></textarea>
-                    <button onclick="saveSiteContent()" class="btn-fill">SAVE FOOTER INFO</button>
-                    <div id="siteContentStatus" class="text-[10px] text-gray-400 uppercase tracking-widest mt-4"></div>
-                </section>
-
-            </div>
-
-            <div class="lg:col-span-7">
-                <h2 class="text-[11px] font-bold tracking-widest mb-8 text-gray-400">LIVE ORDER STREAM</h2>
-                <div id="order-list" class="space-y-8"></div>
-            </div>
+                    <button onclick="loadSiteContent()" style="font-size:10px;color:var(--gray-500);">REFRESH</button>
+                </div>
+                <textarea id="siteFaqs" placeholder="FAQS" rows="6" style="margin-top:16px;"></textarea>
+                <textarea id="sitePolicy" placeholder="POLICY" rows="6"></textarea>
+                <button onclick="saveSiteContent()" class="btn-primary">SAVE FOOTER INFO</button>
+                <div id="siteContentStatus" style="font-size:10px;color:var(--gray-400);letter-spacing:0.1em;margin-top:12px;"></div>
+            </section>
 
         </div>
-    </div>
 
-    <!-- Edit Item Modal -->
-    <div id="editModal" class="fixed inset-0 bg-black/50 z-[100] flex flex-col items-center justify-center p-10 hidden overflow-y-auto backdrop-blur-sm">
-        <div class="max-w-2xl w-full bg-white p-8 border border-gray-200 shadow-xl relative my-auto">
-            <button onclick="document.getElementById('editModal').classList.add('hidden')" class="absolute top-4 right-4 text-[10px] text-gray-500 hover:text-black font-bold">CLOSE</button>
-            <h2 class="text-[11px] font-bold tracking-widest text-gray-400 mb-8">EDIT PRODUCT</h2>
-            <input type="hidden" id="editItemId">
-            <input type="text" id="editItemName" placeholder="PRODUCT NAME">
-            <div class="flex gap-4">
-                <input type="number" id="editItemCost" placeholder="COST (THB)" class="w-1/4">
-                <input type="number" id="editItemPrice" placeholder="SELLING PRICE (MMK)" class="w-1/4">
-                <input type="number" id="editItemQty" placeholder="QTY" class="w-1/4">
-                <select id="editItemCat" class="w-1/4">
-                    <option value="Instock">INSTOCK</option>
-                    <option value="Preorder">PREORDER</option>
-                    <option value="Sold Out">SOLD OUT</option>
-                </select>
-            </div>
-            <textarea id="editItemDesc" placeholder="PRODUCT DESCRIPTION" rows="3"></textarea>
-            
-            <div class="mb-6">
-                <div id="editSizeInputs"></div>
-                <button onclick="addEditSizeInput()" type="button" class="text-[10px] text-gray-500 hover:text-black mt-4">+ ADD ANOTHER SIZE OPTION</button>
-            </div>
-            <div class="mb-6">
-                <div id="editColorInputs"></div>
-                <button onclick="addEditColorInput()" type="button" class="text-[10px] text-gray-500 hover:text-black">+ ADD ANOTHER COLOR OPTION</button>
-            </div>
-            
-            <button id="editUploadBtn" class="w-full border border-gray-200 p-6 text-[10px] mb-6 hover:border-black transition-colors text-gray-500 hover:text-black">
-                + ATTACH NEW PRODUCT IMAGERY (REPLACES OLD)
-            </button>
-
-            <button onclick="saveEditItem()" class="btn-fill">UPDATE PRODUCT</button>
+        <!-- ═══ RIGHT COLUMN ═══ -->
+        <div>
+            <h2 class="section-title">LIVE ORDER STREAM</h2>
+            <div id="order-list"></div>
         </div>
-    </div>
 
-    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
-    <script>
-        // Simple security layer
-        document.addEventListener("DOMContentLoaded", () => {
-            if(localStorage.getItem('adminToken')) {
+    </div>
+</div>
+
+<!-- ═══════════════════ EDIT MODAL ════════════════════════ -->
+<div id="editModal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <button onclick="document.getElementById('editModal').classList.add('hidden')" class="modal-close">CLOSE</button>
+        <h2 class="section-title">EDIT PRODUCT</h2>
+        <input type="hidden" id="editItemId">
+        <input type="text" id="editItemName" placeholder="PRODUCT NAME">
+        <div style="display:flex;gap:12px;">
+            <input type="number" id="editItemCost" placeholder="COST (THB)" style="width:25%;">
+            <input type="number" id="editItemPrice" placeholder="PRICE (MMK)" style="width:25%;">
+            <input type="number" id="editItemQty" placeholder="QTY" style="width:25%;">
+            <select id="editItemCat" style="width:25%;">
+                <option value="Instock">INSTOCK</option>
+                <option value="Preorder">PREORDER</option>
+                <option value="Sold Out">SOLD OUT</option>
+            </select>
+        </div>
+        <textarea id="editItemDesc" placeholder="PRODUCT DESCRIPTION" rows="3"></textarea>
+
+        <div style="margin-bottom:16px;">
+            <div id="editSizeInputs"></div>
+            <button onclick="addEditSizeInput()" type="button" style="font-size:10px;color:var(--gray-500);margin-top:4px;">+ ADD ANOTHER SIZE</button>
+        </div>
+        <div style="margin-bottom:16px;">
+            <div id="editColorInputs"></div>
+            <button onclick="addEditColorInput()" type="button" style="font-size:10px;color:var(--gray-500);margin-top:4px;">+ ADD ANOTHER COLOR</button>
+        </div>
+
+        <button id="editUploadBtn" class="btn-outline" style="margin-bottom:16px;">+ ATTACH NEW IMAGERY (REPLACES OLD)</button>
+        <button onclick="saveEditItem()" class="btn-primary">UPDATE PRODUCT</button>
+    </div>
+</div>
+
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+<script>
+    // ═══════════════════════════════════════════════════════
+    // ►  TOAST
+    // ═══════════════════════════════════════════════════════
+    function toast(msg, type = 'info', duration = 3500) {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = `toast ${type === 'error' ? 'toast-error' : type === 'success' ? 'toast-success' : ''}`;
+        el.textContent = msg;
+        container.appendChild(el);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => el.classList.add('show'));
+        });
+        setTimeout(() => {
+            el.classList.remove('show');
+            setTimeout(() => el.remove(), 400);
+        }, duration);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  AUTH
+    // ═══════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('adminToken')) {
+            document.getElementById('authOverlay').style.display = 'none';
+            load();
+            loadSiteContent();
+        }
+    });
+
+    function checkPass() {
+        const authError = document.getElementById('authError');
+        authError.innerText = '';
+        fetch('/auth/admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: document.getElementById('adminPass').value })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                localStorage.setItem('adminToken', data.token);
                 document.getElementById('authOverlay').style.display = 'none';
                 load();
                 loadSiteContent();
-            }
-        });
-
-        function checkPass() { 
-            const authError = document.getElementById('authError');
-            authError.innerText = '';
-            fetch('/auth/admin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: document.getElementById('adminPass').value })
-            }).then(res => res.json()).then(data => {
-                if (data.success) {
-                    localStorage.setItem('adminToken', data.token);
-                    document.getElementById('authOverlay').style.display = 'none';
-                    load();
-                    loadSiteContent();
-                } else {
-                    localStorage.removeItem('adminToken');
-                    authError.innerText = data.error || "ACCESS DENIED";
-                }
-            }).catch(err => {
-                authError.innerText = 'LOGIN FAILED: ' + err.message;
-            });
-        }
-
-        // Live Time Display
-        setInterval(() => {
-            document.getElementById('timeDisplay').innerText = new Date().toLocaleString();
-        }, 1000);
-
-        // Size Input Logic
-        function addSizeInput() {
-            const el = document.createElement('input');
-            el.type = 'text';
-            el.className = 'size-input';
-            el.placeholder = 'SIZE OPTION';
-            document.getElementById('sizeInputs').appendChild(el);
-        }
-        function addColorInput() {
-            const el = document.createElement('input');
-            el.type = 'text';
-            el.className = 'color-input';
-            el.placeholder = 'COLOR OPTION';
-            document.getElementById('colorInputs').appendChild(el);
-        }
-
-        // Image Upload Logic
-        let photos = [];
-        var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd', maxFiles: 20 }, (e,r) => { 
-            if(r.event==="success") { 
-                if (photos.length >= 20) return alert("MAXIMUM 20 IMAGES ALLOWED");
-                photos.push(r.info.secure_url); 
-                document.getElementById('uploadBtn').innerText = `${photos.length} IMAGES ATTACHED ✓`;
-                document.getElementById('uploadBtn').style.borderColor = "#000";
-                document.getElementById('uploadBtn').style.color = "#000";
-            }
-        });
-        document.getElementById('uploadBtn').onclick = () => widget.open();
-
-        async function saveItem() {
-            const token = localStorage.getItem('adminToken');
-            const sizes = Array.from(document.querySelectorAll('.size-input')).map(s => s.value.trim()).filter(Boolean);
-            const colors = Array.from(document.querySelectorAll('.color-input')).map(c => c.value.trim()).filter(Boolean);
-            const data = { 
-                name: document.getElementById('itemName').value, 
-                costTHB: document.getElementById('itemCost').value, 
-                priceMMK: document.getElementById('itemPrice').value,
-                quantity: document.getElementById('itemQty').value,
-                category: document.getElementById('itemCat').value, 
-                description: document.getElementById('itemDesc').value, 
-                availableSizes: sizes, 
-                availableColors: colors,
-                images: photos 
-            };
-            if(!data.name || !data.costTHB || photos.length === 0) return alert("MISSING DATA OR IMAGES");
-
-            const response = await fetch('/api/add-item', { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify(data)});
-            const result = await response.json();
-            if (!response.ok) {
-                const message = result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Unable to add product');
-                return alert(`PRODUCT NOT DEPLOYED: ${message}`);
-            }
-            alert("PRODUCT DEPLOYED");
-            location.reload();
-        }
-
-        // Order Management API
-        async function markSoldOut(id) {
-            const token = localStorage.getItem('adminToken');
-            await fetch(`/api/update-item-cat/${id}`, { method:'PUT', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify({category: 'Sold Out'})});
-            load();
-        }
-
-        async function updateOrder(id) {
-            const token = localStorage.getItem('adminToken');
-            const status = document.getElementById(`status-${id}`).value;
-            const estArrival = document.getElementById(`est-${id}`).value;
-            await fetch(`/api/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify({status, estArrival})});
-            alert("ORDER STATUS UPDATED");
-            load();
-        }
-
-        async function delOrder(id) { 
-            if(confirm('PERMANENTLY DELETE THIS ORDER?')) { 
-                const token = localStorage.getItem('adminToken');
-                await fetch(`/api/delete-order/${id}`, {method:'DELETE', headers: {'Authorization': `Bearer ${token}`}}); 
-                load(); 
-            } 
-        }
-        async function delItem(id) { 
-            if(confirm('REMOVE PRODUCT FROM STORE?')) { 
-                const token = localStorage.getItem('adminToken');
-                await fetch(`/api/delete-item/${id}`, {method:'DELETE', headers: {'Authorization': `Bearer ${token}`}}); 
-                load(); 
-            } 
-        }
-
-        let itemsCache = [];
-        let editPhotos = [];
-
-        var editWidget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd', maxFiles: 20 }, (e,r) => { 
-            if(r.event==="success") { 
-                if (editPhotos.length >= 20) return alert("MAXIMUM 20 IMAGES ALLOWED");
-                editPhotos.push(r.info.secure_url); 
-                document.getElementById('editUploadBtn').innerText = `${editPhotos.length} NEW IMAGES ATTACHED ✓`;
-                document.getElementById('editUploadBtn').style.borderColor = "#000";
-                document.getElementById('editUploadBtn').style.color = "#000";
-            }
-        });
-        document.getElementById('editUploadBtn').onclick = () => editWidget.open();
-
-        function addEditSizeInput(val = '') {
-            const el = document.createElement('input');
-            el.type = 'text';
-            el.className = 'size-input edit-size-input w-full border-b border-gray-200 pb-2 mb-2 outline-none text-[11px]';
-            el.placeholder = 'SIZE OPTION';
-            el.value = val;
-            document.getElementById('editSizeInputs').appendChild(el);
-        }
-        function addEditColorInput(val = '') {
-            const el = document.createElement('input');
-            el.type = 'text';
-            el.className = 'color-input edit-color-input w-full border-b border-gray-200 pb-2 mb-2 outline-none text-[11px]';
-            el.placeholder = 'COLOR OPTION';
-            el.value = val;
-            document.getElementById('editColorInputs').appendChild(el);
-        }
-
-        function openEditModal(id) {
-            const item = itemsCache.find(i => i._id === id);
-            if(!item) return;
-            document.getElementById('editItemId').value = item._id;
-            document.getElementById('editItemName').value = item.name || '';
-            document.getElementById('editItemCost').value = item.costTHB || '';
-            document.getElementById('editItemPrice').value = item.price || '';
-            document.getElementById('editItemQty').value = item.quantity !== undefined ? item.quantity : 1;
-            document.getElementById('editItemCat').value = item.category || 'Instock';
-            document.getElementById('editItemDesc').value = item.description || '';
-            
-            document.getElementById('editSizeInputs').innerHTML = '';
-            (item.availableSizes || []).forEach(s => addEditSizeInput(s));
-            if((item.availableSizes || []).length === 0) addEditSizeInput();
-
-            document.getElementById('editColorInputs').innerHTML = '';
-            (item.availableColors || []).forEach(c => addEditColorInput(c));
-            if((item.availableColors || []).length === 0) addEditColorInput();
-
-            editPhotos = [];
-            document.getElementById('editUploadBtn').innerText = '+ ATTACH NEW PRODUCT IMAGERY (REPLACES OLD)';
-            document.getElementById('editUploadBtn').style.borderColor = "#e5e5e5";
-            document.getElementById('editUploadBtn').style.color = "#6b7280";
-
-            document.getElementById('editModal').classList.remove('hidden');
-        }
-
-        async function saveEditItem() {
-            const token = localStorage.getItem('adminToken');
-            const id = document.getElementById('editItemId').value;
-            const sizes = Array.from(document.querySelectorAll('.edit-size-input')).map(s => s.value.trim()).filter(Boolean);
-            const colors = Array.from(document.querySelectorAll('.edit-color-input')).map(c => c.value.trim()).filter(Boolean);
-            const data = { 
-                name: document.getElementById('editItemName').value, 
-                costTHB: document.getElementById('editItemCost').value, 
-                priceMMK: document.getElementById('editItemPrice').value,
-                quantity: document.getElementById('editItemQty').value,
-                category: document.getElementById('editItemCat').value, 
-                description: document.getElementById('editItemDesc').value, 
-                availableSizes: sizes,
-                availableColors: colors
-            };
-            if(editPhotos.length > 0) {
-                data.images = editPhotos;
-            }
-
-            await fetch(`/api/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify(data)});
-            alert("PRODUCT UPDATED");
-            document.getElementById('editModal').classList.add('hidden');
-            load();
-        }
-
-        async function resetCustomerPassword() {
-            const username = document.getElementById('resetUsername').value.trim();
-            const newPassword = document.getElementById('resetPassword').value.trim();
-            if (!username || !newPassword) return alert('Fill username and new password');
-            const token = localStorage.getItem('adminToken');
-            const res = await fetch('/api/reset-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ username, newPassword })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                alert('Customer password reset successfully');
-                document.getElementById('resetUsername').value = '';
-                document.getElementById('resetPassword').value = '';
+                toast('SYSTEM ACCESS GRANTED', 'success');
             } else {
-                alert(data.error || 'Unable to reset password');
+                localStorage.removeItem('adminToken');
+                authError.innerText = data.error || 'ACCESS DENIED';
             }
-        }
+        }).catch(err => {
+            authError.innerText = 'LOGIN FAILED: ' + err.message;
+        });
+    }
 
-        async function loadSiteContent() {
-            const status = document.getElementById('siteContentStatus');
-            try {
-                if (status) status.innerText = 'LOADING...';
-                const res = await fetch('/api/site-content');
-                const data = await res.json();
-                if (!res.ok) {
-                    throw new Error(data.error || 'Unable to load footer info');
-                }
-                document.getElementById('siteFaqs').value = data.faqs || '';
-                document.getElementById('sitePolicy').value = data.policy || '';
-                if (status) status.innerText = 'LOADED';
-            } catch (err) {
-                console.error('Site content load failed', err);
-                if (status) status.innerText = err.message || 'LOAD FAILED';
-            }
-        }
+    // Live Clock
+    setInterval(() => {
+        document.getElementById('timeDisplay').innerText = new Date().toLocaleString();
+    }, 1000);
 
-        async function saveSiteContent() {
+    // ═══════════════════════════════════════════════════════
+    // ►  SIZE / COLOR INPUTS
+    // ═══════════════════════════════════════════════════════
+    function addSizeInput() {
+        const el = document.createElement('input');
+        el.type = 'text'; el.className = 'size-input'; el.placeholder = 'SIZE OPTION';
+        document.getElementById('sizeInputs').appendChild(el);
+    }
+    function addColorInput() {
+        const el = document.createElement('input');
+        el.type = 'text'; el.className = 'color-input'; el.placeholder = 'COLOR OPTION';
+        document.getElementById('colorInputs').appendChild(el);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  IMAGE UPLOAD
+    // ═══════════════════════════════════════════════════════
+    let photos = [];
+    var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd', maxFiles: 20 }, (e, r) => {
+        if (r.event === 'success') {
+            if (photos.length >= 20) return toast('MAXIMUM 20 IMAGES', 'error');
+            photos.push(r.info.secure_url);
+            const btn = document.getElementById('uploadBtn');
+            btn.innerText = `${photos.length} IMAGES ATTACHED ✓`;
+            btn.style.borderColor = 'var(--black)';
+            btn.style.color = 'var(--black)';
+        }
+    });
+    document.getElementById('uploadBtn').onclick = () => widget.open();
+
+    // ═══════════════════════════════════════════════════════
+    // ►  SAVE ITEM
+    // ═══════════════════════════════════════════════════════
+    async function saveItem() {
+        const token = localStorage.getItem('adminToken');
+        const sizes = Array.from(document.querySelectorAll('.size-input')).map(s => s.value.trim()).filter(Boolean);
+        const colors = Array.from(document.querySelectorAll('.color-input')).map(c => c.value.trim()).filter(Boolean);
+        const data = {
+            name: document.getElementById('itemName').value,
+            costTHB: document.getElementById('itemCost').value,
+            priceMMK: document.getElementById('itemPrice').value,
+            quantity: document.getElementById('itemQty').value,
+            category: document.getElementById('itemCat').value,
+            description: document.getElementById('itemDesc').value,
+            availableSizes: sizes,
+            availableColors: colors,
+            images: photos
+        };
+        if (!data.name || !data.costTHB || photos.length === 0) return toast('MISSING DATA OR IMAGES', 'error');
+
+        const response = await fetch('/api/add-item', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+        const result = await response.json();
+        if (!response.ok) {
+            return toast(result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'UNABLE TO ADD PRODUCT'), 'error');
+        }
+        toast('PRODUCT DEPLOYED', 'success');
+        location.reload();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  ORDER MANAGEMENT
+    // ═══════════════════════════════════════════════════════
+    async function markSoldOut(id) {
+        const token = localStorage.getItem('adminToken');
+        await fetch(`/api/update-item-cat/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ category: 'Sold Out' }) });
+        toast('MARKED SOLD OUT', 'success');
+        load();
+    }
+
+    async function updateOrder(id) {
+        const token = localStorage.getItem('adminToken');
+        const status = document.getElementById(`status-${id}`).value;
+        const estArrival = document.getElementById(`est-${id}`).value;
+        await fetch(`/api/update-order/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ status, estArrival }) });
+        toast('ORDER UPDATED', 'success');
+        load();
+    }
+
+    async function delOrder(id) {
+        if (confirm('PERMANENTLY DELETE THIS ORDER?')) {
             const token = localStorage.getItem('adminToken');
-            const status = document.getElementById('siteContentStatus');
-            const data = {
-                faqs: document.getElementById('siteFaqs').value,
-                policy: document.getElementById('sitePolicy').value
-            };
-
-            try {
-                if (status) status.innerText = 'SAVING...';
-                const res = await fetch('/api/site-content', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (!res.ok) {
-                    const message = result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Unable to save footer info');
-                    throw new Error(message);
-                }
-                if (status) status.innerText = 'SAVED';
-                alert('FOOTER INFO UPDATED');
-            } catch (err) {
-                console.error('Site content save failed', err);
-                if (status) status.innerText = err.message || 'SAVE FAILED';
-                alert(err.message || 'Unable to save footer info');
-            }
+            await fetch(`/api/delete-order/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            toast('ORDER DELETED', 'success');
+            load();
         }
+    }
 
-        // Data Fetching and Rendering
-        async function load() {
+    async function delItem(id) {
+        if (confirm('REMOVE PRODUCT FROM STORE?')) {
             const token = localStorage.getItem('adminToken');
-            try {
-                const itemsRes = await fetch('/api/items');
-                if (!itemsRes.ok) {
-                    const errText = await itemsRes.text().catch(() => 'unknown error');
-                    throw new Error(`Unable to load items (${itemsRes.status}): ${errText}`);
+            await fetch(`/api/delete-item/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            toast('PRODUCT REMOVED', 'success');
+            load();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  EDIT MODAL
+    // ═══════════════════════════════════════════════════════
+    let itemsCache = [];
+    let editPhotos = [];
+
+    var editWidget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd', maxFiles: 20 }, (e, r) => {
+        if (r.event === 'success') {
+            if (editPhotos.length >= 20) return toast('MAXIMUM 20 IMAGES', 'error');
+            editPhotos.push(r.info.secure_url);
+            const btn = document.getElementById('editUploadBtn');
+            btn.innerText = `${editPhotos.length} NEW IMAGES ATTACHED ✓`;
+            btn.style.borderColor = 'var(--black)';
+            btn.style.color = 'var(--black)';
+        }
+    });
+    document.getElementById('editUploadBtn').onclick = () => editWidget.open();
+
+    function addEditSizeInput(val = '') {
+        const el = document.createElement('input');
+        el.type = 'text';
+        el.className = 'size-input edit-size-input';
+        el.placeholder = 'SIZE OPTION';
+        el.value = val;
+        document.getElementById('editSizeInputs').appendChild(el);
+    }
+    function addEditColorInput(val = '') {
+        const el = document.createElement('input');
+        el.type = 'text';
+        el.className = 'color-input edit-color-input';
+        el.placeholder = 'COLOR OPTION';
+        el.value = val;
+        document.getElementById('editColorInputs').appendChild(el);
+    }
+
+    function openEditModal(id) {
+        const item = itemsCache.find(i => i._id === id);
+        if (!item) return;
+        document.getElementById('editItemId').value = item._id;
+        document.getElementById('editItemName').value = item.name || '';
+        document.getElementById('editItemCost').value = item.costTHB || '';
+        document.getElementById('editItemPrice').value = item.price || '';
+        document.getElementById('editItemQty').value = item.quantity !== undefined ? item.quantity : 1;
+        document.getElementById('editItemCat').value = item.category || 'Instock';
+        document.getElementById('editItemDesc').value = item.description || '';
+
+        document.getElementById('editSizeInputs').innerHTML = '';
+        (item.availableSizes || []).forEach(s => addEditSizeInput(s));
+        if ((item.availableSizes || []).length === 0) addEditSizeInput();
+
+        document.getElementById('editColorInputs').innerHTML = '';
+        (item.availableColors || []).forEach(c => addEditColorInput(c));
+        if ((item.availableColors || []).length === 0) addEditColorInput();
+
+        editPhotos = [];
+        const btn = document.getElementById('editUploadBtn');
+        btn.innerText = '+ ATTACH NEW IMAGERY (REPLACES OLD)';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    async function saveEditItem() {
+        const token = localStorage.getItem('adminToken');
+        const id = document.getElementById('editItemId').value;
+        const sizes = Array.from(document.querySelectorAll('.edit-size-input')).map(s => s.value.trim()).filter(Boolean);
+        const colors = Array.from(document.querySelectorAll('.edit-color-input')).map(c => c.value.trim()).filter(Boolean);
+        const data = {
+            name: document.getElementById('editItemName').value,
+            costTHB: document.getElementById('editItemCost').value,
+            priceMMK: document.getElementById('editItemPrice').value,
+            quantity: document.getElementById('editItemQty').value,
+            category: document.getElementById('editItemCat').value,
+            description: document.getElementById('editItemDesc').value,
+            availableSizes: sizes,
+            availableColors: colors
+        };
+        if (editPhotos.length > 0) data.images = editPhotos;
+
+        await fetch(`/api/update-item/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+        toast('PRODUCT UPDATED', 'success');
+        document.getElementById('editModal').classList.add('hidden');
+        load();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  CUSTOMER PASSWORD RESET
+    // ═══════════════════════════════════════════════════════
+    async function resetCustomerPassword() {
+        const username = document.getElementById('resetUsername').value.trim();
+        const newPassword = document.getElementById('resetPassword').value.trim();
+        if (!username || !newPassword) return toast('FILL USERNAME AND NEW PASSWORD', 'error');
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ username, newPassword })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            toast('PASSWORD RESET SUCCESSFULLY', 'success');
+            document.getElementById('resetUsername').value = '';
+            document.getElementById('resetPassword').value = '';
+        } else {
+            toast(data.error || 'UNABLE TO RESET PASSWORD', 'error');
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  SITE CONTENT
+    // ═══════════════════════════════════════════════════════
+    async function loadSiteContent() {
+        const status = document.getElementById('siteContentStatus');
+        try {
+            if (status) status.innerText = 'LOADING...';
+            const res = await fetch('/api/site-content');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Unable to load footer info');
+            document.getElementById('siteFaqs').value = data.faqs || '';
+            document.getElementById('sitePolicy').value = data.policy || '';
+            if (status) status.innerText = 'LOADED';
+        } catch (err) {
+            console.error('Site content load failed', err);
+            if (status) status.innerText = err.message || 'LOAD FAILED';
+        }
+    }
+
+    async function saveSiteContent() {
+        const token = localStorage.getItem('adminToken');
+        const status = document.getElementById('siteContentStatus');
+        const data = {
+            faqs: document.getElementById('siteFaqs').value,
+            policy: document.getElementById('sitePolicy').value
+        };
+        try {
+            if (status) status.innerText = 'SAVING...';
+            const res = await fetch('/api/site-content', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Unable to save');
+            if (status) status.innerText = 'SAVED';
+            toast('FOOTER INFO UPDATED', 'success');
+        } catch (err) {
+            if (status) status.innerText = err.message || 'SAVE FAILED';
+            toast(err.message || 'UNABLE TO SAVE FOOTER INFO', 'error');
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  DATA LOAD
+    // ═══════════════════════════════════════════════════════
+    function renderLoadingSkeletons() {
+        document.getElementById('inv-list').innerHTML = Array(5).fill(0).map(() =>
+            `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);">
+                <div class="skeleton" style="height:12px;width:40%;"></div>
+                <div class="skeleton" style="height:12px;width:20%;"></div>
+            </div>`
+        ).join('');
+        document.getElementById('order-list').innerHTML = Array(3).fill(0).map(() =>
+            `<div style="padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid var(--gray-200);">
+                <div style="display:flex;gap:16px;margin-bottom:12px;">
+                    <div class="skeleton" style="width:56px;height:56px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div class="skeleton" style="height:14px;width:50%;margin-bottom:8px;"></div><div class="skeleton" style="height:10px;width:70%;margin-bottom:6px;"></div><div class="skeleton" style="height:10px;width:40%;"></div></div>
+                </div>
+                <div class="skeleton" style="height:40px;width:100%;"></div>
+            </div>`
+        ).join('');
+    }
+
+    async function load() {
+        const token = localStorage.getItem('adminToken');
+        renderLoadingSkeletons();
+        try {
+            const itemsRes = await fetch('/api/items');
+            if (!itemsRes.ok) throw new Error(`Unable to load items (${itemsRes.status})`);
+            const items = await itemsRes.json();
+            itemsCache = items;
+
+            const ordersRes = await fetch('/api/orders', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!ordersRes.ok) {
+                if (ordersRes.status === 401 || ordersRes.status === 403) {
+                    localStorage.removeItem('adminToken');
+                    document.getElementById('authOverlay').style.display = 'flex';
+                    throw new Error('Session expired');
                 }
-                const items = await itemsRes.json();
-                itemsCache = items;
+                throw new Error(`Unable to load orders (${ordersRes.status})`);
+            }
+            const orders = await ordersRes.json();
 
-                const ordersRes = await fetch('/api/orders', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!ordersRes.ok) {
-                    const errText = await ordersRes.text().catch(() => 'unknown error');
-                    if (ordersRes.status === 401 || ordersRes.status === 403) {
-                        localStorage.removeItem('adminToken');
-                        const overlay = document.getElementById('authOverlay');
-                        if (overlay) overlay.style.display = 'flex';
-                        throw new Error(`Admin session expired (${ordersRes.status}): ${errText}`);
-                    }
-                    throw new Error(`Unable to load orders (${ordersRes.status}): ${errText}`);
-                }
-                const orders = await ordersRes.json();
+            const usersRes = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!usersRes.ok) throw new Error('Unable to load users');
+            const users = await usersRes.json();
 
-                const usersRes = await fetch('/api/users', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!usersRes.ok) {
-                    throw new Error('Unable to load users');
-                }
-                const users = await usersRes.json();
+            // Render Users
+            document.getElementById('user-list').innerHTML = users.map(u =>
+                `<div class="user-item">
+                    <span>${u.username}</span>
+                    <span class="user-date">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</span>
+                </div>`
+            ).join('') || '<div style="font-size:11px;color:var(--gray-400);padding:12px 0;">NO CUSTOMER ACCOUNTS FOUND.</div>';
 
-                document.getElementById('user-list').innerHTML = users.map(u => `
-                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
-                        <span>${u.username}</span>
-                        <span class="text-gray-400 text-[10px]">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'DATE N/A'}</span>
-                    </div>`).join('') || '<div class="text-gray-400 text-[11px]">NO CUSTOMER ACCOUNTS FOUND.</div>';
-                document.getElementById('resetUsername').value = '';
-                document.getElementById('resetPassword').value = '';
+            // Stats
+            let rev = 0;
+            orders.forEach(o => { rev += o.totalMMK; });
+            document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
+            document.getElementById('orderCount').innerText = orders.length;
 
-                // Calculate Stats
-                let rev = 0;
-                orders.forEach(o => { rev += o.totalMMK; });
-                document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
-                document.getElementById('orderCount').innerText = orders.length;
-
-                // Render Orders
-                document.getElementById('order-list').innerHTML = orders.map(o => `
-                    <div class="border-b border-gray-200 pb-6 text-[11px]">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-start gap-4">
-                            ${o.items[0]?.image ? `<img src="${o.items[0].image}" class="w-16 h-16 object-cover border border-gray-200">` : ''}
+            // Render Orders
+            document.getElementById('order-list').innerHTML = orders.map(o => `
+                <div class="admin-order">
+                    <div class="admin-order-top">
+                        <div class="admin-order-info">
+                            ${o.items[0]?.image ? `<img src="${o.items[0].image}" class="admin-order-img" loading="lazy" alt="Order item">` : ''}
                             <div>
-                                <p class="font-bold text-sm mb-1 uppercase">${o.customerName || o.username}</p>
-                                <p class="text-gray-500">${o.phone || 'NO PHONE'} • ${o.address || 'NO ADDRESS'}</p>
-                                ${o.telegram ? `<p class="text-blue-500 text-[10px] uppercase">TG: @${o.telegram.replace('@','')}</p>` : ''}
-                                <p class="mt-2 text-gray-500">${o.items.map(i => `${i.qty}x ${i.name} (${i.size || 'N/A'} / ${i.color || 'N/A'})`).join('<br>')}</p>
+                                <p class="admin-order-name">${o.customerName || o.username}</p>
+                                <p class="admin-order-meta">${o.phone || 'NO PHONE'} • ${o.address || 'NO ADDRESS'}</p>
+                                ${o.telegram ? `<p class="admin-order-tg">TG: @${o.telegram.replace('@', '')}</p>` : ''}
+                                <p class="admin-order-items">${o.items.map(i => `${i.qty}x ${i.name} (${i.size || 'N/A'} / ${i.color || 'N/A'})`).join('<br>')}</p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-lg mb-2">${o.totalMMK.toLocaleString()} MMK</p>
-                            <a href="${o.paymentScreenshot}" target="_blank" class="text-gray-400 hover:text-black underline">VIEW RECEIPT</a>
+                        <div style="text-align:right;">
+                            <p class="admin-order-price">${o.totalMMK.toLocaleString()} MMK</p>
+                            <a href="${o.paymentScreenshot}" target="_blank" class="admin-order-receipt">VIEW RECEIPT</a>
                         </div>
                     </div>
-                    
-                    <div class="flex items-end gap-4 bg-gray-50 p-4">
-                        <div class="w-1/3">
-                            <label class="text-[9px] text-gray-400 block mb-1">STATUS</label>
-                            <select id="status-${o._id}" class="!mb-0 bg-transparent border-b border-gray-300 w-full pb-1 outline-none">
-                                <option value="Pending" ${o.status=='Pending'?'selected':''}>PENDING</option>
-                                <option value="Shipped" ${o.status=='Shipped'?'selected':''}>SHIPPED</option>
-                                <option value="Delivered" ${o.status=='Delivered'?'selected':''}>DELIVERED</option>
+                    <div class="admin-order-controls">
+                        <div>
+                            <label>STATUS</label>
+                            <select id="status-${o._id}" style="margin-bottom:0;">
+                                <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>PENDING</option>
+                                <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>SHIPPED</option>
+                                <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>DELIVERED</option>
                             </select>
                         </div>
-                        <div class="w-1/3">
-                            <label class="text-[9px] text-gray-400 block mb-1">EST. ARRIVAL</label>
-                            <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="e.g. 3-5 DAYS" class="!mb-0 bg-transparent border-b border-gray-300 w-full pb-1 outline-none">
+                        <div>
+                            <label>EST. ARRIVAL</label>
+                            <input type="text" id="est-${o._id}" value="${o.estArrival || ''}" placeholder="e.g. 3-5 DAYS" style="margin-bottom:0;">
                         </div>
-                        <div class="w-1/3 flex gap-4 justify-end">
-                            <button onclick="updateOrder('${o._id}')" class="text-blue-600 hover:underline">UPDATE</button>
-                            <button onclick="delOrder('${o._id}')" class="text-red-500 hover:underline">DELETE</button>
+                        <div class="admin-order-actions">
+                            <button onclick="updateOrder('${o._id}')" class="admin-order-update">UPDATE</button>
+                            <button onclick="delOrder('${o._id}')" class="admin-order-delete">DELETE</button>
                         </div>
                     </div>
-                </div>`).join('') || '<p class="text-gray-400 text-[11px]">NO ACTIVE ORDERS.</p>';
+                </div>
+            `).join('') || '<p style="color:var(--gray-400);font-size:11px;letter-spacing:0.08em;">NO ACTIVE ORDERS.</p>';
 
             // Render Inventory
             const q = document.getElementById('invSearch').value.toLowerCase();
-            document.getElementById('inv-list').innerHTML = items.filter(i=>i.name.toLowerCase().includes(q)).map(i => `
-                <div class="flex justify-between items-center text-[11px] border-b border-gray-100 pb-2 group">
+            document.getElementById('inv-list').innerHTML = items.filter(i => i.name.toLowerCase().includes(q)).map(i => `
+                <div class="inv-item">
                     <div>
-                        <span class="font-bold">${i.name}</span>
-                        <span class="text-gray-400 ml-2">[${i.category}]</span>
+                        <span style="font-weight:600;">${i.name}</span>
+                        <span style="color:var(--gray-400);margin-left:8px;">[${i.category}]</span>
                     </div>
-                    <div class="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="openEditModal('${i._id}')" class="text-blue-500 hover:text-blue-700">EDIT</button>
-                        <button onclick="markSoldOut('${i._id}')" class="text-gray-400 hover:text-black">MARK SOLD OUT</button>
-                        <button onclick="delItem('${i._id}')" class="text-gray-300 hover:text-red-500">REMOVE</button>
+                    <div class="inv-actions">
+                        <button onclick="openEditModal('${i._id}')" class="inv-action-edit">EDIT</button>
+                        <button onclick="markSoldOut('${i._id}')" class="inv-action-sold">SOLD OUT</button>
+                        <button onclick="delItem('${i._id}')" class="inv-action-del">REMOVE</button>
                     </div>
-                </div>`).join('');
-            } catch (err) {
-                console.error('Admin load failed', err);
-                const detail = err.message ? ` ${err.message}` : '';
-                document.getElementById('inv-list').innerHTML = `<div class="p-8 text-[11px] text-gray-500">Unable to load inventory.${detail}</div>`;
-                document.getElementById('order-list').innerHTML = `<div class="p-8 text-[11px] text-gray-500">Unable to load orders.${detail}</div>`;
-                if (err.message && (err.message.includes('Admin session expired') || err.message.includes('Invalid token') || err.message.includes('Access denied'))) {
-                    localStorage.removeItem('adminToken');
-                    const overlay = document.getElementById('authOverlay');
-                    if (overlay) overlay.style.display = 'flex';
-                    document.getElementById('authError').innerText = 'Session invalid or expired. Please login again.';
-                }
+                </div>
+            `).join('') || '<div style="font-size:11px;color:var(--gray-400);padding:12px 0;">NO PRODUCTS FOUND.</div>';
+
+        } catch (err) {
+            console.error('Admin load failed', err);
+            if (err.message.includes('Session expired')) {
+                document.getElementById('authError').innerText = 'SESSION EXPIRED. PLEASE LOGIN AGAIN.';
+            } else {
+                toast(err.message || 'UNABLE TO LOAD DATA', 'error');
             }
         }
-    </script>
+    }
+</script>
 </body>
 </html>

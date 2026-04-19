@@ -3,156 +3,885 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEVEREVER</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>NeverEver — Online Fashion Shop Myanmar</title>
+    <meta name="description" content="Shop trendy fashion and accessories at NeverEver — Myanmar's online store with K-PAY & Wave payment. Fast delivery across Myanmar.">
+    <meta property="og:title" content="NeverEver — Online Fashion Shop Myanmar">
+    <meta property="og:description" content="Shop trendy fashion and accessories at NeverEver. Pay with K-PAY & Wave. Fast delivery across Myanmar.">
+    <meta property="og:image" content="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#000000">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #f4f4f4; color: #000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: uppercase; -webkit-font-smoothing: antialiased; }
-        .yeezy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
-        @media (min-width: 768px) { .yeezy-grid { grid-template-columns: repeat(4, 1fr); } }
-        
-        /* Ultra minimal inputs and buttons */
-        input { border: none; border-bottom: 1px solid #000; border-radius: 0; padding: 10px 0; width: 100%; outline: none; background: transparent; font-size: 11px; margin-bottom: 15px;}
-        button { background: transparent; color: #000; text-transform: uppercase; border: none; outline: none; cursor: pointer; }
-        
-        .btn-fill { background: #000; color: #fff; padding: 15px; width: 100%; font-size: 11px; letter-spacing: 1px; }
-        .btn-fill:hover { background: #333; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .size-chip, .color-chip { padding: 10px; font-size: 11px; text-align: center; cursor: pointer; color: #aaa; }
-        .size-chip:hover, .color-chip:hover { color: #000; }
-        .size-chip.active, .color-chip.active { color: #000; font-weight: bold; text-decoration: underline; }
+        :root {
+            --black: #000;
+            --white: #fff;
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --gray-800: #262626;
+            --gray-900: #171717;
+            --red: #c41e1e;
+            --red-soft: #e63946;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'Space Mono', 'SF Mono', 'Courier New', monospace;
+            --transition: cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        /* Slide Out Panels (Cart, Auth, Tracking) */
-        .side-panel { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: fixed; top: 0; right: 0; height: 100vh; width: 100%; max-width: 450px; background: #fff; z-index: 2000; padding: 40px; overflow-y: auto; }
+        body {
+            background: var(--gray-50);
+            color: var(--black);
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        /* ── Typography ─────────────────────────────────── */
+        .uppercase { text-transform: uppercase; }
+        .tracking { letter-spacing: 0.12em; }
+        .tracking-tight { letter-spacing: -0.02em; }
+        .font-mono { font-family: var(--font-mono); }
+        .text-xs { font-size: 10px; line-height: 1.4; }
+        .text-sm { font-size: 11px; line-height: 1.5; }
+        .text-base { font-size: 13px; line-height: 1.6; }
+        .text-lg { font-size: 16px; }
+        .text-xl { font-size: 20px; }
+
+        /* ── Product Grid ───────────────────────────────── */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
+            padding-top: 64px;
+        }
+        @media (min-width: 768px) {
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 1200px) {
+            .product-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .product-card {
+            background: var(--white);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .product-card .card-img-wrap {
+            position: relative;
+            padding-bottom: 120%;
+            overflow: hidden;
+            background: var(--gray-50);
+        }
+        .product-card .card-img-wrap img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 16px;
+            transition: transform 0.6s var(--transition), opacity 0.4s ease;
+        }
+        .product-card:hover .card-img-wrap img {
+            transform: scale(1.06);
+        }
+        .product-card .card-info {
+            padding: 16px 12px 20px;
+            text-align: center;
+        }
+        .product-card .card-name {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 6px;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+        .product-card .card-price {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--gray-500);
+            letter-spacing: 0.1em;
+        }
+        .product-card .badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--black);
+            color: var(--white);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 4px 10px;
+            letter-spacing: 0.1em;
+            z-index: 5;
+            text-transform: uppercase;
+        }
+        .product-card .badge.preorder {
+            background: var(--gray-700);
+        }
+
+        /* Lazy image fade-in */
+        .lazy-img {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .lazy-img.loaded {
+            opacity: 1;
+        }
+
+        /* ── Skeleton Loading ───────────────────────────── */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0;
+        }
+        .skeleton-card {
+            background: var(--white);
+        }
+        .skeleton-card .skel-img {
+            padding-bottom: 120%;
+            background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        .skeleton-card .skel-text {
+            padding: 16px 12px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .skeleton-card .skel-line {
+            height: 10px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* ── Nav ────────────────────────────────────────── */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 100;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .nav-link {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--black);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 4px;
+            position: relative;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: var(--gray-500); }
+        .nav-link.muted { color: var(--gray-400); }
+        .nav-link.muted:hover { color: var(--black); }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 1.5px;
+            background: var(--black);
+        }
+        .nav-logo {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 32px;
+        }
+        @media (min-width: 768px) {
+            .nav { padding: 0 40px; }
+            .nav-logo { height: 38px; }
+            .nav-link { font-size: 11px; padding: 8px 6px; }
+        }
+        .nav-group { display: flex; gap: 12px; z-index: 10; }
+        @media (min-width: 768px) { .nav-group { gap: 24px; } }
+
+        /* ── Search Bar ─────────────────────────────────── */
+        .search-bar {
+            position: sticky;
+            top: 64px;
+            z-index: 90;
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 20px;
+        }
+        .search-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            padding: 14px 0;
+            background: transparent;
+            text-transform: uppercase;
+        }
+        .search-input::placeholder { color: var(--gray-400); }
+
+        /* ── Side Panels ────────────────────────────────── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 500;
+            opacity: 0;
+            transition: opacity 0.3s var(--transition);
+        }
+        .overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .side-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            height: 100dvh;
+            width: 100%;
+            max-width: 460px;
+            background: var(--white);
+            z-index: 600;
+            padding: 40px 28px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.4s var(--transition);
+        }
         .side-panel.show { transform: translateX(0); }
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 1500; }
-        .overlay.show { display: block; }
-        /* Product Detail Full Screen */
-        #productView { display: none; position: fixed; inset: 0; background: #fff; z-index: 1000; overflow-y: auto; padding-top: 60px;}
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .slide-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 10; opacity: 0.7; border: 1px solid #ccc; font-weight: bold; font-family: monospace; }
-        .slide-btn:hover { opacity: 1; }
-        .content-copy { text-transform: none; white-space: pre-line; }
+        @media (min-width: 768px) {
+            .side-panel { padding: 48px 40px; }
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+        .panel-close {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: color 0.2s;
+            padding: 8px;
+        }
+        .panel-close:hover { color: var(--black); }
+
+        /* ── Product View (Full Screen) ─────────────────── */
+        #productView {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--white);
+            z-index: 400;
+            overflow-y: auto;
+            padding-top: 64px;
+        }
+        #productView.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pv-gallery {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pv-gallery::-webkit-scrollbar { display: none; }
+        .pv-gallery-item {
+            flex: none;
+            width: 100%;
+            position: relative;
+            padding-bottom: 125%;
+            scroll-snap-align: center;
+        }
+        .pv-gallery-item img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 16px;
+            background: var(--gray-50);
+        }
+        .slide-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .pv-gallery-wrap:hover .slide-btn { opacity: 0.8; }
+        .slide-btn:hover { opacity: 1 !important; background: var(--white); }
+
+        .pv-info {
+            text-align: center;
+            padding: 24px 24px 60px;
+            max-width: 500px;
+            margin: 0 auto;
+            animation: slideUp 0.4s ease 0.1s both;
+        }
+        .pv-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .pv-price {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--gray-500);
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+        .pv-desc {
+            font-size: 12px;
+            color: var(--gray-500);
+            line-height: 1.8;
+            text-transform: none;
+            max-width: 380px;
+            margin: 0 auto 24px;
+        }
+
+        /* Size / Color Chips */
+        .chip-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .chip {
+            padding: 10px 16px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            color: var(--gray-400);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            background: none;
+        }
+        .chip:hover { color: var(--black); }
+        .chip.active {
+            color: var(--black);
+            border-color: var(--black);
+        }
+
+        /* ── Buttons ────────────────────────────────────── */
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: var(--black);
+            color: var(--white);
+            border: none;
+            font-family: var(--font-sans);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-primary:hover { background: var(--gray-800); }
+        .btn-primary:active { transform: scale(0.985); }
+        .btn-primary.disabled { 
+            background: var(--gray-300); 
+            cursor: not-allowed; 
+        }
+
+        .btn-outline {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: transparent;
+            color: var(--black);
+            border: 1px solid var(--gray-200);
+            font-family: var(--font-sans);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--black); }
+
+        /* ── Inputs ─────────────────────────────────────── */
+        .input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 12px 0;
+            font-family: var(--font-sans);
+            font-size: 11px;
+            letter-spacing: 0.04em;
+            outline: none;
+            background: transparent;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+            text-transform: uppercase;
+        }
+        .input:focus { border-bottom-color: var(--black); }
+        .input::placeholder { color: var(--gray-400); text-transform: uppercase; }
+
+        /* ── Cart Items ─────────────────────────────────── */
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .cart-item-left { display: flex; gap: 16px; }
+        .cart-item-img {
+            width: 64px;
+            height: 80px;
+            object-fit: cover;
+            background: var(--gray-50);
+        }
+        .cart-item-name {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .cart-item-meta {
+            font-size: 10px;
+            color: var(--gray-500);
+            line-height: 1.6;
+            text-transform: uppercase;
+        }
+        .cart-item-price {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            text-align: right;
+        }
+        .cart-item-remove {
+            font-size: 10px;
+            color: var(--gray-400);
+            cursor: pointer;
+            background: none;
+            border: none;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color 0.2s;
+        }
+        .cart-item-remove:hover { color: var(--red); }
+
+        /* ── Toast Notification System ──────────────────── */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--black);
+            color: var(--white);
+            padding: 14px 20px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            pointer-events: auto;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 0.4s var(--transition), opacity 0.4s;
+            max-width: 340px;
+            line-height: 1.5;
+        }
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .toast.toast-error {
+            background: var(--black);
+            border-left: 3px solid var(--red);
+        }
+        .toast.toast-success {
+            background: var(--black);
+            border-left: 3px solid #22c55e;
+        }
+
+        /* ── Order Card ─────────────────────────────────── */
+        .order-card {
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .order-id {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        .order-status {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+        }
+        .order-status.pending { color: var(--gray-400); }
+        .order-status.shipped { color: var(--black); background: var(--gray-100); }
+        .order-status.delivered { color: #22c55e; }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .order-item img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-100);
+        }
+        .order-item-name {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .order-item-meta {
+            font-size: 10px;
+            color: var(--gray-500);
+            text-transform: uppercase;
+        }
+        .order-total {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 12px;
+            text-transform: uppercase;
+        }
+        .order-est {
+            font-size: 10px;
+            color: var(--gray-500);
+            margin-top: 6px;
+            text-transform: uppercase;
+        }
+
+        /* ── Footer ─────────────────────────────────────── */
+        .footer {
+            border-top: 1px solid var(--gray-200);
+            padding: 48px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+        @media (min-width: 768px) {
+            .footer {
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 56px 48px;
+            }
+        }
+        .footer-brand {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+        .footer-sub {
+            font-size: 10px;
+            color: var(--gray-400);
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+        .footer-link {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer-link:hover { color: var(--black); }
+
+        /* ── Auth Panel ─────────────────────────────────── */
+        .auth-divider {
+            font-size: 10px;
+            color: var(--gray-400);
+            text-align: center;
+            margin: 24px 0;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* ── Content copy (FAQs/Policy) ─────────────────── */
+        .content-copy {
+            text-transform: none;
+            white-space: pre-line;
+            font-size: 12px;
+            line-height: 2;
+            color: var(--gray-600);
+        }
+
+        /* ── Utility ────────────────────────────────────── */
+        .hidden { display: none !important; }
+        .mb-0 { margin-bottom: 0; }
+        .mt-4 { margin-top: 16px; }
+        .mt-6 { margin-top: 24px; }
+        .mt-8 { margin-top: 32px; }
+        .mb-4 { margin-bottom: 16px; }
+        .space-y-4 > * + * { margin-top: 16px; }
+        .space-y-6 > * + * { margin-top: 24px; }
+
+        /* ── Scrollbar ──────────────────────────────────── */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--gray-300); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
+
+        /* ── Payment Info ───────────────────────────────── */
+        .payment-info {
+            background: var(--gray-50);
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 10px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            line-height: 1.8;
+            color: var(--gray-600);
+        }
+        .payment-info strong {
+            display: block;
+            color: var(--black);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
-<nav class="fixed top-0 left-0 w-full px-4 py-4 flex justify-between items-center bg-white/90 backdrop-blur-sm z-50 text-[9px] md:text-[11px] font-bold tracking-widest">
-    <div class="flex gap-3 md:gap-6 z-10">
-        <button onclick="filter('Instock')" class="hover:underline">INSTOCK</button>
-        <button onclick="filter('Preorder')" class="hover:underline text-gray-400">PREORDER</button>
-        <button onclick="filter('Sold Out')" class="hover:underline text-gray-400 hidden sm:inline-block">SOLD OUT</button>
+<!-- ═══════════════════ TOAST CONTAINER ═══════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════ NAVIGATION ════════════════════════ -->
+<nav class="nav">
+    <div class="nav-group">
+        <button onclick="filter('Instock')" class="nav-link active" id="navInstock">INSTOCK</button>
+        <button onclick="filter('Preorder')" class="nav-link muted" id="navPreorder">PREORDER</button>
+        <button onclick="filter('Sold Out')" class="nav-link muted" id="navSoldout">SOLD OUT</button>
     </div>
-    <div class="h-8 md:h-10 flex items-center justify-center absolute left-1/2 -translate-x-1/2">
-        <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg" class="h-full object-contain" alt="NEVEREVER">
-    </div>
-    <div class="flex gap-3 md:gap-6 z-10">
-        <button id="authBtn" onclick="openPanel('authPanel')" class="hover:underline uppercase">LOGIN</button>
-        <button onclick="openOrders()" class="hover:underline uppercase hidden" id="trackBtn">ORDERS</button>
-        <button onclick="openPanel('cartPanel')" class="hover:underline">CART (<span id="cartCount">0</span>)</button>
+    <img src="https://res.cloudinary.com/dawhhgjsd/image/upload/v1776423940/szt6butb9fnufnwybq6v.jpg" class="nav-logo" alt="NeverEver">
+    <div class="nav-group">
+        <button id="authBtn" onclick="openPanel('authPanel')" class="nav-link">LOGIN</button>
+        <button onclick="openOrders()" class="nav-link hidden" id="trackBtn">ORDERS</button>
+        <button onclick="openPanel('cartPanel')" class="nav-link">CART (<span id="cartCount">0</span>)</button>
     </div>
 </nav>
 
-<main class="yeezy-grid pt-[60px]" id="main-grid"></main>
+<!-- ═══════════════════ SEARCH BAR ═══════════════════════ -->
+<div class="search-bar" style="padding-top:64px;">
+    <input type="text" class="search-input" id="searchInput" placeholder="SEARCH PRODUCTS..." oninput="applyFilters()">
+</div>
 
-<footer class="border-t border-gray-200 px-6 py-10 md:py-14 text-[10px] tracking-widest">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between gap-8">
-        <div>
-            <p class="font-bold mb-3">NEVEREVER</p>
-            <p class="text-gray-400 leading-relaxed">ONLINE SHOP / MYANMAR</p>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-5 sm:gap-10">
-            <button onclick="openInfoPanel('faqs')" class="text-left hover:underline">FAQS</button>
-            <button onclick="openInfoPanel('policy')" class="text-left hover:underline">POLICY</button>
-            <a href="https://t.me/tfuwnthuh" target="_blank" rel="noopener" class="hover:underline">CONTACT</a>
-        </div>
+<!-- ═══════════════════ PRODUCT GRID ═════════════════════ -->
+<main class="product-grid" id="main-grid" style="padding-top:0;"></main>
+
+<!-- ═══════════════════ FOOTER ════════════════════════════ -->
+<footer class="footer">
+    <div style="text-align:center;">
+        <p class="footer-brand">NEVEREVER</p>
+        <p class="footer-sub">ONLINE SHOP / MYANMAR</p>
+    </div>
+    <div class="footer-links">
+        <button onclick="openInfoPanel('faqs')" class="footer-link">FAQS</button>
+        <button onclick="openInfoPanel('policy')" class="footer-link">POLICY</button>
+        <a href="https://t.me/tfuwnthuh" target="_blank" rel="noopener" class="footer-link">CONTACT</a>
     </div>
 </footer>
 
+<!-- ═══════════════════ PRODUCT VIEW (FULL SCREEN) ═══════ -->
 <div id="productView">
-    <button onclick="document.getElementById('productView').style.display='none'" class="fixed top-6 left-6 z-50 text-[11px] font-bold hover:underline">BACK</button>
-    <div class="max-w-4xl mx-auto flex flex-col items-center pb-20">
-        <div class="w-full max-w-md mx-auto mb-10 overflow-hidden relative group">
-            <button onclick="document.getElementById('pGallery').scrollBy({left: -300, behavior: 'smooth'})" class="slide-btn flex left-2">&lt;</button>
-            <button onclick="document.getElementById('pGallery').scrollBy({left: 300, behavior: 'smooth'})" class="slide-btn flex right-2">&gt;</button>
-            <div id="pGallery" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar"></div>
+    <button onclick="closeProductView()" style="position:fixed;top:20px;left:20px;z-index:450;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);padding:10px 16px;border:1px solid var(--gray-200);cursor:pointer;">← BACK</button>
+    <div style="max-width:500px;margin:0 auto;padding-bottom:40px;">
+        <div class="pv-gallery-wrap" style="position:relative;overflow:hidden;">
+            <button onclick="document.getElementById('pGallery').scrollBy({left:-300,behavior:'smooth'})" class="slide-btn" style="left:12px;">‹</button>
+            <button onclick="document.getElementById('pGallery').scrollBy({left:300,behavior:'smooth'})" class="slide-btn" style="right:12px;">›</button>
+            <div id="pGallery" class="pv-gallery"></div>
         </div>
-        <div class="w-full max-w-md px-6 text-center space-y-6">
-            <h1 id="pName" class="text-xl"></h1>
-            <p id="pPrice" class="text-[12px] text-gray-500"></p>
-            <p id="pDesc" class="text-[11px] text-gray-400 lowercase leading-relaxed"></p>
-            
-            <div id="sizeGrid" class="flex justify-center gap-4 mt-8"></div>
-            <div id="colorGrid" class="flex justify-center gap-4 mt-4"></div>
-            <button onclick="addToCart()" class="btn-fill mt-8">ADD TO CART</button>
+        <div class="pv-info">
+            <h1 id="pName" class="pv-name"></h1>
+            <p id="pPrice" class="pv-price"></p>
+            <p id="pDesc" class="pv-desc"></p>
+            <div id="sizeGrid" class="chip-row mt-6"></div>
+            <div id="colorGrid" class="chip-row mt-4"></div>
+            <button onclick="addToCart()" class="btn-primary mt-8">ADD TO CART</button>
         </div>
     </div>
 </div>
 
+<!-- ═══════════════════ OVERLAY ═══════════════════════════ -->
 <div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
 
+<!-- ═══════════════════ CART PANEL ════════════════════════ -->
 <div id="cartPanel" class="side-panel">
-    <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 class="text-lg">CART</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
-    <div id="cartItems" class="space-y-6 mb-10"></div>
-    
-    <div id="checkoutForm" class="hidden space-y-4">
-        <div class="flex justify-between text-[11px] font-bold border-t border-black pt-4 mb-8"><span>TOTAL</span><span id="cartTotal"></span></div>
-        <div class="text-[10px] text-gray-500 space-y-1 mb-8">
-            <p>TRANSFER EXACT AMOUNT TO:</p>
-            <p class="text-black">K-PAY / WAVE: 09450151480 (Pyay Moe)</p>
+    <div class="panel-header"><h2 class="panel-title">CART</h2><button class="panel-close" onclick="closeAllPanels()">CLOSE</button></div>
+    <div id="cartItems"></div>
+    <div id="checkoutForm" class="hidden">
+        <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:0.05em;border-top:1px solid var(--black);padding-top:16px;margin-bottom:24px;text-transform:uppercase;"><span>TOTAL</span><span id="cartTotal"></span></div>
+        <div class="payment-info">
+            <span>TRANSFER EXACT AMOUNT TO:</span>
+            <strong>K-PAY / WAVE: 09450151480 (PYAY MOE)</strong>
         </div>
-        <input type="text" id="orderName" placeholder="YOUR FULL NAME">
-        <input type="text" id="orderTg" placeholder="TELEGRAM USERNAME">
-        <input type="text" id="orderPhone" placeholder="PHONE NUMBER">
-        <input type="text" id="orderAddr" placeholder="DELIVERY ADDRESS">
-        <button id="uploadSS" class="w-full border border-gray-300 p-4 text-[11px] mb-4 hover:border-black transition-colors">UPLOAD PAYMENT RECEIPT</button>
+        <input type="text" class="input" id="orderName" placeholder="YOUR FULL NAME">
+        <input type="text" class="input" id="orderTg" placeholder="TELEGRAM USERNAME">
+        <input type="text" class="input" id="orderPhone" placeholder="PHONE NUMBER">
+        <input type="text" class="input" id="orderAddr" placeholder="DELIVERY ADDRESS">
+        <button id="uploadSS" class="btn-outline mb-4">UPLOAD PAYMENT RECEIPT</button>
         <input type="hidden" id="paymentImg">
-        <button onclick="checkout()" class="btn-fill">PLACE ORDER</button>
+        <button onclick="checkout()" class="btn-primary">PLACE ORDER</button>
     </div>
 </div>
 
+<!-- ═══════════════════ AUTH PANEL ════════════════════════ -->
 <div id="authPanel" class="side-panel">
-    <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 id="authTitle" class="text-lg">LOGIN</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
+    <div class="panel-header"><h2 id="authTitle" class="panel-title">LOGIN</h2><button class="panel-close" onclick="closeAllPanels()">CLOSE</button></div>
     <div id="authLoggedOutState">
-        <input type="text" id="authUser" placeholder="USERNAME">
-        <input type="password" id="authPass" placeholder="PASSWORD">
-        <button onclick="handleAuth()" class="btn-fill mt-4">CONTINUE</button>
-        <button onclick="toggleMode()" id="modeText" class="w-full text-center text-[10px] text-gray-400 mt-6 hover:text-black">NEED AN ACCOUNT? SIGN UP</button>
+        <input type="text" class="input" id="authUser" placeholder="USERNAME">
+        <input type="password" class="input" id="authPass" placeholder="PASSWORD">
+        <button onclick="handleAuth()" class="btn-primary mt-4">CONTINUE</button>
+        <button onclick="toggleMode()" id="modeText" class="auth-divider" style="width:100%;cursor:pointer;background:none;border:none;">NEED AN ACCOUNT? SIGN UP</button>
     </div>
-
     <div id="authLoggedInState" class="hidden space-y-4">
-        <p class="text-[10px] text-gray-500">Signed in as <span id="authUsername"></span></p>
-        <input type="password" id="oldPass" placeholder="CURRENT PASSWORD">
-        <input type="password" id="newPass" placeholder="NEW PASSWORD">
-        <button onclick="changePassword()" class="btn-fill mt-2">UPDATE PASSWORD</button>
-        <button onclick="signOut()" class="btn-fill mt-2 bg-gray-900">SIGN OUT</button>
-        <p class="text-[10px] text-gray-500">If you forgot your password, contact support @tfuwnthuh</p>
-    </div>
-
-    <div class="mt-8 flex justify-center w-full">
-        <p class="text-[10px] text-gray-500">Login with username and password above.</p>
+        <p style="font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;">Signed in as <span id="authUsername" style="font-weight:600;color:var(--black);"></span></p>
+        <input type="password" class="input" id="oldPass" placeholder="CURRENT PASSWORD">
+        <input type="password" class="input" id="newPass" placeholder="NEW PASSWORD">
+        <button onclick="changePassword()" class="btn-primary mt-4">UPDATE PASSWORD</button>
+        <button onclick="signOut()" class="btn-outline mt-4">SIGN OUT</button>
+        <p style="font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;margin-top:16px;">IF YOU FORGOT YOUR PASSWORD, CONTACT SUPPORT @TFUWNTHUH</p>
     </div>
 </div>
 
+<!-- ═══════════════════ ORDERS PANEL ═════════════════════ -->
 <div id="ordersPanel" class="side-panel">
-    <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 class="text-lg">ORDERS</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
-    <div id="orders-user-info" class="text-[10px] text-gray-500 mb-4"></div>
-    <div id="my-orders-list" class="space-y-8"></div>
+    <div class="panel-header"><h2 class="panel-title">ORDERS</h2><button class="panel-close" onclick="closeAllPanels()">CLOSE</button></div>
+    <div id="orders-user-info" style="font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;"></div>
+    <div id="my-orders-list"></div>
 </div>
 
+<!-- ═══════════════════ INFO PANEL (FAQs/Policy) ═════════ -->
 <div id="infoPanel" class="side-panel">
-    <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 id="infoTitle" class="text-lg">INFO</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
-    <div id="infoContent" class="content-copy text-[12px] leading-7 text-gray-600"></div>
+    <div class="panel-header"><h2 id="infoTitle" class="panel-title">INFO</h2><button class="panel-close" onclick="closeAllPanels()">CLOSE</button></div>
+    <div id="infoContent" class="content-copy"></div>
 </div>
 
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
-    let allItems = [], cart = {}, user = null, currentItem = null, selectedSize = null, selectedColor = null, isLoginMode = true, pendingAction = null;
+    // ═══════════════════════════════════════════════════════
+    // ►  STATE
+    // ═══════════════════════════════════════════════════════
+    let allItems = [], cart = {}, user = null, currentItem = null;
+    let selectedSize = null, selectedColor = null;
+    let isLoginMode = true, pendingAction = null;
+    let currentFilter = 'Instock';
+
     const defaultSiteContent = {
-        faqs: 'FAQS WILL BE UPDATED SOON.\n\nFOR ORDER QUESTIONS, CONTACT SUPPORT @tfuwnthuh.',
+        faqs: 'FAQS WILL BE UPDATED SOON.\n\nFOR ORDER QUESTIONS, CONTACT SUPPORT @TFUWNTHUH.',
         policy: 'STORE POLICY WILL BE UPDATED SOON.\n\nPLEASE CONFIRM SIZE, COLOR, AND DELIVERY DETAILS BEFORE PLACING AN ORDER.'
     };
     let siteContent = { ...defaultSiteContent };
+
+    // Restore session
     const storedUser = localStorage.getItem('neverUser');
     try {
         user = storedUser ? JSON.parse(storedUser) : null;
@@ -162,16 +891,39 @@
         user = null;
     }
 
+    // ═══════════════════════════════════════════════════════
+    // ►  TOAST SYSTEM
+    // ═══════════════════════════════════════════════════════
+    function toast(msg, type = 'info', duration = 3500) {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = `toast ${type === 'error' ? 'toast-error' : type === 'success' ? 'toast-success' : ''}`;
+        el.textContent = msg;
+        container.appendChild(el);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => el.classList.add('show'));
+        });
+        setTimeout(() => {
+            el.classList.remove('show');
+            setTimeout(() => el.remove(), 400);
+        }, duration);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  INIT
+    // ═══════════════════════════════════════════════════════
     async function init() {
         loadSiteContent();
+        renderSkeletons();
+
         try {
             const res = await fetch('/api/items');
             if (!res.ok) throw new Error('Unable to load items');
             allItems = await res.json();
-            filter('All');
+            filter('Instock');
         } catch (err) {
             console.error(err);
-            document.getElementById('main-grid').innerHTML = '<p class="text-red-500 p-8">Unable to load products. Please refresh or contact support.</p>';
+            document.getElementById('main-grid').innerHTML = '<p style="padding:40px;font-size:12px;color:var(--red);text-align:center;grid-column:1/-1;">UNABLE TO LOAD PRODUCTS. PLEASE REFRESH.</p>';
             return;
         }
 
@@ -193,16 +945,41 @@
             }
         }
 
-        if(user && localStorage.getItem('neverToken')) {
+        updateAuthUI();
+        renderAuthPanel();
+    }
+
+    function updateAuthUI() {
+        if (user && localStorage.getItem('neverToken')) {
             document.getElementById('authBtn').innerHTML = 'PROFILE';
             document.getElementById('trackBtn').classList.remove('hidden');
         } else {
             document.getElementById('authBtn').innerHTML = 'LOGIN';
             document.getElementById('trackBtn').classList.add('hidden');
         }
-        renderAuthPanel();
     }
 
+    // ═══════════════════════════════════════════════════════
+    // ►  SKELETONS
+    // ═══════════════════════════════════════════════════════
+    function renderSkeletons() {
+        const grid = document.getElementById('main-grid');
+        let html = '';
+        for (let i = 0; i < 8; i++) {
+            html += `<div class="skeleton-card">
+                <div class="skel-img"></div>
+                <div class="skel-text">
+                    <div class="skel-line" style="width:70%;"></div>
+                    <div class="skel-line" style="width:40%;"></div>
+                </div>
+            </div>`;
+        }
+        grid.innerHTML = html;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  SITE CONTENT
+    // ═══════════════════════════════════════════════════════
     async function loadSiteContent() {
         try {
             const res = await fetch('/api/site-content');
@@ -221,63 +998,124 @@
         openPanel('infoPanel');
     }
 
+    // ═══════════════════════════════════════════════════════
+    // ►  FILTERING & SEARCH
+    // ═══════════════════════════════════════════════════════
     function filter(cat) {
-        const filtered = allItems.filter(i => cat === 'All' ? true : i.category === cat);
-        document.getElementById('main-grid').innerHTML = filtered.map(i => `
-            <div class="cursor-pointer group flex flex-col h-full relative" onclick="openProduct('${i._id}')">
-                ${i.category === 'Sold Out' ? `<div class="absolute top-4 left-4 bg-blue-700 text-white text-[9px] font-bold py-1 px-4 z-10">SOLD OUT</div>` : ''}
-                <div class="p-3 sm:p-8 w-full flex-grow flex flex-col justify-end">
-                    <div class="w-full overflow-hidden bg-[#f4f4f4] relative" style="padding-bottom: 100%;">
-                        <img src="${i.images[0]}" class="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500">
-                    </div>
-                </div>
-                <div class="flex flex-col flex-grow justify-between text-center px-2 pb-6 mt-4">
-                    <div class="flex flex-col justify-start">
-                        <p class="text-[10px] font-mono tracking-widest uppercase mb-2 leading-relaxed">${i.name}</p>
-                    </div>
-                    <p class="text-[10px] font-mono tracking-widest text-[#555] mt-auto">${i.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MMK</p>
-                </div>
-            </div>`).join('') || '<p class="text-[11px] text-gray-400 p-8">NO PRODUCTS FOUND.</p>';
+        currentFilter = cat;
+        // Update nav active states
+        document.getElementById('navInstock').classList.toggle('active', cat === 'Instock');
+        document.getElementById('navInstock').classList.toggle('muted', cat !== 'Instock');
+        document.getElementById('navPreorder').classList.toggle('active', cat === 'Preorder');
+        document.getElementById('navPreorder').classList.toggle('muted', cat !== 'Preorder');
+        document.getElementById('navSoldout').classList.toggle('active', cat === 'Sold Out');
+        document.getElementById('navSoldout').classList.toggle('muted', cat !== 'Sold Out');
+        applyFilters();
     }
 
+    function applyFilters() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const filtered = allItems.filter(i => {
+            const matchCat = currentFilter === 'All' ? true : i.category === currentFilter;
+            const matchSearch = !query || i.name.toLowerCase().includes(query);
+            return matchCat && matchSearch;
+        });
+        renderProducts(filtered);
+    }
+
+    function renderProducts(items) {
+        const grid = document.getElementById('main-grid');
+        if (items.length === 0) {
+            grid.innerHTML = '<p style="padding:40px;font-size:11px;color:var(--gray-400);text-align:center;grid-column:1/-1;text-transform:uppercase;letter-spacing:0.1em;">NO PRODUCTS FOUND.</p>';
+            return;
+        }
+        grid.innerHTML = items.map(i => {
+            let badge = '';
+            if (i.category === 'Sold Out') badge = '<div class="badge">SOLD OUT</div>';
+            else if (i.category === 'Preorder') badge = '<div class="badge preorder">PREORDER</div>';
+            return `<div class="product-card" onclick="openProduct('${i._id}')">
+                ${badge}
+                <div class="card-img-wrap">
+                    <img src="${i.images[0]}" alt="${i.name}" loading="lazy" class="lazy-img" onload="this.classList.add('loaded')">
+                </div>
+                <div class="card-info">
+                    <p class="card-name">${i.name}</p>
+                    <p class="card-price">${i.price.toLocaleString('en-US', {minimumFractionDigits: 0})} MMK</p>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  PRODUCT VIEW
+    // ═══════════════════════════════════════════════════════
     function openProduct(id) {
         currentItem = allItems.find(i => i._id === id);
         selectedSize = null;
+        selectedColor = null;
+
         document.getElementById('pName').innerText = currentItem.name;
         document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
-        document.getElementById('pDesc').innerText = currentItem.description || "NO DESCRIPTION AVAILABLE.";
+        document.getElementById('pDesc').innerText = currentItem.description || '';
+
         document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `
-            <div class="w-full flex-none snap-center relative" style="padding-bottom: 125%;">
-                <img src="${img}" class="absolute inset-0 w-full h-full object-contain p-2 bg-[#f4f4f4]">
-            </div>
-        `).join('');
-        document.getElementById('sizeGrid').innerHTML = (currentItem.availableSizes || []).map(s => `<div class="size-chip" onclick="selSize(this, '${s}')">${s}</div>`).join('');
-        document.getElementById('colorGrid').innerHTML = (currentItem.availableColors || []).map(c => `<div class="color-chip" onclick="selColor(this, '${c}')">${c}</div>`).join('');
-        selectedColor = null;
-        
-        document.getElementById('productView').style.display = 'block';
+            <div class="pv-gallery-item">
+                <img src="${img}" alt="${currentItem.name}" loading="lazy">
+            </div>`).join('');
+
+        document.getElementById('sizeGrid').innerHTML = (currentItem.availableSizes || []).map(s =>
+            `<button class="chip" onclick="selSize(this,'${s}')">${s}</button>`
+        ).join('');
+
+        document.getElementById('colorGrid').innerHTML = (currentItem.availableColors || []).map(c =>
+            `<button class="chip" onclick="selColor(this,'${c}')">${c}</button>`
+        ).join('');
+
+        const pv = document.getElementById('productView');
+        pv.style.display = 'block';
+        requestAnimationFrame(() => pv.classList.add('show'));
         window.scrollTo(0, 0);
     }
 
-    function selSize(el, s) { document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); selectedSize = s; }
-    function selColor(el, c) { document.querySelectorAll('.color-chip').forEach(e => e.classList.remove('active')); el.classList.add('active'); selectedColor = c; }
-    
-    function openPanel(id) { 
+    function closeProductView() {
+        const pv = document.getElementById('productView');
+        pv.classList.remove('show');
+        setTimeout(() => pv.style.display = 'none', 300);
+    }
+
+    function selSize(el, s) {
+        document.querySelectorAll('#sizeGrid .chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        selectedSize = s;
+    }
+    function selColor(el, c) {
+        document.querySelectorAll('#colorGrid .chip').forEach(e => e.classList.remove('active'));
+        el.classList.add('active');
+        selectedColor = c;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  PANELS
+    // ═══════════════════════════════════════════════════════
+    function openPanel(id) {
         if (id === 'authPanel') renderAuthPanel();
         document.getElementById('overlay').classList.add('show');
         document.getElementById(id).classList.add('show');
-        if(id === 'cartPanel') updateCart();
+        if (id === 'cartPanel') updateCart();
     }
-    
+
     function closeAllPanels() {
         document.getElementById('overlay').classList.remove('show');
         document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('show'));
     }
 
-    function toggleMode() { 
-        isLoginMode = !isLoginMode; 
-        document.getElementById('authTitle').innerText = isLoginMode ? "LOGIN" : "REGISTER"; 
-        document.getElementById('modeText').innerText = isLoginMode ? "NEED AN ACCOUNT? SIGN UP" : "HAVE AN ACCOUNT? LOGIN"; 
+    // ═══════════════════════════════════════════════════════
+    // ►  AUTH
+    // ═══════════════════════════════════════════════════════
+    function toggleMode() {
+        isLoginMode = !isLoginMode;
+        document.getElementById('authTitle').innerText = isLoginMode ? 'LOGIN' : 'REGISTER';
+        document.getElementById('modeText').innerText = isLoginMode ? 'NEED AN ACCOUNT? SIGN UP' : 'HAVE AN ACCOUNT? LOGIN';
     }
 
     function renderAuthPanel() {
@@ -289,37 +1127,40 @@
             document.getElementById('authTitle').innerText = 'PROFILE';
             document.getElementById('authUsername').innerText = user.username;
             document.getElementById('modeText').classList.add('hidden');
-            document.getElementById('authUser').closest('div')?.classList?.add('hidden');
         } else {
             loggedOut.classList.remove('hidden');
             loggedIn.classList.add('hidden');
             document.getElementById('authTitle').innerText = isLoginMode ? 'LOGIN' : 'REGISTER';
             document.getElementById('modeText').classList.remove('hidden');
-            document.getElementById('authUser').closest('div')?.classList?.remove('hidden');
         }
     }
 
     async function handleAuth() {
         const u = document.getElementById('authUser').value, p = document.getElementById('authPass').value;
+        if (!u || !p) return toast('PLEASE FILL IN ALL FIELDS', 'error');
         const endpoint = isLoginMode ? '/auth/login' : '/auth/signup';
-        const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
-        const d = await res.json();
-        if(res.ok) { 
-            localStorage.setItem('neverToken', d.token);
-            localStorage.setItem('neverUser', JSON.stringify(d.user)); 
-            user = d.user;
-            document.getElementById('authBtn').innerHTML = 'PROFILE';
-            document.getElementById('trackBtn').classList.remove('hidden');
-            renderAuthPanel();
-            if (pendingAction === 'orders') {
-                pendingAction = null;
+        try {
+            const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+            const d = await res.json();
+            if (res.ok) {
+                localStorage.setItem('neverToken', d.token);
+                localStorage.setItem('neverUser', JSON.stringify(d.user));
+                user = d.user;
+                updateAuthUI();
+                renderAuthPanel();
+                toast(isLoginMode ? 'WELCOME BACK' : 'ACCOUNT CREATED', 'success');
+                if (pendingAction === 'orders') {
+                    pendingAction = null;
+                    closeAllPanels();
+                    openOrders();
+                    return;
+                }
                 closeAllPanels();
-                openOrders();
-                return;
+            } else {
+                toast(d.error || 'AUTHENTICATION FAILED', 'error');
             }
-            closeAllPanels();
-        } else {
-            alert(d.error || "Authentication Failed");
+        } catch (err) {
+            toast('NETWORK ERROR. TRY AGAIN.', 'error');
         }
     }
 
@@ -327,199 +1168,242 @@
         localStorage.removeItem('neverToken');
         localStorage.removeItem('neverUser');
         user = null;
-        document.getElementById('authBtn').innerHTML = 'LOGIN';
-        document.getElementById('trackBtn').classList.add('hidden');
+        updateAuthUI();
         renderAuthPanel();
         closeAllPanels();
+        toast('SIGNED OUT', 'success');
     }
 
     async function changePassword() {
         const oldPass = document.getElementById('oldPass').value;
         const newPass = document.getElementById('newPass').value;
-        if (!oldPass || !newPass) return alert('Fill both current and new password');
+        if (!oldPass || !newPass) return toast('FILL BOTH CURRENT AND NEW PASSWORD', 'error');
         const token = localStorage.getItem('neverToken');
-        const res = await fetch('/auth/change-password', { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify({ oldPassword: oldPass, newPassword: newPass })});
-        const d = await res.json();
-        if (res.ok) {
-            alert('Password updated successfully');
-            document.getElementById('oldPass').value = '';
-            document.getElementById('newPass').value = '';
-        } else {
-            alert(d.error || (d.errors ? d.errors.map(e => e.msg).join(', ') : 'Unable to update password'));
+        try {
+            const res = await fetch('/auth/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass }) });
+            const d = await res.json();
+            if (res.ok) {
+                toast('PASSWORD UPDATED', 'success');
+                document.getElementById('oldPass').value = '';
+                document.getElementById('newPass').value = '';
+            } else {
+                toast(d.error || (d.errors ? d.errors.map(e => e.msg).join(', ') : 'UNABLE TO UPDATE PASSWORD'), 'error');
+            }
+        } catch (err) {
+            toast('NETWORK ERROR', 'error');
         }
     }
 
+    // ═══════════════════════════════════════════════════════
+    // ►  CART
+    // ═══════════════════════════════════════════════════════
     function addToCart() {
-        if((currentItem.availableSizes || []).length && !selectedSize) return alert("PLEASE SELECT A SIZE");
-        if((currentItem.availableColors || []).length && !selectedColor) return alert("PLEASE SELECT A COLOR");
+        if (!currentItem) return;
+        if ((currentItem.availableSizes || []).length && !selectedSize) return toast('PLEASE SELECT A SIZE', 'error');
+        if ((currentItem.availableColors || []).length && !selectedColor) return toast('PLEASE SELECT A COLOR', 'error');
         const key = `${currentItem._id}-${selectedSize || 'NOSZ'}-${selectedColor || 'NOC'}`;
-        if(cart[key]) cart[key].qty += 1;
+        if (cart[key]) cart[key].qty += 1;
         else cart[key] = { item: currentItem, size: selectedSize, color: selectedColor, qty: 1, image: currentItem.images[0] };
-        
-        document.getElementById('productView').style.display = 'none';
+
+        closeProductView();
+        toast(`${currentItem.name} ADDED TO CART`, 'success');
         openPanel('cartPanel');
     }
 
     function updateCart() {
         const keys = Object.keys(cart);
         let totalMMK = 0, totalItems = 0;
-        
+
         document.getElementById('cartItems').innerHTML = keys.map(k => {
             const c = cart[k];
             totalMMK += c.item.price * c.qty;
             totalItems += c.qty;
-            return `
-            <div class="flex justify-between items-start text-[11px] mb-4">
-                <div class="flex gap-4">
-                    <img src="${c.image || c.item.images[0]}" class="w-16 h-20 object-cover">
-                    <div><p>${c.item.name}</p><p class="text-gray-400">SIZE: ${c.size || 'N/A'}</p><p class="text-gray-400">COLOR: ${c.color || 'N/A'}</p><p class="text-gray-400">QTY: ${c.qty}</p></div>
+            return `<div class="cart-item">
+                <div class="cart-item-left">
+                    <img src="${c.image || c.item.images[0]}" class="cart-item-img" alt="${c.item.name}" loading="lazy">
+                    <div>
+                        <p class="cart-item-name">${c.item.name}</p>
+                        <p class="cart-item-meta">SIZE: ${c.size || 'N/A'}</p>
+                        <p class="cart-item-meta">COLOR: ${c.color || 'N/A'}</p>
+                        <p class="cart-item-meta">QTY: ${c.qty}</p>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p>${(c.item.price * c.qty).toLocaleString()} MMK</p>
-                    <button onclick="delete cart['${k}'];updateCart()" class="text-gray-400 mt-2 hover:text-black">REMOVE</button>
+                <div style="text-align:right;">
+                    <p class="cart-item-price">${(c.item.price * c.qty).toLocaleString()} MMK</p>
+                    <button onclick="delete cart['${k}'];updateCart();toast('ITEM REMOVED','success');" class="cart-item-remove">REMOVE</button>
                 </div>
             </div>`;
-        }).join('') || '<p class="text-[11px] text-gray-400">YOUR CART IS EMPTY.</p>';
-        
+        }).join('') || '<p style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.08em;text-align:center;padding:40px 0;">YOUR CART IS EMPTY.</p>';
+
         document.getElementById('cartCount').innerText = totalItems;
         document.getElementById('cartTotal').innerText = `${totalMMK.toLocaleString()} MMK`;
-        document.getElementById('checkoutForm').style.display = keys.length ? 'block' : 'none';
+        document.getElementById('checkoutForm').classList.toggle('hidden', keys.length === 0);
     }
 
-    var widget = cloudinary.createUploadWidget({ cloudName:'dawhhgjsd', uploadPreset:'dawhhgjsd' }, (e,r) => { 
-        if(r.event==="success") { 
-            document.getElementById('paymentImg').value = r.info.secure_url; 
-            document.getElementById('uploadSS').innerText = "RECEIPT ATTACHED ✓"; 
-            document.getElementById('uploadSS').style.borderColor = "#000";
+    // ═══════════════════════════════════════════════════════
+    // ►  CLOUDINARY UPLOAD
+    // ═══════════════════════════════════════════════════════
+    var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd' }, (e, r) => {
+        if (r.event === 'success') {
+            document.getElementById('paymentImg').value = r.info.secure_url;
+            const btn = document.getElementById('uploadSS');
+            btn.innerText = 'RECEIPT ATTACHED ✓';
+            btn.style.borderColor = 'var(--black)';
+            btn.style.color = 'var(--black)';
+            toast('RECEIPT UPLOADED', 'success');
         }
     });
-    document.getElementById("uploadSS").onclick = () => widget.open();
+    document.getElementById('uploadSS').onclick = () => widget.open();
 
+    // ═══════════════════════════════════════════════════════
+    // ►  CHECKOUT
+    // ═══════════════════════════════════════════════════════
     async function checkout() {
-        if(!user) {
-            alert("YOU MUST BE SIGNED IN TO PLACE AN ORDER");
+        if (!user) {
+            toast('YOU MUST BE SIGNED IN TO PLACE AN ORDER', 'error');
             return openPanel('authPanel');
         }
-        if(!document.getElementById('paymentImg').value) return alert("PLEASE UPLOAD RECEIPT");
-        if(!document.getElementById('orderName').value || !document.getElementById('orderTg').value) return alert("FULL NAME AND TELEGRAM REQUIRED");
-        if(!document.getElementById('orderPhone').value || !document.getElementById('orderAddr').value) return alert("ADDRESS AND PHONE REQUIRED");
-        
+        if (!document.getElementById('paymentImg').value) return toast('PLEASE UPLOAD RECEIPT', 'error');
+        if (!document.getElementById('orderName').value || !document.getElementById('orderTg').value) return toast('FULL NAME AND TELEGRAM REQUIRED', 'error');
+        if (!document.getElementById('orderPhone').value || !document.getElementById('orderAddr').value) return toast('ADDRESS AND PHONE REQUIRED', 'error');
+
         let total = 0;
         const formattedItems = Object.values(cart).map(c => {
             total += c.item.price * c.qty;
             return { name: c.item.name, size: c.size, color: c.color, qty: c.qty, price: c.item.price, image: c.image || c.item.images[0] };
         });
 
-        const data = { 
-            userId: user.id, username: user.username, 
+        const data = {
+            userId: user.id, username: user.username,
             customerName: document.getElementById('orderName').value,
             telegram: document.getElementById('orderTg').value,
             phone: document.getElementById('orderPhone').value,
-            address: document.getElementById('orderAddr').value, 
-            items: formattedItems, paymentScreenshot: document.getElementById('paymentImg').value, totalMMK: total 
+            address: document.getElementById('orderAddr').value,
+            items: formattedItems, paymentScreenshot: document.getElementById('paymentImg').value, totalMMK: total
         };
-        
+
         const token = localStorage.getItem('neverToken');
-        const response = await fetch('/api/submit-order', { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify(data)});
-        const result = await response.json();
-        if (!response.ok) {
-            console.error('Submit order failed', response.status, result);
-            if (response.status === 401 || response.status === 403) {
-                localStorage.removeItem('neverToken');
-                localStorage.removeItem('neverUser');
-                user = null;
-                document.getElementById('authBtn').innerHTML = 'LOGIN';
-                document.getElementById('trackBtn').classList.add('hidden');
+        try {
+            const response = await fetch('/api/submit-order', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+            const result = await response.json();
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('neverToken');
+                    localStorage.removeItem('neverUser');
+                    user = null;
+                    updateAuthUI();
+                }
+                return toast(result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'UNABLE TO PLACE ORDER'), 'error');
             }
-            return alert(result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Unable to place order'));
+            toast(`ORDER PLACED! ID: ${result.orderId}`, 'success', 5000);
+            cart = {};
+            updateCart();
+            document.getElementById('orderName').value = '';
+            document.getElementById('orderTg').value = '';
+            document.getElementById('orderPhone').value = '';
+            document.getElementById('orderAddr').value = '';
+            document.getElementById('paymentImg').value = '';
+            const btn = document.getElementById('uploadSS');
+            btn.innerText = 'UPLOAD PAYMENT RECEIPT';
+            btn.style.borderColor = '';
+            btn.style.color = '';
+            closeAllPanels();
+        } catch (err) {
+            toast('NETWORK ERROR. TRY AGAIN.', 'error');
         }
-        alert(`ORDER PLACED. ORDER ID: ${result.orderId}`);
-        cart = {};
-        updateCart();
-        document.getElementById('orderName').value = '';
-        document.getElementById('orderTg').value = '';
-        document.getElementById('orderPhone').value = '';
-        document.getElementById('orderAddr').value = '';
-        document.getElementById('paymentImg').value = '';
-        document.getElementById('uploadSS').innerText = 'UPLOAD PAYMENT RECEIPT';
-        document.getElementById('uploadSS').style.borderColor = '#d1d5db';
-        closeAllPanels();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ►  ORDERS
+    // ═══════════════════════════════════════════════════════
+    function renderOrderSkeletons() {
+        return `<div style="padding:20px 0;">
+            ${[1,2].map(() => `<div style="margin-bottom:24px;">
+                <div class="skeleton" style="height:14px;width:40%;margin-bottom:12px;"></div>
+                <div style="display:flex;gap:12px;margin-bottom:12px;">
+                    <div class="skeleton" style="width:48px;height:48px;"></div>
+                    <div style="flex:1;"><div class="skeleton" style="height:10px;width:60%;margin-bottom:8px;"></div><div class="skeleton" style="height:10px;width:40%;"></div></div>
+                </div>
+                <div class="skeleton" style="height:10px;width:30%;"></div>
+            </div>`).join('')}
+        </div>`;
     }
 
     async function openOrders() {
-        console.log('openOrders called', { user });
-        document.getElementById('orders-user-info').innerText = 'Loading orders...';
-        document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-gray-500">Loading orders...</div>';
+        document.getElementById('orders-user-info').innerText = '';
+        document.getElementById('my-orders-list').innerHTML = renderOrderSkeletons();
         closeAllPanels();
         const panel = document.getElementById('ordersPanel');
         panel.classList.add('show');
         document.getElementById('overlay').classList.add('show');
+
         if (!user) {
             pendingAction = 'orders';
             openPanel('authPanel');
-            document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-red-500">Please login to view your orders.</div>';
+            document.getElementById('my-orders-list').innerHTML = '<p style="font-size:11px;color:var(--gray-500);text-transform:uppercase;text-align:center;padding:40px 0;">PLEASE LOGIN TO VIEW YOUR ORDERS.</p>';
             return;
         }
+
         const token = localStorage.getItem('neverToken');
-        console.log('Fetching orders with token:', token ? 'present' : 'missing');
         try {
-            const res = await fetch('/api/my-orders', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            console.log('Orders response status:', res.status);
+            const res = await fetch('/api/my-orders', { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) {
                 const text = await res.text();
-                console.error('Orders fetch failed', res.status, text);
                 if (res.status === 401 || res.status === 403) {
                     localStorage.removeItem('neverToken');
                     localStorage.removeItem('neverUser');
                     user = null;
-                    document.getElementById('authBtn').innerHTML = 'LOGIN';
-                    document.getElementById('trackBtn').classList.add('hidden');
-                    document.getElementById('orders-user-info').innerText = 'Session expired or unauthorized. Please login again.';
-                    document.getElementById('my-orders-list').innerHTML = `<div class="p-8 text-center text-[12px] text-red-500">Session expired or unauthorized. Please login again.</div>`;
+                    updateAuthUI();
+                    document.getElementById('orders-user-info').innerText = '';
+                    document.getElementById('my-orders-list').innerHTML = '<p style="font-size:11px;color:var(--red);text-transform:uppercase;text-align:center;padding:40px 0;">SESSION EXPIRED. PLEASE LOGIN AGAIN.</p>';
                     openPanel('authPanel');
                     return;
                 }
-                document.getElementById('orders-user-info').innerText = `Unable to load your orders (${res.status}).`;
-                document.getElementById('my-orders-list').innerHTML = `<div class="p-8 text-center text-[12px] text-red-500">Unable to load your orders (${res.status}). ${text}</div>`;
+                document.getElementById('my-orders-list').innerHTML = `<p style="font-size:11px;color:var(--red);text-transform:uppercase;text-align:center;padding:40px 0;">UNABLE TO LOAD ORDERS (${res.status}).</p>`;
                 return;
             }
 
             const orders = await res.json();
-            console.log('Orders loaded', orders);
-            document.getElementById('orders-user-info').innerText = `Logged in as: ${user?.username || 'Unknown'}`;
+            document.getElementById('orders-user-info').innerText = `LOGGED IN AS: ${user?.username || 'UNKNOWN'}`;
+
             if (!Array.isArray(orders) || orders.length === 0) {
-                document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-gray-500">No orders found for this account yet.</div>';
+                document.getElementById('my-orders-list').innerHTML = '<p style="font-size:11px;color:var(--gray-400);text-transform:uppercase;text-align:center;padding:40px 0;letter-spacing:0.08em;">NO ORDERS FOUND YET.</p>';
                 return;
             }
-            document.getElementById('my-orders-list').innerHTML = orders.map(o => `
-                <div class="text-[11px] pb-6 border-b border-gray-200">
-                    <div class="flex justify-between mb-4"><span class="font-bold">#${o._id ? o._id.slice(-6) : 'UNKNOWN'}</span><span class="${o.status === 'Pending' ? 'text-gray-400' : 'text-black'}">${o.status || 'Pending'}</span></div>
-                    <div class="space-y-4 mb-4">
+
+            document.getElementById('my-orders-list').innerHTML = orders.map(o => {
+                const statusClass = (o.status || 'Pending').toLowerCase();
+                return `<div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">#${o._id ? o._id.slice(-6) : 'UNKNOWN'}</span>
+                        <span class="order-status ${statusClass}">${o.status || 'PENDING'}</span>
+                    </div>
+                    <div>
                         ${Array.isArray(o.items) ? o.items.map(i => {
                             const dbMatch = allItems.find(it => it.name === i.name);
                             const imgSrc = i.image || (dbMatch ? dbMatch.images[0] : '');
-                            return `
-                            <div class="flex items-center gap-4">
-                                ${imgSrc ? `<img src="${imgSrc}" class="w-12 h-12 object-cover bg-gray-50 border border-gray-100">` : ''}
+                            return `<div class="order-item">
+                                ${imgSrc ? `<img src="${imgSrc}" alt="${i.name}" loading="lazy">` : ''}
                                 <div>
-                                    <p>${i.name}</p>
-                                    <p class="text-gray-500">${i.qty}x SIZE ${i.size || 'N/A'} | COLOR ${i.color || 'N/A'}</p>
+                                    <p class="order-item-name">${i.name}</p>
+                                    <p class="order-item-meta">${i.qty}x SIZE ${i.size || 'N/A'} | COLOR ${i.color || 'N/A'}</p>
                                 </div>
                             </div>`;
-                        }).join('') : '<p class="text-[11px] text-gray-400">No items found.</p>'}
+                        }).join('') : '<p style="font-size:10px;color:var(--gray-400);">NO ITEMS FOUND.</p>'}
                     </div>
-                    <p>TOTAL: ${o.totalMMK ? o.totalMMK.toLocaleString() : '0'} MMK</p>
-                    ${o.estArrival ? `<p class="mt-2 text-gray-500">EST: ${o.estArrival}</p>` : ''}
-                </div>`).join('') || '<p class="text-[11px] text-gray-400">NO ORDERS FOUND.</p>';
+                    <p class="order-total">TOTAL: ${o.totalMMK ? o.totalMMK.toLocaleString() : '0'} MMK</p>
+                    ${o.estArrival ? `<p class="order-est">EST: ${o.estArrival}</p>` : ''}
+                </div>`;
+            }).join('');
         } catch (err) {
             console.error('Orders fetch error', err);
-            document.getElementById('orders-user-info').innerText = 'Unable to load your orders. Please try again later.';
-            document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-red-500">Unable to load your orders. Please try again later.</div>';
+            document.getElementById('my-orders-list').innerHTML = '<p style="font-size:11px;color:var(--red);text-transform:uppercase;text-align:center;padding:40px 0;">UNABLE TO LOAD ORDERS. TRY AGAIN LATER.</p>';
         }
     }
-    
+
+    // ═══════════════════════════════════════════════════════
+    // ►  LAUNCH
+    // ═══════════════════════════════════════════════════════
     init();
 </script>
 </body>
