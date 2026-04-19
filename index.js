@@ -339,6 +339,23 @@ app.post('/auth/change-password', verifyToken, [
   res.json({ success: true, message: 'Password updated successfully' });
 });
 
+app.post('/api/reset-password', verifyAdmin, [
+  body('username').isLength({ min: 1 }).trim().escape(),
+  body('newPassword').isLength({ min: 6 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const user = await User.findOne({ username: req.body.username });
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  user.password = await bcrypt.hash(req.body.newPassword, 10);
+  await user.save();
+  res.json({ success: true, message: 'Customer password updated' });
+});
+
 app.get('/debug', async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
   let admin = false;

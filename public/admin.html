@@ -107,7 +107,12 @@
                         </div>
                         <button onclick="load()" class="text-[10px] text-gray-500 hover:text-black">REFRESH</button>
                     </div>
-                    <div id="user-list" class="space-y-3 max-h-[220px] overflow-y-auto pr-4 text-[11px]"></div>
+                    <div id="user-list" class="space-y-3 max-h-[180px] overflow-y-auto pr-4 text-[11px]"></div>
+                    <div class="mt-4 flex gap-2">
+                        <input id="resetUsername" type="text" placeholder="Customer username" class="flex-1 border-b border-gray-200 bg-transparent text-[11px] py-2">
+                        <input id="resetPassword" type="password" placeholder="New password" class="flex-1 border-b border-gray-200 bg-transparent text-[11px] py-2">
+                    </div>
+                    <button onclick="resetCustomerPassword()" class="btn-fill mt-4">RESET CUSTOMER PASSWORD</button>
                 </section>
 
             </div>
@@ -362,6 +367,26 @@
             load();
         }
 
+        async function resetCustomerPassword() {
+            const username = document.getElementById('resetUsername').value.trim();
+            const newPassword = document.getElementById('resetPassword').value.trim();
+            if (!username || !newPassword) return alert('Fill username and new password');
+            const token = localStorage.getItem('adminToken');
+            const res = await fetch('/api/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ username, newPassword })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Customer password reset successfully');
+                document.getElementById('resetUsername').value = '';
+                document.getElementById('resetPassword').value = '';
+            } else {
+                alert(data.error || 'Unable to reset password');
+            }
+        }
+
         // Data Fetching and Rendering
         async function load() {
             const token = localStorage.getItem('adminToken');
@@ -402,6 +427,8 @@
                         <span>${u.username}</span>
                         <span class="text-gray-400 text-[10px]">${new Date(u.createdAt).toLocaleDateString()}</span>
                     </div>`).join('') || '<div class="text-gray-400 text-[11px]">NO CUSTOMER ACCOUNTS FOUND.</div>';
+                document.getElementById('resetUsername').value = '';
+                document.getElementById('resetPassword').value = '';
 
                 // Calculate Stats
                 let rev = 0;

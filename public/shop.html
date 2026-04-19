@@ -117,6 +117,7 @@
     <div class="mt-8 flex justify-center w-full">
         <p class="text-[10px] text-gray-500">Login with username and password above.</p>
     </div>
+</div>
 
 <div id="ordersPanel" class="side-panel">
     <div class="flex justify-between items-center mb-10 text-[11px] font-bold"><h2 class="text-lg">ORDERS</h2><button onclick="closeAllPanels()" class="hover:underline">CLOSE</button></div>
@@ -403,9 +404,16 @@
 
     async function openOrders() {
         console.log('openOrders called', { user });
+        document.getElementById('orders-user-info').innerText = 'Loading orders...';
+        document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-gray-500">Loading orders...</div>';
+        closeAllPanels();
+        const panel = document.getElementById('ordersPanel');
+        panel.classList.add('show');
+        document.getElementById('overlay').classList.add('show');
         if (!user) {
             pendingAction = 'orders';
             openPanel('authPanel');
+            document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-red-500">Please login to view your orders.</div>';
             return;
         }
         const token = localStorage.getItem('neverToken');
@@ -424,20 +432,18 @@
                     user = null;
                     document.getElementById('authBtn').innerHTML = 'LOGIN';
                     document.getElementById('trackBtn').classList.add('hidden');
+                    document.getElementById('orders-user-info').innerText = 'Session expired or unauthorized. Please login again.';
                     document.getElementById('my-orders-list').innerHTML = `<div class="p-8 text-center text-[12px] text-red-500">Session expired or unauthorized. Please login again.</div>`;
                     openPanel('authPanel');
                     return;
                 }
+                document.getElementById('orders-user-info').innerText = `Unable to load your orders (${res.status}).`;
                 document.getElementById('my-orders-list').innerHTML = `<div class="p-8 text-center text-[12px] text-red-500">Unable to load your orders (${res.status}). ${text}</div>`;
                 return;
             }
 
             const orders = await res.json();
             console.log('Orders loaded', orders);
-            closeAllPanels();
-            const panel = document.getElementById('ordersPanel');
-            panel.classList.add('show');
-            document.getElementById('overlay').classList.add('show');
             document.getElementById('orders-user-info').innerText = `Logged in as: ${user?.username || 'Unknown'}`;
             if (!Array.isArray(orders) || orders.length === 0) {
                 document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-gray-500">No orders found for this account yet.</div>';
@@ -465,7 +471,8 @@
                 </div>`).join('') || '<p class="text-[11px] text-gray-400">NO ORDERS FOUND.</p>';
         } catch (err) {
             console.error('Orders fetch error', err);
-            alert('Unable to load your orders. Please try again later.');
+            document.getElementById('orders-user-info').innerText = 'Unable to load your orders. Please try again later.';
+            document.getElementById('my-orders-list').innerHTML = '<div class="p-8 text-center text-[12px] text-red-500">Unable to load your orders. Please try again later.</div>';
         }
     }
     
