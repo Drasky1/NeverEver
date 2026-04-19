@@ -349,6 +349,28 @@ app.get('/debug', async (req, res) => {
   res.json(debugData);
 });
 
+app.get('/debug-user-orders', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const username = req.user.username;
+  const query = [{ userId }];
+  if (username) query.push({ username });
+  const orders = await Order.find({ $or: query }).sort({ createdAt: -1 });
+  res.json({
+    user: { id: userId, username },
+    query,
+    ordersCount: orders.length,
+    orders: orders.map(o => ({
+      id: o._id,
+      userId: o.userId,
+      username: o.username,
+      customerName: o.customerName,
+      totalMMK: o.totalMMK,
+      status: o.status,
+      createdAt: o.createdAt
+    }))
+  });
+});
+
 // Route everything else to the main app (SPA behavior)
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get(/.*/, (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));

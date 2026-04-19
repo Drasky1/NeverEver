@@ -327,10 +327,12 @@
             return;
         }
         const token = localStorage.getItem('neverToken');
+        console.log('Fetching orders with token:', token ? 'present' : 'missing');
         try {
             const res = await fetch('/api/my-orders', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            console.log('Orders response status:', res.status);
             if (!res.ok) {
                 const text = await res.text();
                 console.error('Orders fetch failed', res.status, text);
