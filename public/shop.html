@@ -129,7 +129,7 @@
         const res = await fetch('/api/items');
         allItems = await res.json();
         filter('Instock');
-        if(user) {
+        if(user && localStorage.getItem('neverToken')) {
             document.getElementById('authBtn').innerHTML = 'PROFILE';
             document.getElementById('trackBtn').classList.remove('hidden');
         }
@@ -199,6 +199,7 @@
         const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
         const d = await res.json();
         if(res.ok) { 
+            localStorage.setItem('neverToken', d.token);
             localStorage.setItem('neverUser', JSON.stringify(d.user)); 
             location.reload(); 
         } else alert(d.error || "Authentication Failed");
@@ -208,6 +209,7 @@
         const res = await fetch('/auth/google', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token: response.credential})});
         const d = await res.json();
         if(res.ok) { 
+            localStorage.setItem('neverToken', d.token);
             localStorage.setItem('neverUser', JSON.stringify(d.user)); 
             location.reload(); 
         } else alert(d.error || "Google Sign-In Failed");
@@ -283,14 +285,18 @@
             items: formattedItems, paymentScreenshot: document.getElementById('paymentImg').value, totalMMK: total 
         };
         
-        await fetch('/api/submit-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+        const token = localStorage.getItem('neverToken');
+        await fetch('/api/submit-order', { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify(data)});
         alert("ORDER PLACED"); 
         location.reload();
     }
 
     async function openOrders() {
         if(!user) return;
-        const orders = await (await fetch(`/api/my-orders/${user.id}`)).json();
+        const token = localStorage.getItem('neverToken');
+        const orders = await (await fetch(`/api/my-orders/${user.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })).json();
         openPanel('ordersPanel');
         document.getElementById('my-orders-list').innerHTML = orders.map(o => `
             <div class="text-[11px] pb-6 border-b border-gray-200">

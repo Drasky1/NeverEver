@@ -1,22 +1,44 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
 
 const app = express();
-const client = new OAuth2Client('866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://cdn.tailwindcss.com", "https://upload-widget.cloudinary.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      connectSrc: ["'self'", "https://api.telegram.org"],
+    },
+  },
+}));
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:10000', 'https://yourdomain.com'], // Replace with your actual domains
+  credentials: true
+}));
 app.use(express.static('public')); // ALL HTML/JS/CSS GOES IN 'public' FOLDER
 
 const RATE = 125;
-const TELEGRAM_BOT_TOKEN = '8680111413:AAGQrF3NzoJ7oQduth5dSp5c-3Uo9fBHN0o';
-const TELEGRAM_CHAT_ID = '-5248393169';
 
-mongoose.connect('mongodb+srv://Malcolm:Sa1Mon3LLA@cluster0.h2cafaa.mongodb.net/NeverEver?retryWrites=true&w=majority')
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("✅ DB CONNECTED"))
     .catch(err => console.error("❌ DB ERROR:", err));
 
@@ -39,23 +61,58 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-app.get('/api/items', async (req, res) => res.json(await Item.find()));
-app.get('/api/orders', async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
-app.get('/api/my-orders/:userId', async (req, res) => res.json(await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 })));
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access denied' });
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = verified;
+    next();
+  } catch (err) {
+    res.status(400).json({ error: 'Invalid token' });
+  }
+};
 
-app.post('/api/add-item', async (req, res) => {
-    const calculatedPrice = req.body.priceMMK ? Number(req.body.priceMMK) : Number(req.body.costTHB) * RATE;
-    const newItem = new Item({ ...req.body, price: calculatedPrice });
-    await newItem.save();
-    res.json({ success: true });
+const verifyAdmin = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access denied' });
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    if (verified.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+    req.admin = verified;
+    next();
+  } catch (err) {
+    res.status(400).json({ error: 'Invalid token' });
+  }
+};
+
+app.get('/api/orders', verifyAdmin, async (req, res) => res.json(await Order.find().sort({ createdAt: -1 })));
+app.post('/api/add-item', verifyAdmin, [
+  body('name').isLength({ min: 1 }).trim().escape(),
+  body('costTHB').isNumeric(),
+  body('priceMMK').optional().isNumeric(),
+  body('quantity').isNumeric(),
+  body('description').optional().trim().escape(),
+  body('availableSizes').optional().isArray(),
+  body('availableColors').optional().isArray(),
+  body('images').isArray({ min: 1 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const calculatedPrice = req.body.priceMMK ? Number(req.body.priceMMK) : Number(req.body.costTHB) * RATE;
+  const newItem = new Item({ ...req.body, price: calculatedPrice });
+  await newItem.save();
+  res.json({ success: true });
 });
 
-app.put('/api/update-item-cat/:id', async (req, res) => {
+app.put('/api/update-item-cat/:id', verifyAdmin, async (req, res) => {
     await Item.findByIdAndUpdate(req.params.id, { category: req.body.category });
     res.json({ success: true });
 });
 
-app.put('/api/update-item/:id', async (req, res) => {
+app.put('/api/update-item/:id', verifyAdmin, async (req, res) => {
     let updateData = { ...req.body };
     if (req.body.priceMMK) {
         updateData.price = Number(req.body.priceMMK);
@@ -66,55 +123,67 @@ app.put('/api/update-item/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-app.post('/api/submit-order', async (req, res) => {
-    let totalCostMMK = 0;
-    try {
-        for (const item of req.body.items) {
-            const dbItem = await Item.findOne({ name: item.name });
-            if (dbItem) { 
-                totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty; 
-                
-                dbItem.quantity = (dbItem.quantity || 0) - item.qty;
-                if (dbItem.quantity <= 0) {
-                    dbItem.quantity = 0;
-                    if (dbItem.category === 'Instock') {
-                        dbItem.category = 'Sold Out';
-                    }
-                }
-                await dbItem.save();
-            }
+app.post('/api/submit-order', verifyToken, [
+  body('customerName').isLength({ min: 1 }).trim().escape(),
+  body('telegram').trim().escape(),
+  body('phone').isLength({ min: 1 }).trim().escape(),
+  body('address').isLength({ min: 1 }).trim().escape(),
+  body('items').isArray({ min: 1 }),
+  body('paymentScreenshot').isURL(),
+  body('totalMMK').isNumeric(),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  let totalCostMMK = 0;
+  try {
+    for (const item of req.body.items) {
+      const dbItem = await Item.findOne({ name: item.name });
+      if (dbItem) { 
+        totalCostMMK += (Number(dbItem.costTHB) * RATE) * item.qty; 
+        
+        dbItem.quantity = (dbItem.quantity || 0) - item.qty;
+        if (dbItem.quantity <= 0) {
+          dbItem.quantity = 0;
+          if (dbItem.category === 'Instock') {
+            dbItem.category = 'Sold Out';
+          }
         }
-    } catch (e) { console.error(e); }
-    req.body.totalCostMMK = totalCostMMK;
-    req.body.profitMMK = req.body.totalMMK - totalCostMMK;
+        await dbItem.save();
+      }
+    }
+  } catch (e) { console.error(e); }
+  req.body.totalCostMMK = totalCostMMK;
+  req.body.profitMMK = req.body.totalMMK - totalCostMMK;
 
-    const order = new Order(req.body);
-    await order.save();
+  const order = new Order(req.body);
+  await order.save();
 
-    try {
-        const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
-        const tgLabel = order.telegram ? `\nTELEGRAM: @${order.telegram.replace('@', '')}` : '';
-        const nameLabel = order.customerName || order.username;
-        const message = `🚨 NEW ORDER\n\nUSER: ${nameLabel}${tgLabel}\nPHONE: ${order.phone}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\n\nITEMS:\n- ${itemList}\n\nADDRESS: ${order.address}`;
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-            chat_id: TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
-        });
-    } catch (err) { console.error("Telegram error:", err.message); }
-    res.json({ success: true });
+  try {
+    const itemList = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('\n- ');
+    const tgLabel = order.telegram ? `\nTELEGRAM: @${order.telegram.replace('@', '')}` : '';
+    const nameLabel = order.customerName || order.username;
+    const message = `🚨 NEW ORDER\n\nUSER: ${nameLabel}${tgLabel}\nPHONE: ${order.phone}\nTOTAL: ${order.totalMMK.toLocaleString()} MMK\n\nITEMS:\n- ${itemList}\n\nADDRESS: ${order.address}`;
+    await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+      chat_id: process.env.TELEGRAM_CHAT_ID, photo: order.paymentScreenshot, caption: message
+    });
+  } catch (err) { console.error("Telegram error:", err.message); }
+  res.json({ success: true });
 });
 
-app.put('/api/update-order/:id', async (req, res) => {
+app.put('/api/update-order/:id', verifyAdmin, async (req, res) => {
     await Order.findByIdAndUpdate(req.params.id, req.body);
     res.json({ success: true });
 });
-app.delete('/api/delete-item/:id', async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
-app.delete('/api/delete-order/:id', async (req, res) => { await Order.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+app.delete('/api/delete-item/:id', verifyAdmin, async (req, res) => { await Item.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+app.delete('/api/delete-order/:id', verifyAdmin, async (req, res) => { await Order.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
 app.post('/auth/google', async (req, res) => {
     try {
         const ticket = await client.verifyIdToken({
             idToken: req.body.token,
-            audience: '866705523346-4dnad433fs6ckk7lieark8a764h8ulp8.apps.googleusercontent.com'
+            audience: process.env.GOOGLE_CLIENT_ID
         });
         const payload = ticket.getPayload();
         let user = await User.findOne({ username: payload.email });
@@ -122,24 +191,41 @@ app.post('/auth/google', async (req, res) => {
             user = new User({ username: payload.email, password: '' });
             await user.save();
         }
-        res.json({ success: true, user: { id: user._id, username: user.username } });
+        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        res.json({ success: true, token, user: { id: user._id, username: user.username } });
     } catch (e) { res.status(401).json({ error: "Google verification failed" }); }
 });
 
-app.post('/auth/signup', async (req, res) => {
-    try {
-        const hashed = await bcrypt.hash(req.body.password, 10);
-        const user = new User({ username: req.body.username, password: hashed });
-        await user.save();
-        res.json({ success: true, user: { id: user._id, username: user.username } });
-    } catch (err) { res.status(400).json({ error: "Username taken" }); }
+app.post('/auth/signup', [
+  body('username').isLength({ min: 3 }).trim().escape(),
+  body('password').isLength({ min: 6 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  try {
+    const hashed = await bcrypt.hash(req.body.password, 10);
+    const user = new User({ username: req.body.username, password: hashed });
+    await user.save();
+    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, token, user: { id: user._id, username: user.username } });
+  } catch (err) { res.status(400).json({ error: "Username taken" }); }
 });
 
-app.post('/auth/login', async (req, res) => {
-    const user = await User.findOne({ username: req.body.username });
-    if (user && await bcrypt.compare(req.body.password, user.password)) {
-        res.json({ success: true, user: { id: user._id, username: user.username } });
-    } else { res.status(401).json({ error: "Invalid credentials" }); }
+app.post('/auth/admin', [
+  body('password').isLength({ min: 1 }),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  if (req.body.password === process.env.ADMIN_PASSWORD) {
+    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ error: 'Invalid admin password' });
+  }
 });
 
 // Route everything else to the main app (SPA behavior)

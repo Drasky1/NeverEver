@@ -155,13 +155,19 @@
         });
 
         function checkPass() { 
-            if(document.getElementById('adminPass').value === 'never2026') {
-                localStorage.setItem('adminAuthed', 'true');
-                document.getElementById('authOverlay').remove(); 
-                load(); // Load data only after login
-            } else {
-                alert("ACCESS DENIED");
-            }
+            fetch('/auth/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: document.getElementById('adminPass').value })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    localStorage.setItem('adminToken', data.token);
+                    document.getElementById('authOverlay').remove(); 
+                    load();
+                } else {
+                    alert(data.error || "ACCESS DENIED");
+                }
+            });
         }
 
         // Live Time Display
@@ -199,6 +205,7 @@
         document.getElementById('uploadBtn').onclick = () => widget.open();
 
         async function saveItem() {
+            const token = localStorage.getItem('adminToken');
             const sizes = Array.from(document.querySelectorAll('.size-input')).map(s => s.value.trim()).filter(Boolean);
             const colors = Array.from(document.querySelectorAll('.color-input')).map(c => c.value.trim()).filter(Boolean);
             const data = { 
@@ -214,27 +221,41 @@
             };
             if(!data.name || !data.costTHB || photos.length === 0) return alert("MISSING DATA OR IMAGES");
 
-            await fetch('/api/add-item', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            await fetch('/api/add-item', { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify(data)});
             alert("PRODUCT DEPLOYED");
             location.reload();
         }
 
         // Order Management API
         async function markSoldOut(id) {
-            await fetch(`/api/update-item-cat/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({category: 'Sold Out'})});
+            const token = localStorage.getItem('adminToken');
+            await fetch(`/api/update-item-cat/${id}`, { method:'PUT', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify({category: 'Sold Out'})});
             load();
         }
 
         async function updateOrder(id) {
+            const token = localStorage.getItem('adminToken');
             const status = document.getElementById(`status-${id}`).value;
             const estArrival = document.getElementById(`est-${id}`).value;
-            await fetch(`/api/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status, estArrival})});
+            await fetch(`/api/update-order/${id}`, { method:'PUT', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify({status, estArrival})});
             alert("ORDER STATUS UPDATED");
             load();
         }
 
-        async function delOrder(id) { if(confirm('PERMANENTLY DELETE THIS ORDER?')) { await fetch(`/api/delete-order/${id}`, {method:'DELETE'}); load(); } }
-        async function delItem(id) { if(confirm('REMOVE PRODUCT FROM STORE?')) { await fetch(`/api/delete-item/${id}`, {method:'DELETE'}); load(); } }
+        async function delOrder(id) { 
+            if(confirm('PERMANENTLY DELETE THIS ORDER?')) { 
+                const token = localStorage.getItem('adminToken');
+                await fetch(`/api/delete-order/${id}`, {method:'DELETE', headers: {'Authorization': `Bearer ${token}`}}); 
+                load(); 
+            } 
+        }
+        async function delItem(id) { 
+            if(confirm('REMOVE PRODUCT FROM STORE?')) { 
+                const token = localStorage.getItem('adminToken');
+                await fetch(`/api/delete-item/${id}`, {method:'DELETE', headers: {'Authorization': `Bearer ${token}`}}); 
+                load(); 
+            } 
+        }
 
         let itemsCache = [];
         let editPhotos = [];
@@ -295,6 +316,7 @@
         }
 
         async function saveEditItem() {
+            const token = localStorage.getItem('adminToken');
             const id = document.getElementById('editItemId').value;
             const sizes = Array.from(document.querySelectorAll('.edit-size-input')).map(s => s.value.trim()).filter(Boolean);
             const colors = Array.from(document.querySelectorAll('.edit-color-input')).map(c => c.value.trim()).filter(Boolean);
@@ -312,7 +334,7 @@
                 data.images = editPhotos;
             }
 
-            await fetch(`/api/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            await fetch(`/api/update-item/${id}`, { method:'PUT', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body:JSON.stringify(data)});
             alert("PRODUCT UPDATED");
             document.getElementById('editModal').classList.add('hidden');
             load();
@@ -320,9 +342,12 @@
 
         // Data Fetching and Rendering
         async function load() {
+            const token = localStorage.getItem('adminToken');
             const items = await (await fetch('/api/items')).json();
             itemsCache = items;
-            const orders = await (await fetch('/api/orders')).json();
+            const orders = await (await fetch('/api/orders', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })).json();
             
             // Calculate Stats
             let rev = 0;
