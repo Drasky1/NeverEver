@@ -515,6 +515,16 @@
             transition: border-color 0.2s, color 0.2s;
         }
         .btn-outline:hover { border-color: var(--black); }
+        
+        .load-more-container {
+            padding: 40px 24px 60px;
+            display: flex;
+            justify-content: center;
+            background: var(--gray-50);
+        }
+        #loadMoreBtn {
+            max-width: 240px;
+        }
 
         /* ── Inputs ─────────────────────────────────────── */
         .input {
@@ -818,6 +828,9 @@
 
 <!-- PRODUCT GRID -->
 <main class="product-grid" id="main-grid"></main>
+<div class="load-more-container" id="loadMoreContainer">
+    <button id="loadMoreBtn" onclick="loadMore()" class="btn-outline">LOAD MORE</button>
+</div>
 
 <!-- ═══════════════════ FOOTER ════════════════════════════ -->
 <footer class="footer">
@@ -916,6 +929,7 @@
     let selectedSize = null, selectedColor = null;
     let isLoginMode = true, pendingAction = null;
     let currentFilter = 'Instock';
+    let visibleCount = 12; // Initial products to show (3 rows on desktop)
 
     const defaultSiteContent = {
         faqs: 'FAQS WILL BE UPDATED SOON.\n\nFOR ORDER QUESTIONS, CONTACT SUPPORT @TFUWNTHUH.',
@@ -1055,7 +1069,8 @@
         applyFilters();
     }
 
-    function applyFilters() {
+    function applyFilters(resetCount = true) {
+        if (resetCount) visibleCount = 12; // Reset count when filtering or searching
         const query = document.getElementById('searchInput').value.toLowerCase().trim();
         const filtered = allItems.filter(i => {
             const matchCat = currentFilter === 'All' ? true : i.category === currentFilter;
@@ -1065,13 +1080,25 @@
         renderProducts(filtered);
     }
 
+    function loadMore() {
+        visibleCount += 12;
+        applyFilters(false); // Re-render with NEW count, don't reset to 12
+    }
+
     function renderProducts(items) {
         const grid = document.getElementById('main-grid');
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+
         if (items.length === 0) {
             grid.innerHTML = '<p style="padding:40px;font-size:11px;color:var(--gray-400);text-align:center;grid-column:1/-1;text-transform:uppercase;letter-spacing:0.1em;">NO PRODUCTS FOUND.</p>';
+            loadMoreContainer.classList.add('hidden');
             return;
         }
-        grid.innerHTML = items.map(i => {
+
+        const visibleItems = items.slice(0, visibleCount);
+        loadMoreContainer.classList.toggle('hidden', items.length <= visibleCount);
+
+        grid.innerHTML = visibleItems.map(i => {
             let badge = '';
             if (i.category === 'Sold Out') badge = '<div class="badge">SOLD OUT</div>';
             else if (i.category === 'Preorder') badge = '<div class="badge preorder">PREORDER</div>';

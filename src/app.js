@@ -20,6 +20,7 @@ const adminRoutes = require('./routes/admin');
 const siteContentRoutes = require('./routes/siteContent');
 
 const app = express();
+app.set('trust proxy', 1); // Required for Render to see correct user IPs
 const publicDir = path.join(__dirname, '..', 'public');
 
 // ── Security ──────────────────────────────────────────────
@@ -41,10 +42,15 @@ app.use(helmet({
 }));
 
 // ── Rate Limiting ─────────────────────────────────────────
-app.use(rateLimit({
+const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
-}));
+  max: 200, // Limit each IP to 200 requests per 15 mins for API calls
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+// Apply limiter only to API and Auth routes (not static files)
+app.use('/auth', limiter);
+app.use('/api', limiter);
 
 // ── Compression ───────────────────────────────────────────
 app.use(compression());
@@ -86,6 +92,7 @@ app.get('/health', (req, res) => {
 });
 
 // ── API Routes ────────────────────────────────────────────
+// Note: rateLimit applies to these routes via the 'limiter' middleware defined above
 app.use('/auth', authRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/orders', orderRoutes);
