@@ -929,7 +929,7 @@
     let selectedSize = null, selectedColor = null;
     let isLoginMode = true, pendingAction = null;
     let currentFilter = 'Instock';
-    let visibleCount = 12; // Initial products to show (3 rows on desktop)
+    let visibleCount = 12; 
 
     const defaultSiteContent = {
         faqs: 'FAQS WILL BE UPDATED SOON.\n\nFOR ORDER QUESTIONS, CONTACT SUPPORT @TFUWNTHUH.',
@@ -1069,8 +1069,16 @@
         applyFilters();
     }
 
+    function getBatchSize() {
+        // Return 6 items for mobile (2 cols * 3 rows), 9 for tablet (3 cols * 3 rows), 12 for desktop (4 cols * 3 rows)
+        const width = window.innerWidth;
+        if (width < 768) return 6;
+        if (width < 1200) return 9;
+        return 12;
+    }
+
     function applyFilters(resetCount = true) {
-        if (resetCount) visibleCount = 12; // Reset count when filtering or searching
+        if (resetCount) visibleCount = getBatchSize(); // Reset to 3 rows based on device
         const query = document.getElementById('searchInput').value.toLowerCase().trim();
         const filtered = allItems.filter(i => {
             const matchCat = currentFilter === 'All' ? true : i.category === currentFilter;
@@ -1081,8 +1089,8 @@
     }
 
     function loadMore() {
-        visibleCount += 12;
-        applyFilters(false); // Re-render with NEW count, don't reset to 12
+        visibleCount += getBatchSize(); // Add 3 more rows based on device
+        applyFilters(false); // Re-render with NEW count, don't reset
     }
 
     function renderProducts(items) {
