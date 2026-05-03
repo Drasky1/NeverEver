@@ -426,6 +426,36 @@
         .pv-gallery-wrap:hover .slide-btn { opacity: 0.8; }
         .slide-btn:hover { opacity: 1 !important; background: var(--white); }
 
+        /* Gallery Pagination Dots */
+        .pv-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding-bottom: 8px;
+        }
+        .pv-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
+        .pv-dot.active {
+            background: var(--black);
+            transform: scale(1.2);
+        }
+
+        @media (max-width: 767px) {
+            .slide-btn { display: none !important; }
+        }
+        @media (min-width: 768px) {
+            .pv-dots { display: none; }
+        }
+
         .pv-info {
             text-align: center;
             padding: 24px 24px 60px;
@@ -853,6 +883,7 @@
             <button onclick="document.getElementById('pGallery').scrollBy({left:-300,behavior:'smooth'})" class="slide-btn" style="left:12px;">‹</button>
             <button onclick="document.getElementById('pGallery').scrollBy({left:300,behavior:'smooth'})" class="slide-btn" style="right:12px;">›</button>
             <div id="pGallery" class="pv-gallery"></div>
+            <div id="pDots" class="pv-dots"></div>
         </div>
         <div class="pv-info">
             <h1 id="pName" class="pv-name"></h1>
@@ -1136,10 +1167,18 @@
         document.getElementById('pPrice').innerText = `${currentItem.price.toLocaleString()} MMK`;
         document.getElementById('pDesc').innerText = currentItem.description || '';
 
-        document.getElementById('pGallery').innerHTML = currentItem.images.map(img => `
+        const gallery = document.getElementById('pGallery');
+        gallery.innerHTML = currentItem.images.map(img => `
             <div class="pv-gallery-item">
                 <img src="${img}" alt="${currentItem.name}" loading="lazy">
             </div>`).join('');
+        gallery.scrollLeft = 0;
+
+        // Generate dots
+        const dotsContainer = document.getElementById('pDots');
+        dotsContainer.innerHTML = currentItem.images.map((_, i) => 
+            `<button class="pv-dot ${i === 0 ? 'active' : ''}" onclick="scrollToImage(${i})"></button>`
+        ).join('');
 
         document.getElementById('sizeGrid').innerHTML = (currentItem.availableSizes || []).map(s =>
             `<button class="chip" onclick="selSize(this,'${s}')">${s}</button>`
@@ -1154,6 +1193,20 @@
         requestAnimationFrame(() => pv.classList.add('show'));
         window.scrollTo(0, 0);
     }
+
+    function scrollToImage(index) {
+        const gallery = document.getElementById('pGallery');
+        const width = gallery.offsetWidth;
+        gallery.scrollTo({ left: width * index, behavior: 'smooth' });
+    }
+
+    // Handle dot activation on scroll
+    document.getElementById('pGallery').addEventListener('scroll', function() {
+        const index = Math.round(this.scrollLeft / this.offsetWidth);
+        document.querySelectorAll('.pv-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
+    });
 
     function closeProductView() {
         const pv = document.getElementById('productView');
