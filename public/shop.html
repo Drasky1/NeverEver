@@ -1415,7 +1415,7 @@
 
         const token = localStorage.getItem('neverToken');
         try {
-            const response = await fetch('/api/submit-order', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+            const response = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
             const result = await response.json();
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
@@ -1477,7 +1477,7 @@
 
         const token = localStorage.getItem('neverToken');
         try {
-            const res = await fetch('/api/my-orders', { headers: { 'Authorization': `Bearer ${token}` } });
+            const res = await fetch('/api/orders/mine', { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) {
                 const text = await res.text();
                 if (res.status === 401 || res.status === 403) {

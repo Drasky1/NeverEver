@@ -669,7 +669,7 @@
         };
         if (!data.name || !data.costTHB || photos.length === 0) return toast('MISSING DATA OR IMAGES', 'error');
 
-        const response = await fetch('/api/add-item', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+        const response = await fetch('/api/items', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
         const result = await response.json();
         if (!response.ok) {
             return toast(result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'UNABLE TO ADD PRODUCT'), 'error');
@@ -683,7 +683,7 @@
     // ═══════════════════════════════════════════════════════
     async function markSoldOut(id) {
         const token = localStorage.getItem('adminToken');
-        await fetch(`/api/update-item-cat/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ category: 'Sold Out' }) });
+        await fetch(`/api/items/${id}/category`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ category: 'Sold Out' }) });
         toast('MARKED SOLD OUT', 'success');
         load();
     }
@@ -692,7 +692,7 @@
         const token = localStorage.getItem('adminToken');
         const status = document.getElementById(`status-${id}`).value;
         const estArrival = document.getElementById(`est-${id}`).value;
-        await fetch(`/api/update-order/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ status, estArrival }) });
+        await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ status, estArrival }) });
         toast('ORDER UPDATED', 'success');
         load();
     }
@@ -700,7 +700,7 @@
     async function delOrder(id) {
         if (confirm('PERMANENTLY DELETE THIS ORDER?')) {
             const token = localStorage.getItem('adminToken');
-            await fetch(`/api/delete-order/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            await fetch(`/api/orders/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
             toast('ORDER DELETED', 'success');
             load();
         }
@@ -709,7 +709,7 @@
     async function delItem(id) {
         if (confirm('REMOVE PRODUCT FROM STORE?')) {
             const token = localStorage.getItem('adminToken');
-            await fetch(`/api/delete-item/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            await fetch(`/api/items/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
             toast('PRODUCT REMOVED', 'success');
             load();
         }
@@ -795,7 +795,7 @@
         };
         if (editPhotos.length > 0) data.images = editPhotos;
 
-        await fetch(`/api/update-item/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+        await fetch(`/api/items/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
         toast('PRODUCT UPDATED', 'success');
         document.getElementById('editModal').classList.add('hidden');
         load();
@@ -809,7 +809,7 @@
         const newPassword = document.getElementById('resetPassword').value.trim();
         if (!username || !newPassword) return toast('FILL USERNAME AND NEW PASSWORD', 'error');
         const token = localStorage.getItem('adminToken');
-        const res = await fetch('/api/reset-password', {
+        const res = await fetch('/api/admin/reset-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ username, newPassword })
@@ -908,7 +908,7 @@
             }
             const orders = await ordersRes.json();
 
-            const usersRes = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+            const usersRes = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
             if (!usersRes.ok) throw new Error('Unable to load users');
             const users = await usersRes.json();
 
