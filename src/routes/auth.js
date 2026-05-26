@@ -81,7 +81,7 @@ router.post('/admin', [
 
   // Never log passwords — compare securely
   if (req.body.password === ADMIN_PASSWORD) {
-    const token = jwt.sign({ role: 'admin', id: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ role: 'admin', id: 'admin' }, JWT_SECRET, { expiresIn: '12h' });
     res.json({ success: true, token });
   } else {
     res.status(401).json({ error: 'Invalid admin password' });

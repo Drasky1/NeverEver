@@ -583,8 +583,30 @@
     // ═══════════════════════════════════════════════════════
     // ►  AUTH
     // ═══════════════════════════════════════════════════════
+    function expireAdminSession(message = 'SESSION EXPIRED. PLEASE LOGIN AGAIN.') {
+        localStorage.removeItem('adminToken');
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('authError').innerText = message;
+    }
+
+    function getAdminToken() {
+        const token = localStorage.getItem('adminToken');
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            if (payload.exp && payload.exp * 1000 <= Date.now()) {
+                expireAdminSession();
+                return null;
+            }
+        } catch (err) {
+            expireAdminSession('PLEASE LOGIN AGAIN.');
+            return null;
+        }
+        return token;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        if (localStorage.getItem('adminToken')) {
+        if (getAdminToken()) {
             document.getElementById('authOverlay').style.display = 'none';
             load();
             loadSiteContent();
@@ -653,7 +675,8 @@
     // ►  SAVE ITEM
     // ═══════════════════════════════════════════════════════
     async function saveItem() {
-        const token = localStorage.getItem('adminToken');
+        const token = getAdminToken();
+        if (!token) return;
         const sizes = Array.from(document.querySelectorAll('.size-input')).map(s => s.value.trim()).filter(Boolean);
         const colors = Array.from(document.querySelectorAll('.color-input')).map(c => c.value.trim()).filter(Boolean);
         const data = {
@@ -682,14 +705,16 @@
     // ►  ORDER MANAGEMENT
     // ═══════════════════════════════════════════════════════
     async function markSoldOut(id) {
-        const token = localStorage.getItem('adminToken');
+        const token = getAdminToken();
+        if (!token) return;
         await fetch(`/api/items/${id}/category`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ category: 'Sold Out' }) });
         toast('MARKED SOLD OUT', 'success');
         load();
     }
 
     async function updateOrder(id) {
-        const token = localStorage.getItem('adminToken');
+        const token = getAdminToken();
+        if (!token) return;
         const status = document.getElementById(`status-${id}`).value;
         const estArrival = document.getElementById(`est-${id}`).value;
         await fetch(`/api/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ status, estArrival }) });
@@ -699,7 +724,8 @@
 
     async function delOrder(id) {
         if (confirm('PERMANENTLY DELETE THIS ORDER?')) {
-            const token = localStorage.getItem('adminToken');
+            const token = getAdminToken();
+            if (!token) return;
             await fetch(`/api/orders/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
             toast('ORDER DELETED', 'success');
             load();
@@ -708,7 +734,8 @@
 
     async function delItem(id) {
         if (confirm('REMOVE PRODUCT FROM STORE?')) {
-            const token = localStorage.getItem('adminToken');
+            const token = getAdminToken();
+            if (!token) return;
             await fetch(`/api/items/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
             toast('PRODUCT REMOVED', 'success');
             load();
@@ -779,7 +806,8 @@
     }
 
     async function saveEditItem() {
-        const token = localStorage.getItem('adminToken');
+        const token = getAdminToken();
+        if (!token) return;
         const id = document.getElementById('editItemId').value;
         const sizes = Array.from(document.querySelectorAll('.edit-size-input')).map(s => s.value.trim()).filter(Boolean);
         const colors = Array.from(document.querySelectorAll('.edit-color-input')).map(c => c.value.trim()).filter(Boolean);
@@ -808,7 +836,8 @@
         const username = document.getElementById('resetUsername').value.trim();
         const newPassword = document.getElementById('resetPassword').value.trim();
         if (!username || !newPassword) return toast('FILL USERNAME AND NEW PASSWORD', 'error');
-        const token = localStorage.getItem('adminToken');
+        const token = getAdminToken();
+        if (!token) return;
         const res = await fetch('/api/admin/reset-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -844,7 +873,8 @@
     }
 
     async function saveSiteContent() {
-        const token = localStorage.getItem('adminToken');
+        const token = getAdminToken();
+        if (!token) return;
         const status = document.getElementById('siteContentStatus');
         const data = {
             faqs: document.getElementById('siteFaqs').value,
@@ -889,7 +919,8 @@
     }
 
     async function load() {
-        const token = localStorage.getItem('adminToken');
+        const token = getAdminToken();
+        if (!token) return;
         renderLoadingSkeletons();
         try {
             const itemsRes = await fetch('/api/items');
@@ -900,8 +931,7 @@
             const ordersRes = await fetch('/api/orders', { headers: { 'Authorization': `Bearer ${token}` } });
             if (!ordersRes.ok) {
                 if (ordersRes.status === 401 || ordersRes.status === 403) {
-                    localStorage.removeItem('adminToken');
-                    document.getElementById('authOverlay').style.display = 'flex';
+                    expireAdminSession();
                     throw new Error('Session expired');
                 }
                 throw new Error(`Unable to load orders (${ordersRes.status})`);
