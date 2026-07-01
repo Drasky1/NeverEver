@@ -123,7 +123,7 @@
         }
         .btn-outline:hover { border-color: var(--black); }
 
-        /* ── Skeleton ───────────────────────────────────── */
+      
         @keyframes shimmer {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
@@ -135,7 +135,7 @@
             border-radius: 2px;
         }
 
-        /* ── Section ────────────────────────────────────── */
+       
         .section-title {
             font-size: 11px;
             font-weight: 700;
@@ -144,13 +144,13 @@
             margin-bottom: 24px;
         }
 
-        /* ── Scrollbar ──────────────────────────────────── */
+       
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--gray-300); }
         ::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
 
-        /* ── Auth Overlay ───────────────────────────────── */
+        
         .auth-overlay {
             position: fixed;
             inset: 0;
@@ -188,7 +188,7 @@
             margin-top: 16px;
         }
 
-        /* ── Edit Modal ─────────────────────────────────── */
+       
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -221,7 +221,7 @@
         }
         .modal-close:hover { color: var(--black); }
 
-        /* ── Layout ─────────────────────────────────────── */
+       
         .admin-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -269,7 +269,7 @@
             letter-spacing: -0.01em;
         }
 
-        /* ── Inventory Item ─────────────────────────────── */
+      
         .inv-item {
             display: flex;
             justify-content: space-between;
@@ -298,7 +298,7 @@
         .inv-action-del { color: var(--gray-300); }
         .inv-action-del:hover { color: var(--red); }
 
-        /* ── Order Card ─────────────────────────────────── */
+       
         .admin-order {
             border-bottom: 1px solid var(--gray-200);
             padding-bottom: 24px;
@@ -387,7 +387,7 @@
         .admin-order-delete { color: var(--red); }
         .admin-order-delete:hover { opacity: 0.7; }
 
-        /* ── User List ──────────────────────────────────── */
+      
         .user-item {
             display: flex;
             justify-content: space-between;
@@ -408,7 +408,7 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ═══════════════════ AUTH OVERLAY ══════════════════════ -->
+
 <div id="authOverlay" class="auth-overlay">
     <div class="auth-box">
         <h1>SYSTEM ACCESS</h1>
@@ -418,7 +418,7 @@
     </div>
 </div>
 
-<!-- ═══════════════════ ADMIN CONTENT ════════════════════ -->
+
 <div class="admin-container">
 
     <header class="admin-header">
@@ -440,10 +440,10 @@
 
     <div class="admin-grid">
 
-        <!-- ═══ LEFT COLUMN ═══ -->
+        
         <div>
 
-            <!-- Deploy Product -->
+            
             <section style="margin-bottom:48px;">
                 <h2 class="section-title">DEPLOY NEW PRODUCT</h2>
                 <input type="text" id="itemName" placeholder="PRODUCT NAME">
@@ -475,7 +475,7 @@
                 <button onclick="saveItem()" class="btn-primary">PUBLISH TO STORE</button>
             </section>
 
-            <!-- Database -->
+            
             <section style="margin-bottom:48px;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;">
                     <h2 class="section-title" style="margin-bottom:0;">DATABASE</h2>
@@ -484,7 +484,7 @@
                 <div id="inv-list" style="max-height:240px;overflow-y:auto;"></div>
             </section>
 
-            <!-- Customer Accounts -->
+            
             <section style="margin-bottom:48px;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;">
                     <div>
@@ -501,7 +501,7 @@
                 <button onclick="resetCustomerPassword()" class="btn-primary" style="margin-top:16px;">RESET CUSTOMER PASSWORD</button>
             </section>
 
-            <!-- Footer Info -->
+            
             <section>
                 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;">
                     <div>
@@ -518,7 +518,7 @@
 
         </div>
 
-        <!-- ═══ RIGHT COLUMN ═══ -->
+       
         <div>
             <h2 class="section-title">LIVE ORDER STREAM</h2>
             <div id="order-list"></div>
@@ -527,7 +527,7 @@
     </div>
 </div>
 
-<!-- ═══════════════════ EDIT MODAL ════════════════════════ -->
+
 <div id="editModal" class="modal-overlay hidden">
     <div class="modal-box">
         <button onclick="document.getElementById('editModal').classList.add('hidden')" class="modal-close">CLOSE</button>
@@ -562,9 +562,7 @@
 
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <script>
-    // ═══════════════════════════════════════════════════════
-    // ►  TOAST
-    // ═══════════════════════════════════════════════════════
+    
     function toast(msg, type = 'info', duration = 3500) {
         const container = document.getElementById('toastContainer');
         const el = document.createElement('div');
@@ -580,9 +578,7 @@
         }, duration);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // ►  AUTH
-    // ═══════════════════════════════════════════════════════
+   
     function expireAdminSession(message = 'SESSION EXPIRED. PLEASE LOGIN AGAIN.') {
         localStorage.removeItem('adminToken');
         document.getElementById('authOverlay').style.display = 'flex';
@@ -636,14 +632,12 @@
         });
     }
 
-    // Live Clock
+    
     setInterval(() => {
         document.getElementById('timeDisplay').innerText = new Date().toLocaleString();
     }, 1000);
 
-    // ═══════════════════════════════════════════════════════
-    // ►  SIZE / COLOR INPUTS
-    // ═══════════════════════════════════════════════════════
+   
     function addSizeInput() {
         const el = document.createElement('input');
         el.type = 'text'; el.className = 'size-input'; el.placeholder = 'SIZE OPTION';
@@ -655,9 +649,7 @@
         document.getElementById('colorInputs').appendChild(el);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // ►  IMAGE UPLOAD
-    // ═══════════════════════════════════════════════════════
+   
     let photos = [];
     var widget = cloudinary.createUploadWidget({ cloudName: 'dawhhgjsd', uploadPreset: 'dawhhgjsd', maxFiles: 20 }, (e, r) => {
         if (r.event === 'success') {
@@ -671,9 +663,7 @@
     });
     document.getElementById('uploadBtn').onclick = () => widget.open();
 
-    // ═══════════════════════════════════════════════════════
-    // ►  SAVE ITEM
-    // ═══════════════════════════════════════════════════════
+    
     async function saveItem() {
         const token = getAdminToken();
         if (!token) return;
@@ -701,9 +691,7 @@
         location.reload();
     }
 
-    // ═══════════════════════════════════════════════════════
-    // ►  ORDER MANAGEMENT
-    // ═══════════════════════════════════════════════════════
+    
     async function markSoldOut(id) {
         const token = getAdminToken();
         if (!token) return;
@@ -742,9 +730,7 @@
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // ►  EDIT MODAL
-    // ═══════════════════════════════════════════════════════
+   
     let itemsCache = [];
     let editPhotos = [];
 
@@ -829,9 +815,7 @@
         load();
     }
 
-    // ═══════════════════════════════════════════════════════
-    // ►  CUSTOMER PASSWORD RESET
-    // ═══════════════════════════════════════════════════════
+    
     async function resetCustomerPassword() {
         const username = document.getElementById('resetUsername').value.trim();
         const newPassword = document.getElementById('resetPassword').value.trim();
@@ -853,9 +837,7 @@
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // ►  SITE CONTENT
-    // ═══════════════════════════════════════════════════════
+    
     async function loadSiteContent() {
         const status = document.getElementById('siteContentStatus');
         try {
@@ -897,9 +879,7 @@
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // ►  DATA LOAD
-    // ═══════════════════════════════════════════════════════
+   
     function renderLoadingSkeletons() {
         document.getElementById('inv-list').innerHTML = Array(5).fill(0).map(() =>
             `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);">
@@ -942,7 +922,7 @@
             if (!usersRes.ok) throw new Error('Unable to load users');
             const users = await usersRes.json();
 
-            // Render Users
+           
             document.getElementById('user-list').innerHTML = users.map(u =>
                 `<div class="user-item">
                     <span>${u.username}</span>
@@ -950,13 +930,13 @@
                 </div>`
             ).join('') || '<div style="font-size:11px;color:var(--gray-400);padding:12px 0;">NO CUSTOMER ACCOUNTS FOUND.</div>';
 
-            // Stats
+            
             let rev = 0;
             orders.forEach(o => { rev += o.totalMMK; });
             document.getElementById('revTotal').innerText = `${rev.toLocaleString()} MMK`;
             document.getElementById('orderCount').innerText = orders.length;
 
-            // Render Orders
+           
             document.getElementById('order-list').innerHTML = orders.map(o => `
                 <div class="admin-order">
                     <div class="admin-order-top">
@@ -995,7 +975,7 @@
                 </div>
             `).join('') || '<p style="color:var(--gray-400);font-size:11px;letter-spacing:0.08em;">NO ACTIVE ORDERS.</p>';
 
-            // Render Inventory
+          
             const q = document.getElementById('invSearch').value.toLowerCase();
             document.getElementById('inv-list').innerHTML = items.filter(i => i.name.toLowerCase().includes(q)).map(i => `
                 <div class="inv-item">
